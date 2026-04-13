@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export function focusTrap(
   element: HTMLElement,
   onEscape?: () => void
@@ -10,19 +12,15 @@ export function focusTrap(
 
     if (e.key !== 'Tab') return;
 
-    const focusable = element.querySelector(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) as HTMLElement;
-
-    if (!focusable) return;
-
-    const firstElement = focusable;
     const focusableElements = Array.from(
       element.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
     ) as HTMLElement[];
 
+    if (!focusableElements.length) return;
+
+    const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
     if (e.shiftKey) {
