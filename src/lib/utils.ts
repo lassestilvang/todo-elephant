@@ -4,42 +4,42 @@ export function focusTrap(
 ): (() => void) => void {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      onEscape?.()
-      return
+      onEscape?.();
+      return;
     }
 
-    if (e.key !== 'Tab') return
+    if (e.key !== 'Tab') return;
 
     const focusable = element.querySelector(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) as HTMLElement
+    ) as HTMLElement;
 
-    if (!focusable) return
+    if (!focusable) return;
 
-    const firstElement = focusable
+    const firstElement = focusable;
     const focusableElements = Array.from(
       element.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
-    ) as HTMLElement[]
+    ) as HTMLElement[];
 
-    const lastElement = focusableElements[focusableElements.length - 1]
+    const lastElement = focusableElements[focusableElements.length - 1];
 
     if (e.shiftKey) {
       if (document.activeElement === firstElement) {
-        e.preventDefault()
-        lastElement.focus()
+        e.preventDefault();
+        lastElement.focus();
       }
     } else {
       if (document.activeElement === lastElement) {
-        e.preventDefault()
-        firstElement.focus()
+        e.preventDefault();
+        firstElement.focus();
       }
     }
-  }
+  };
 
-  element.addEventListener('keydown', handleKeyDown)
-  return () => element.removeEventListener('keydown', handleKeyDown)
+  element.addEventListener('keydown', handleKeyDown);
+  return () => element.removeEventListener('keydown', handleKeyDown);
 }
 
 export function useClickOutside(
@@ -49,11 +49,11 @@ export function useClickOutside(
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        callback()
+        callback();
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [ref, callback])
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [ref, callback]);
 }
