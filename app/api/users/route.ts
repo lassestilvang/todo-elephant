@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-let users: any[] = [];
+const users: any[] = [];
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({ users, currentUser: null });

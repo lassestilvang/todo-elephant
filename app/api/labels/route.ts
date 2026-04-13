@@ -1,8 +1,3 @@
-import { NextResponse } from 'next/server';
-import { db, labels } from '@/db/index';
-import { asc, eq } from '@vercel/postgres';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
 
 // Validation schema
 const labelSchema = createInsertSchema(labels, {

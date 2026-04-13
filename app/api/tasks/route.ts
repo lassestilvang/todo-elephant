@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-let tasks: any[] = [];
+const tasks: any[] = [];
 let nextId = 1;
 
 export async function GET(request: NextRequest) {
