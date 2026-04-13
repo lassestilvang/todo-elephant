@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, activityLogs } from '@/db/index';
+
 import { desc, eq } from '@vercel/postgres';
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
