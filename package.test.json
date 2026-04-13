@@ -1,0 +1,13 @@
+// Package.json for test dependencies
+{
+  "name": "task-planner-test",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "test:watch": "bun test --watch"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

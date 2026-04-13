@@ -1,0 +1,20 @@
+// Editor configuration for consistent coding experience
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.trimTrailingWhitespace": true,
+  "editor.endOfLine": "lf",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.javascript"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json"
+  }
+}
