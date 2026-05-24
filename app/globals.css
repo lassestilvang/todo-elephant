@@ -1,3 +1,168 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  /* HSL Color System */
+  --bg-primary-light: 210 40% 98%;
+  --bg-secondary-light: 210 40% 95%;
+  --bg-card-light: 0 0% 100%;
+  --text-primary-light: 222 47% 11%;
+  --text-secondary-light: 215 16% 47%;
+  --border-light: 214 32% 91%;
+  --accent-light: 221 83% 53%; /* Beautiful active blue */
+
+  --bg-primary-dark: 222 47% 4%;
+  --bg-secondary-dark: 222 47% 7%;
+  --bg-card-dark: 222 47% 6%;
+  --text-primary-dark: 210 40% 98%;
+  --text-secondary-dark: 217 10% 70%;
+  --border-dark: 222 47% 12%;
+  --accent-dark: 217 91% 60%;
+
+  /* Current State Custom Properties */
+  --background: var(--bg-primary-light);
+  --background-secondary: var(--bg-secondary-light);
+  --card: var(--bg-card-light);
+  --foreground: var(--text-primary-light);
+  --foreground-secondary: var(--text-secondary-light);
+  --border: var(--border-light);
+  --accent: var(--accent-light);
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+
+  color-scheme: light dark;
+}
+
+/* Light / Dark Mode Toggle Implementation */
+:root[data-theme="dark"] {
+  --background: var(--bg-primary-dark);
+  --background-secondary: var(--bg-secondary-dark);
+  --card: var(--bg-card-dark);
+  --foreground: var(--text-primary-dark);
+  --foreground-secondary: var(--text-secondary-dark);
+  --border: var(--border-dark);
+  --accent: var(--accent-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: var(--bg-primary-dark);
+    --background-secondary: var(--bg-secondary-dark);
+    --card: var(--bg-card-dark);
+    --foreground: var(--text-primary-dark);
+    --foreground-secondary: var(--text-secondary-dark);
+    --border: var(--border-dark);
+    --accent: var(--accent-dark);
+  }
+}
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-accent: hsl(var(--accent));
+  --color-card: hsl(var(--card));
+  --color-border: hsl(var(--border));
+  --color-muted: hsl(var(--foreground-secondary));
+  --font-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+/* Base Body Styles */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+}
+
+/* Standard Premium Scrollbar - Baseline Newly Available */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* Legacy WebKit scrollbar fallback wrapped in @supports not to prevent conflicts */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent));
+  }
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+}
+
+:root[data-theme="dark"] .glass-panel,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .glass-panel {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(16px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+}
+
+/* Custom glowing effects */
+.glow-primary {
+  box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.35);
+}
+
+.glow-secondary {
+  box-shadow: 0 0 20px -5px rgba(236, 72, 153, 0.35);
+}
+
+/* Micro-animations and Transitions */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px hsl(var(--foreground) / 0.08);
+}
+
+/* Animate Checkboxes */
+.checkbox-pulse:active {
+  transform: scale(0.9);
+}
+
+/* Custom keyframe animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Radial Progress Ring */
+.radial-progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
