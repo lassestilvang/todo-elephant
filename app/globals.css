@@ -109,7 +109,13 @@ body {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
 }
 
-:root[data-theme="dark"] .glass-panel,
+:root[data-theme="dark"] .glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .glass-panel {
     background: rgba(15, 23, 42, 0.45);
