@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast, Toaster } from "sonner";
 import { 
-  Plus, 
   Keyboard,
   Menu,
 } from "lucide-react";
@@ -425,7 +424,7 @@ export default function Home() {
                 onTaskClick={handleTaskClick}
                 onAddTask={(title, status) => {
                   setTaskTitle(title);
-                  setTaskStatus(status as any);
+                  setTaskStatus(status as Task["status"]);
                   setModalMode("create");
                   setIsModalOpen(true);
                 }}

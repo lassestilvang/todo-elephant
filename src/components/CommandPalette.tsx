@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Search, Keyboard, Sparkles, Folder, Calendar, Plus } from "lucide-react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Search, Keyboard, Sparkles, Folder, Plus } from "lucide-react";
 import { Task } from "@/types";
 
 interface CommandPaletteProps {
@@ -44,38 +44,40 @@ function CommandPalette({
   }, [isOpen, onClose]);
 
   // Command palette filter options
-  const viewCommands = [
+  const viewCommands = useMemo(() => [
     { id: "v-dash", title: "Switch to Dashboard Overview", type: "navigation", action: () => setView("dashboard") },
     { id: "v-kanb", title: "Switch to Kanban Board View", type: "navigation", action: () => setView("kanban") },
     { id: "v-list", title: "Switch to High-Density List View", type: "navigation", action: () => setView("list") }
-  ];
-
-  // Filter tasks based on query
-  const filteredTasks = query
-    ? tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description || "").toLowerCase().includes(query.toLowerCase()))
-    : [];
-
-  const matchedCommands = viewCommands.filter(c => c.title.toLowerCase().includes(query.toLowerCase()));
+  ], [setView]);
 
   // Combine commands and tasks matching query
-  const items = [
-    ...matchedCommands,
-    ...filteredTasks.map(t => ({ id: `t-${t.id}`, title: `Search Task: ${t.title}`, type: "task", action: () => onSelectTask(t) }))
-  ];
+  const items = useMemo(() => {
+    const filteredTasks = query
+      ? tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description || "").toLowerCase().includes(query.toLowerCase()))
+      : [];
 
-  // If query is present and no tasks matches, add "Create Task" command
-  if (query.trim() && items.length === 0) {
-    items.push({
-      id: "create-new-task",
-      title: `Create new task: "${query.trim()}"`,
-      type: "create",
-      action: () => {
-        onCreateTask(query.trim());
-        setQuery("");
-        onClose();
-      }
-    });
-  }
+    const matchedCommands = viewCommands.filter(c => c.title.toLowerCase().includes(query.toLowerCase()));
+
+    const result = [
+      ...matchedCommands,
+      ...filteredTasks.map(t => ({ id: `t-${t.id}`, title: `Search Task: ${t.title}`, type: "task", action: () => onSelectTask(t) }))
+    ];
+
+    if (query.trim() && result.length === 0) {
+      result.push({
+        id: "create-new-task",
+        title: `Create new task: "${query.trim()}"`,
+        type: "create",
+        action: () => {
+          onCreateTask(query.trim());
+          setQuery("");
+          onClose();
+        }
+      });
+    }
+
+    return result;
+  }, [query, tasks, viewCommands, onSelectTask, onCreateTask, onClose]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -104,10 +106,8 @@ function CommandPalette({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, items, selectedIndex, onClose]);
 
-  // Reset selected index on query change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
+  // Clamp selected index to valid range
+  const clampedIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : 0;
 
   if (!isOpen) return null;
 
@@ -144,7 +144,7 @@ function CommandPalette({
           ) : (
             <div className="space-y-0.5">
               {items.map((item, idx) => {
-                const isSelected = idx === selectedIndex;
+                const isSelected = idx === clampedIndex;
                 return (
                   <button
                     key={item.id}
