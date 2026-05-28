@@ -153,7 +153,8 @@ function ListView({
       </div>
 
       {/* Dynamic List Workspace */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8 pr-4">
+      <div className="flex-1 scroll-container px-8 pb-8 pr-4">
+        <div className="scroll-indicator-top" />
         {sortedTasks.length === 0 ? (
           <div className="py-24 text-center text-xs text-muted/60 select-none">
             No matching tasks found matching your filter criteria.
@@ -327,6 +328,7 @@ function ListView({
             })}
           </div>
         )}
+        <div className="scroll-indicator-bottom" />
       </div>
 
     </div>
