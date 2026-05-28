@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Tag, 
   LayoutDashboard, 
@@ -49,16 +49,17 @@ function Sidebar({
   const [newLabelColor, setNewLabelColor] = useState("#64748b");
   
   // Theme state: tracking if dark mode is explicitly enabled
-  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("color-scheme");
-      return (saved as "light" | "dark") || "system";
+  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">("system");
+
+  // Sync theme state from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    const saved = localStorage.getItem("color-scheme");
+    if (saved === "light" || saved === "dark") {
+      setThemeMode(saved);
     }
-    return "system";
-  });
+  }, []);
 
   const toggleTheme = () => {
-    if (typeof window === "undefined") return;
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const nextTheme = currentTheme === "dark" ? "light" : "dark";
     
