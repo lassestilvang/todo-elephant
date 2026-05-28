@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { toast, Toaster } from "sonner";
 import { 
   Keyboard,
@@ -51,6 +51,10 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Ref for tasks lookup to avoid stale closures
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
 
   // Listen for Cmd+K or Ctrl+K Command Palette trigger
   useEffect(() => {
@@ -238,7 +242,7 @@ export default function Home() {
   // Task deletion handler
   const handleTaskDelete = useCallback(async (id: number) => {
     try {
-      const taskToDelete = tasks.find(t => t.id === id);
+      const taskToDelete = tasksRef.current.find(t => t.id === id);
 
       setTasks(prev => prev.filter(t => t.id !== id));
 
@@ -256,7 +260,7 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to delete task");
     }
-  }, [tasks, refreshLogs]);
+  }, [refreshLogs]);
 
   const requestDelete = useCallback((id: number) => {
     setPendingDeleteId(id);
@@ -331,6 +335,21 @@ export default function Home() {
       return true;
     });
   }, [tasks, selectedListId, selectedLabelId]);
+
+  const handleKanbanAddTask = useCallback((title: string, status: string) => {
+    setTaskTitle(title);
+    setTaskStatus(status as Task["status"]);
+    setModalMode("create");
+    setIsModalOpen(true);
+  }, []);
+
+  const closeCommandPalette = useCallback(() => setIsCommandPaletteOpen(false), []);
+
+  const handleCreateTaskFromCommand = useCallback((title: string) => {
+    setTaskTitle(title);
+    setModalMode("create");
+    setIsModalOpen(true);
+  }, []);
 
   // Add subtask inline helper
   const handleAddSubtask = useCallback(() => {
@@ -421,12 +440,7 @@ export default function Home() {
                 onTaskUpdate={handleTaskUpdateDirect}
                 onTaskDelete={requestDelete}
                 onTaskClick={handleTaskClick}
-                onAddTask={(title, status) => {
-                  setTaskTitle(title);
-                  setTaskStatus(status as Task["status"]);
-                  setModalMode("create");
-                  setIsModalOpen(true);
-                }}
+                onAddTask={handleKanbanAddTask}
               />
             )}
 
@@ -448,14 +462,10 @@ export default function Home() {
       {/* Global Interactive Command Palette */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
+        onClose={closeCommandPalette}
         tasks={tasks}
         setView={setView}
-        onCreateTask={(title) => {
-          setTaskTitle(title);
-          setModalMode("create");
-          setIsModalOpen(true);
-        }}
+        onCreateTask={handleCreateTaskFromCommand}
         onSelectTask={handleTaskClick}
       />
 
