@@ -407,7 +407,6 @@ export default function Home() {
               <DashboardView
                 tasks={filteredTasks}
                 lists={lists}
-                labels={labels}
                 activityLogs={activityLogs}
                 onAddTaskClick={openCreateModal}
                 onTaskClick={handleTaskClick}

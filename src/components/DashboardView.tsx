@@ -1,23 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { 
   CheckCircle2, 
   Clock, 
   AlertTriangle, 
   Layers, 
-  User, 
-  ArrowUpRight, 
   Plus, 
   ChevronRight,
   ClipboardList
 } from "lucide-react";
-import { Task, List, Label, ActivityLog } from "@/types";
+import { Task, List, ActivityLog } from "@/types";
 
 interface DashboardViewProps {
   tasks: Task[];
   lists: List[];
-  labels: Label[];
   activityLogs: ActivityLog[];
   onAddTaskClick: () => void;
   onTaskClick: (task: Task) => void;
@@ -26,7 +23,6 @@ interface DashboardViewProps {
 function DashboardView({
   tasks,
   lists,
-  labels,
   activityLogs,
   onAddTaskClick,
   onTaskClick
@@ -39,10 +35,11 @@ function DashboardView({
   const inProgress = tasks.filter(t => t.status === "in-progress" || t.status === "in_progress").length;
   
   // Overdue calculations
+  const now = useMemo(() => Date.now(), []);
   const overdueTasks = tasks.filter(t => {
     if (t.status === "completed" || t.status === "done") return false;
     if (!t.dueDate) return false;
-    return new Date(t.dueDate).getTime() < Date.now();
+    return new Date(t.dueDate).getTime() < now;
   });
 
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
