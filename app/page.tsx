@@ -63,40 +63,30 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Fetch initial data
+  // Fetch initial data in parallel
   useEffect(() => {
     async function initApp() {
       try {
         setLoading(true);
-        
-        // Fetch tasks
-        const tRes = await fetch("/api/tasks");
-        if (tRes.ok) {
-          const tData = await tRes.json();
-          setTasks(tData);
-        }
 
-        // Fetch lists
-        const lRes = await fetch("/api/lists");
-        if (lRes.ok) {
-          const lData = await lRes.json();
-          setLists(lData);
-        }
+        const [tRes, lRes, tagRes, logRes] = await Promise.all([
+          fetch("/api/tasks"),
+          fetch("/api/lists"),
+          fetch("/api/labels"),
+          fetch("/api/activity-logs"),
+        ]);
 
-        // Fetch labels
-        const tagRes = await fetch("/api/labels");
-        if (tagRes.ok) {
-          const tagData = await tagRes.json();
-          setLabels(tagData);
-        }
+        const [tData, lData, tagData, logData] = await Promise.all([
+          tRes.ok ? tRes.json() : [],
+          lRes.ok ? lRes.json() : [],
+          tagRes.ok ? tagRes.json() : [],
+          logRes.ok ? logRes.json() : [],
+        ]);
 
-        // Fetch activity logs
-        const logRes = await fetch("/api/activity-logs");
-        if (logRes.ok) {
-          const logData = await logRes.json();
-          setActivityLogs(logData);
-        }
-
+        setTasks(tData);
+        setLists(lData);
+        setLabels(tagData);
+        setActivityLogs(logData);
       } catch (err) {
         console.error("Initialization error:", err);
         toast.error("Failed to load initial planner data");
