@@ -91,8 +91,9 @@ function TaskModal({
 
           {/* Title Field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted uppercase">Task Title</label>
+            <label htmlFor="task-title" className="text-xs font-bold text-muted uppercase">Task Title</label>
             <input
+              id="task-title"
               type="text"
               required
               value={taskTitle}
@@ -104,8 +105,9 @@ function TaskModal({
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted uppercase">Description</label>
+            <label htmlFor="task-desc" className="text-xs font-bold text-muted uppercase">Description</label>
             <textarea
+              id="task-desc"
               value={taskDesc}
               onChange={e => setTaskDesc(e.target.value)}
               placeholder="Task details and instructions..."
@@ -117,8 +119,9 @@ function TaskModal({
           {/* Due Date & Priority Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted uppercase">Due Date</label>
+              <label htmlFor="task-due-date" className="text-xs font-bold text-muted uppercase">Due Date</label>
               <input
+                id="task-due-date"
                 type="date"
                 value={taskDueDate}
                 onChange={e => setTaskDueDate(e.target.value)}
@@ -126,8 +129,9 @@ function TaskModal({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted uppercase">Priority</label>
+              <label htmlFor="task-priority" className="text-xs font-bold text-muted uppercase">Priority</label>
               <select
+                id="task-priority"
                 value={taskPriority}
                 onChange={e => setTaskPriority(e.target.value as "low" | "medium" | "high")}
                 className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
@@ -142,8 +146,9 @@ function TaskModal({
           {/* Category Folder & Status Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted uppercase">List Folder</label>
+              <label htmlFor="task-list" className="text-xs font-bold text-muted uppercase">List Folder</label>
               <select
+                id="task-list"
                 value={taskListId}
                 onChange={e => setTaskListId(Number(e.target.value))}
                 className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
@@ -156,8 +161,9 @@ function TaskModal({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted uppercase">Workflow Status</label>
+              <label htmlFor="task-status" className="text-xs font-bold text-muted uppercase">Workflow Status</label>
               <select
+                id="task-status"
                 value={taskStatus}
                 onChange={e => setTaskStatus(e.target.value as Task["status"])}
                 className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
