@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/src/components/Sidebar";
 import CommandPalette from "@/src/components/CommandPalette";
 import TaskModal from "@/src/components/TaskModal";
+import ConfirmDialog from "@/src/components/ConfirmDialog";
 import { Task, List, Label, ActivityLog } from "@/types";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
@@ -48,6 +49,7 @@ export default function Home() {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
   // Listen for Cmd+K or Ctrl+K Command Palette trigger
   useEffect(() => {
@@ -255,6 +257,17 @@ export default function Home() {
     }
   }, [tasks, refreshLogs]);
 
+  const requestDelete = useCallback((id: number) => {
+    setPendingDeleteId(id);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (pendingDeleteId !== null) {
+      handleTaskDelete(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  }, [pendingDeleteId, handleTaskDelete]);
+
   // Add folder helper
   const handleCreateList = useCallback(async (name: string, color: string) => {
     try {
@@ -387,7 +400,7 @@ export default function Home() {
                 lists={lists}
                 labels={labels}
                 onTaskUpdate={handleTaskUpdateDirect}
-                onTaskDelete={handleTaskDelete}
+                onTaskDelete={requestDelete}
                 onTaskClick={handleTaskClick}
                 onAddTask={(title, status) => {
                   setTaskTitle(title);
@@ -404,7 +417,7 @@ export default function Home() {
                 lists={lists}
                 labels={labels}
                 onTaskUpdate={handleTaskUpdateDirect}
-                onTaskDelete={handleTaskDelete}
+                onTaskDelete={requestDelete}
                 onTaskClick={handleTaskClick}
               />
             )}
@@ -455,6 +468,16 @@ export default function Home() {
         onRemoveSubtask={handleRemoveSubtask}
         lists={lists}
         labels={labels}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmLabel="Delete Task"
       />
 
     </div>
