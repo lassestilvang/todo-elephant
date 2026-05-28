@@ -68,7 +68,9 @@ function DashboardView({
   const { completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks } = analytics;
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 h-screen animate-fade-in">
+    <div className="flex-1 scroll-container px-8 py-8 h-screen animate-fade-in">
+      <div className="scroll-indicator-top" />
+      <div className="space-y-8">
       
       {/* Page Title & Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -379,7 +381,8 @@ function DashboardView({
         </div>
 
       </div>
-
+      </div>
+      <div className="scroll-indicator-bottom" />
     </div>
   );
 }
