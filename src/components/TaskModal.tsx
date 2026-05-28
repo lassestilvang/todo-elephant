@@ -65,11 +65,16 @@ function TaskModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden flex flex-col max-h-[90vh]">
+      <div 
+        role="dialog" 
+        aria-modal="true" 
+        aria-labelledby="task-modal-title"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden flex flex-col max-h-[90vh]"
+      >
 
         {/* Modal Top Bar */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="font-bold text-sm leading-tight flex items-center gap-2">
+          <h3 id="task-modal-title" className="font-bold text-sm leading-tight flex items-center gap-2">
             <ListTodo size={16} className="text-accent" />
             <span>{mode === "create" ? "Create New Task" : "Edit Planner Task"}</span>
           </h3>

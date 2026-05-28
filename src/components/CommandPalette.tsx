@@ -115,6 +115,9 @@ function CommandPalette({
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
       <div 
         ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
         className="w-full max-w-xl rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden animate-scale-up"
       >
         {/* Input Bar */}

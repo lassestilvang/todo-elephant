@@ -24,15 +24,21 @@ function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel overflow-hidden">
+      <div 
+        role="alertdialog" 
+        aria-modal="true" 
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
+        className="w-full max-w-sm rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel overflow-hidden"
+      >
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
               <AlertTriangle size={20} />
             </div>
             <div className="space-y-1 min-w-0">
-              <h3 className="font-bold text-sm text-foreground">{title}</h3>
-              <p className="text-xs text-muted leading-relaxed">{message}</p>
+              <h3 id="confirm-dialog-title" className="font-bold text-sm text-foreground">{title}</h3>
+              <p id="confirm-dialog-message" className="text-xs text-muted leading-relaxed">{message}</p>
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
