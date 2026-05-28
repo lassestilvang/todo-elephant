@@ -23,7 +23,7 @@ interface DashboardViewProps {
   onTaskClick: (task: Task) => void;
 }
 
-export default function DashboardView({
+function DashboardView({
   tasks,
   lists,
   labels,
@@ -370,3 +370,5 @@ export default function DashboardView({
     </div>
   );
 }
+
+export default React.memo(DashboardView);

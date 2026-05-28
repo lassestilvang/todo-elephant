@@ -13,7 +13,7 @@ interface CommandPaletteProps {
   onSelectTask: (task: Task) => void;
 }
 
-export default function CommandPalette({
+function CommandPalette({
   isOpen,
   onClose,
   tasks,
@@ -189,3 +189,5 @@ export default function CommandPalette({
     </div>
   );
 }
+
+export default React.memo(CommandPalette);

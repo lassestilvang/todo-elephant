@@ -100,7 +100,7 @@ export default function Home() {
   }, []);
 
   // Refresh logs helper
-  const refreshLogs = async () => {
+  const refreshLogs = useCallback(async () => {
     try {
       const logRes = await fetch("/api/activity-logs");
       if (logRes.ok) {
@@ -110,10 +110,29 @@ export default function Home() {
     } catch (err) {
       console.error("Log refresh error:", err);
     }
-  };
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setTaskTitle("");
+    setTaskDesc("");
+    setTaskDueDate("");
+    setTaskPriority("medium");
+    setTaskStatus("pending");
+    setTaskListId(1);
+    setTaskLabelsSelected([]);
+    setSubtasksChecklist([]);
+    setNewSubtaskTitle("");
+    setCurrentEditingTask(null);
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    resetForm();
+    setModalMode("create");
+    setIsModalOpen(true);
+  }, [resetForm]);
 
   // Create or Update task handler
-  const handleTaskSubmit = async (e: React.FormEvent) => {
+  const handleTaskSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
 
@@ -180,16 +199,14 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to persist task details");
     }
-  };
+  }, [taskTitle, taskDesc, taskDueDate, taskPriority, taskStatus, taskListId, taskLabelsSelected, subtasksChecklist, modalMode, currentEditingTask, refreshLogs, resetForm]);
 
   // Direct fast inline updates (e.g. checkbox status, subtask checked state)
-  const handleTaskUpdateDirect = async (id: number, updates: Partial<Task>) => {
+  const handleTaskUpdateDirect = useCallback(async (id: number, updates: Partial<Task>) => {
     try {
-      // Optimistic state updates for instant rendering!
       setTasks(prev => prev.map(t => {
         if (t.id === id) {
           const updated = { ...t, ...updates };
-          // set completedAt if completing
           if (updates.status && (updates.status === "completed" || updates.status === "done")) {
             updated.completedAt = new Date().toISOString();
           } else if (updates.status) {
@@ -214,14 +231,13 @@ export default function Home() {
       console.error(err);
       toast.error("Network synchronization failed");
     }
-  };
+  }, [refreshLogs]);
 
   // Task deletion handler
-  const handleTaskDelete = async (id: number) => {
+  const handleTaskDelete = useCallback(async (id: number) => {
     try {
       const taskToDelete = tasks.find(t => t.id === id);
-      
-      // Optimistic delete
+
       setTasks(prev => prev.filter(t => t.id !== id));
 
       const res = await fetch(`/api/tasks?id=${id}`, {
@@ -238,10 +254,10 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to delete task");
     }
-  };
+  }, [tasks, refreshLogs]);
 
   // Add folder helper
-  const handleCreateList = async (name: string, color: string) => {
+  const handleCreateList = useCallback(async (name: string, color: string) => {
     try {
       const res = await fetch("/api/lists", {
         method: "POST",
@@ -258,10 +274,10 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to create folder category");
     }
-  };
+  }, [refreshLogs]);
 
   // Add Label helper
-  const handleCreateLabel = async (name: string, color: string) => {
+  const handleCreateLabel = useCallback(async (name: string, color: string) => {
     try {
       const res = await fetch("/api/labels", {
         method: "POST",
@@ -278,9 +294,9 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to create label");
     }
-  };
+  }, [refreshLogs]);
 
-  const handleTaskClick = (task: Task) => {
+  const handleTaskClick = useCallback((task: Task) => {
     setCurrentEditingTask(task);
     setModalMode("edit");
     setTaskTitle(task.title);
@@ -292,47 +308,28 @@ export default function Home() {
     setTaskLabelsSelected(task.labels || []);
     setSubtasksChecklist(task.subtasks || []);
     setIsModalOpen(true);
-  };
-
-  const resetForm = () => {
-    setTaskTitle("");
-    setTaskDesc("");
-    setTaskDueDate("");
-    setTaskPriority("medium");
-    setTaskStatus("pending");
-    setTaskListId(1);
-    setTaskLabelsSelected([]);
-    setSubtasksChecklist([]);
-    setNewSubtaskTitle("");
-    setCurrentEditingTask(null);
-  };
-
-  const openCreateModal = () => {
-    resetForm();
-    setModalMode("create");
-    setIsModalOpen(true);
-  };
+  }, []);
 
   // Filter tasks in view by selected Sidebar options
-  const getFilteredTasks = () => {
+  const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
       if (selectedListId) return t.listId === selectedListId;
       if (selectedLabelId) return t.labels?.includes(selectedLabelId);
       return true;
     });
-  };
+  }, [tasks, selectedListId, selectedLabelId]);
 
   // Add subtask inline helper
-  const handleAddSubtask = () => {
+  const handleAddSubtask = useCallback(() => {
     if (!newSubtaskTitle.trim()) return;
     const newId = subtasksChecklist.length > 0 ? Math.max(...subtasksChecklist.map(s => s.id)) + 1 : 101;
     setSubtasksChecklist(prev => [...prev, { id: newId, title: newSubtaskTitle.trim(), completed: false }]);
     setNewSubtaskTitle("");
-  };
+  }, [newSubtaskTitle, subtasksChecklist]);
 
-  const handleRemoveSubtask = (id: number) => {
+  const handleRemoveSubtask = useCallback((id: number) => {
     setSubtasksChecklist(prev => prev.filter(s => s.id !== id));
-  };
+  }, []);
 
   return (
     <div className="flex bg-background text-foreground min-h-screen relative overflow-hidden font-sans antialiased">
@@ -376,7 +373,7 @@ export default function Home() {
           <>
             {currentView === "dashboard" && (
               <DashboardView
-                tasks={getFilteredTasks()}
+                tasks={filteredTasks}
                 lists={lists}
                 labels={labels}
                 activityLogs={activityLogs}
@@ -387,7 +384,7 @@ export default function Home() {
 
             {currentView === "kanban" && (
               <KanbanView
-                tasks={getFilteredTasks()}
+                tasks={filteredTasks}
                 lists={lists}
                 labels={labels}
                 onTaskUpdate={handleTaskUpdateDirect}
@@ -404,7 +401,7 @@ export default function Home() {
 
             {currentView === "list" && (
               <ListView
-                tasks={getFilteredTasks()}
+                tasks={filteredTasks}
                 lists={lists}
                 labels={labels}
                 onTaskUpdate={handleTaskUpdateDirect}

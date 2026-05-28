@@ -24,7 +24,7 @@ interface ListViewProps {
   onTaskClick: (task: Task) => void;
 }
 
-export default function ListView({
+function ListView({
   tasks,
   lists,
   labels,
@@ -322,3 +322,5 @@ export default function ListView({
     </div>
   );
 }
+
+export default React.memo(ListView);

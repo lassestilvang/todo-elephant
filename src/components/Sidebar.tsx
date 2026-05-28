@@ -29,7 +29,7 @@ interface SidebarProps {
   onCreateLabel: (name: string, color: string) => void;
 }
 
-export default function Sidebar({
+function Sidebar({
   currentView,
   setView,
   lists,
@@ -370,3 +370,5 @@ export default function Sidebar({
     </aside>
   );
 }
+
+export default React.memo(Sidebar);

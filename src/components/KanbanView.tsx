@@ -24,7 +24,7 @@ interface KanbanViewProps {
   onAddTask: (title: string, status: string) => void;
 }
 
-export default function KanbanView({
+function KanbanView({
   tasks,
   lists,
   labels,
@@ -268,3 +268,5 @@ export default function KanbanView({
     </div>
   );
 }
+
+export default React.memo(KanbanView);
