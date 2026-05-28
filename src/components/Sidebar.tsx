@@ -198,13 +198,13 @@ function Sidebar({
                 <button
                   type="button"
                   onClick={() => setShowAddList(false)}
-                  className="text-[10px] font-semibold text-muted hover:text-foreground px-2 py-1 rounded"
+                  className="text-[11px] font-semibold text-muted hover:text-foreground px-2 py-1 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="text-[10px] font-semibold bg-accent text-white hover:bg-accent/95 px-2 py-1 rounded glow-primary"
+                  className="text-[11px] font-semibold bg-accent text-white hover:bg-accent/95 px-2 py-1 rounded glow-primary"
                 >
                   Create
                 </button>
@@ -275,13 +275,13 @@ function Sidebar({
                 <button
                   type="button"
                   onClick={() => setShowAddLabel(false)}
-                  className="text-[10px] font-semibold text-muted hover:text-foreground px-2 py-1 rounded"
+                  className="text-[11px] font-semibold text-muted hover:text-foreground px-2 py-1 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="text-[10px] font-semibold bg-accent text-white hover:bg-accent/95 px-2 py-1 rounded glow-primary"
+                  className="text-[11px] font-semibold bg-accent text-white hover:bg-accent/95 px-2 py-1 rounded glow-primary"
                 >
                   Add Label
                 </button>
@@ -338,14 +338,14 @@ function Sidebar({
                 cy="20"
               />
             </svg>
-            <span className="absolute text-[10px] font-bold">{completionPercentage}%</span>
+            <span className="absolute text-[11px] font-bold">{completionPercentage}%</span>
           </div>
           <div>
             <div className="flex items-center gap-1 font-semibold text-xs text-foreground">
               <TrendingUp size={12} className="text-accent" />
               <span>Planner Progress</span>
             </div>
-            <p className="text-[10px] text-muted font-medium">{activeTasks.length} tasks remaining</p>
+            <p className="text-[11px] text-muted font-medium">{activeTasks.length} tasks remaining</p>
           </div>
         </div>
 

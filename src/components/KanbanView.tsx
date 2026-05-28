@@ -104,7 +104,7 @@ function KanbanView({
               <div className={`px-4 py-3.5 border-b border-border border-t-4 ${col.border} flex items-center justify-between`}>
                 <span className="font-bold text-sm text-foreground flex items-center gap-2">
                   <span>{col.title}</span>
-                  <span className="text-[10px] font-bold bg-muted/20 px-2 py-0.5 rounded-full shrink-0 opacity-60">
+                  <span className="text-[11px] font-bold bg-muted/20 px-2 py-0.5 rounded-full shrink-0 opacity-60">
                     {colTasks.length}
                   </span>
                 </span>
@@ -133,13 +133,13 @@ function KanbanView({
                   <div className="flex justify-end gap-1.5">
                     <button
                       onClick={() => setAddingInColumn(null)}
-                      className="text-[9px] font-semibold text-muted hover:text-foreground px-2 py-1"
+                      className="text-[11px] font-semibold text-muted hover:text-foreground px-2 py-1"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => handleQuickAdd(col.id)}
-                      className="text-[9px] font-semibold bg-accent text-white hover:bg-accent/95 px-2.5 py-1 rounded glow-primary"
+                      className="text-[11px] font-semibold bg-accent text-white hover:bg-accent/95 px-2.5 py-1 rounded glow-primary"
                     >
                       Add Card
                     </button>
@@ -181,12 +181,12 @@ function KanbanView({
                             <span className="text-xs font-semibold leading-relaxed text-foreground truncate group-hover:text-accent transition-colors flex-1">
                               {task.title}
                             </span>
-                            <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
+                            <span className={`text-[11px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
                               {task.priority}
                             </span>
                           </div>
                           {task.description && (
-                            <p className="text-[10px] text-muted line-clamp-2 leading-relaxed">
+                            <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
                               {task.description}
                             </p>
                           )}
@@ -195,7 +195,7 @@ function KanbanView({
                         {/* Checklist progress */}
                         {subCount > 0 && (
                           <div className="space-y-1">
-                            <div className="flex items-center justify-between text-[9px] text-muted font-semibold">
+                            <div className="flex items-center justify-between text-[11px] text-muted font-semibold">
                               <span className="flex items-center gap-1">
                                 <CheckSquare size={10} />
                                 <span>Checklist</span>
@@ -214,14 +214,14 @@ function KanbanView({
                         {/* Card metadata footer */}
                         <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border/40">
                           {list && (
-                            <span className="text-[9px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <span className="text-[11px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
                               <span>{list.name}</span>
                             </span>
                           )}
                           
                           {task.dueDate && (
-                            <span className="text-[9px] font-semibold text-muted flex items-center gap-1 shrink-0 ml-auto">
+                            <span className="text-[11px] font-semibold text-muted flex items-center gap-1 shrink-0 ml-auto">
                               <Calendar size={10} />
                               <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
                             </span>

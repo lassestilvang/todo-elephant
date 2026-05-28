@@ -95,7 +95,7 @@ function DashboardView({
           <div className="space-y-1">
             <span className="text-xs font-semibold text-muted uppercase">Completion Rate</span>
             <div className="text-3xl font-extrabold">{completionRate}%</div>
-            <p className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
+            <p className="text-[11px] text-emerald-500 font-bold flex items-center gap-0.5">
               <CheckCircle2 size={10} />
               <span>{completed} completed tasks</span>
             </p>
@@ -133,7 +133,7 @@ function DashboardView({
           <div className="space-y-1">
             <span className="text-xs font-semibold text-muted uppercase">In Progress</span>
             <div className="text-3xl font-extrabold">{inProgress + pending}</div>
-            <p className="text-[10px] text-amber-500 font-bold flex items-center gap-0.5">
+            <p className="text-[11px] text-amber-500 font-bold flex items-center gap-0.5">
               <Clock size={10} />
               <span>{inProgress} active task states</span>
             </p>
@@ -150,7 +150,7 @@ function DashboardView({
             <div className={`text-3xl font-extrabold ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>
               {overdueTasks.length}
             </div>
-            <p className="text-[10px] text-muted font-medium">Needs immediate focus</p>
+            <p className="text-[11px] text-muted font-medium">Needs immediate focus</p>
           </div>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
             overdueTasks.length > 0 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-muted/10 text-muted"
@@ -166,7 +166,7 @@ function DashboardView({
             <div className="text-3xl font-extrabold">
               {completedSubtasks}<span className="text-sm font-semibold text-muted">/{totalSubtasks}</span>
             </div>
-            <p className="text-[10px] text-blue-500 font-bold flex items-center gap-0.5">
+            <p className="text-[11px] text-blue-500 font-bold flex items-center gap-0.5">
               <ClipboardList size={10} />
               <span>Checklist efficiency</span>
             </p>
@@ -261,7 +261,7 @@ function DashboardView({
                       </div>
                       <div className="flex items-end justify-between">
                         <span className="text-lg font-extrabold">{listIncomplete}</span>
-                        <span className="text-[9px] font-semibold text-muted uppercase">remaining</span>
+                        <span className="text-[11px] font-semibold text-muted uppercase">remaining</span>
                       </div>
                     </div>
                   );
@@ -278,7 +278,7 @@ function DashboardView({
                 <ClipboardList size={16} className="text-accent" />
                 <span>Immediate Priority Focus</span>
               </h3>
-              <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full uppercase">Top Checklist</span>
+              <span className="text-[11px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full uppercase">Top Checklist</span>
             </div>
             
             {recentTasks.length === 0 ? (
@@ -304,7 +304,7 @@ function DashboardView({
                             {task.title}
                           </span>
                           {task.priority === "high" && (
-                            <span className="px-1.5 py-0.5 text-[8px] font-bold bg-red-500/10 text-red-500 rounded uppercase">high</span>
+                            <span className="px-1.5 py-0.5 text-[11px] font-bold bg-red-500/10 text-red-500 rounded uppercase">high</span>
                           )}
                         </div>
                         <p className="text-xs text-muted truncate max-w-md">
@@ -314,7 +314,7 @@ function DashboardView({
                       
                       <div className="flex items-center gap-3 shrink-0">
                         {list && (
-                          <span className="text-[10px] font-bold bg-muted/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="text-[11px] font-bold bg-muted/20 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
                             <span>{list.name}</span>
                           </span>
@@ -354,7 +354,7 @@ function DashboardView({
                       {log.details && (
                         <p className="text-[11px] text-muted leading-relaxed font-medium">{log.details}</p>
                       )}
-                      <div className="text-[9px] text-muted/60 font-semibold uppercase">
+                      <div className="text-[11px] text-muted/60 font-semibold uppercase">
                         {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>

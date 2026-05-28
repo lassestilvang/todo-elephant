@@ -128,7 +128,7 @@ function CommandPalette({
             placeholder="Type a command or search for tasks..."
             className="w-full bg-transparent border-0 outline-none text-foreground placeholder:text-muted/60 text-sm focus:ring-0 focus:outline-none"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-1 text-[10px] font-bold text-muted bg-muted/20 border border-border/40 rounded-lg select-none shrink-0 shadow-sm">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-1 text-[11px] font-bold text-muted bg-muted/20 border border-border/40 rounded-lg select-none shrink-0 shadow-sm">
             ESC
           </kbd>
         </div>
@@ -159,7 +159,7 @@ function CommandPalette({
                     {item.type === "task" && <Folder size={16} className={isSelected ? "text-white" : "text-emerald-500"} />}
                     {item.type === "create" && <Plus size={16} className={isSelected ? "text-white" : "text-accent"} />}
                     <span className="truncate flex-1">{item.title}</span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
                       isSelected ? "bg-white/20 text-white" : "bg-muted/10 text-muted"
                     }`}>
                       {item.type.toUpperCase()}
@@ -172,16 +172,16 @@ function CommandPalette({
         </div>
 
         {/* Quick Help Footer */}
-        <div className="px-4 py-3 bg-muted/5 border-t border-border flex items-center justify-between text-[10px] text-muted font-medium select-none">
+        <div className="px-4 py-3 bg-muted/5 border-t border-border flex items-center justify-between text-[11px] text-muted font-medium select-none">
           <div className="flex items-center gap-1.5">
             <Keyboard size={12} />
             <span>Use <span className="font-bold">↑↓</span> to navigate, <span className="font-bold">Enter</span> to select</span>
           </div>
           <div className="flex items-center gap-1">
             <span>Press</span>
-            <kbd className="px-1 bg-muted/15 border border-border/40 rounded text-[9px] font-bold">Ctrl</kbd>
+            <kbd className="px-1 bg-muted/15 border border-border/40 rounded text-[11px] font-bold">Ctrl</kbd>
             <span>+</span>
-            <kbd className="px-1 bg-muted/15 border border-border/40 rounded text-[9px] font-bold">K</kbd>
+            <kbd className="px-1 bg-muted/15 border border-border/40 rounded text-[11px] font-bold">K</kbd>
             <span>anytime</span>
           </div>
         </div>

@@ -125,7 +125,7 @@ function ListView({
                 <button
                   key={filter}
                   onClick={() => setStatusFilter(filter)}
-                  className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg capitalize transition-all duration-150 ${
+                  className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg capitalize transition-all duration-150 ${
                     statusFilter === filter
                       ? "bg-accent text-white shadow-sm"
                       : "text-muted hover:text-foreground"
@@ -142,7 +142,7 @@ function ListView({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent border-0 text-[10px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
+                className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
               >
                 <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
                 <option value="dueDate" className="bg-background text-foreground">Sort: Due Date</option>
@@ -213,18 +213,18 @@ function ListView({
                     {/* Metadata tags */}
                     <div className="flex items-center gap-2 shrink-0">
                       {list && (
-                        <span className="text-[10px] font-bold bg-muted/25 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[11px] font-bold bg-muted/25 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
                           <span>{list.name}</span>
                         </span>
                       )}
 
-                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${priorityPill}`}>
+                      <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full ${priorityPill}`}>
                         {task.priority}
                       </span>
 
                       {task.dueDate && (
-                        <span className="text-[10px] font-medium text-muted flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-muted flex items-center gap-1">
                           <Calendar size={10} />
                           <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
                         </span>
@@ -232,7 +232,7 @@ function ListView({
 
                       {/* Subtask checklist gauge */}
                       {subCount > 0 && (
-                        <span className="text-[10px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[11px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full flex items-center gap-1">
                           <CheckSquare size={10} />
                           <span>{subCompleted}/{subCount}</span>
                         </span>
@@ -256,7 +256,7 @@ function ListView({
                     >
                       {/* Description */}
                       <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-muted uppercase">Description</span>
+                        <span className="text-[11px] font-bold text-muted uppercase">Description</span>
                         <p className="text-xs text-foreground leading-relaxed">
                           {task.description || "No description provided."}
                         </p>
@@ -265,7 +265,7 @@ function ListView({
                       {/* Subtask check-off checklist */}
                       {subCount > 0 && (
                         <div className="space-y-2">
-                          <span className="text-[10px] font-bold text-muted uppercase">Subtasks Checklist</span>
+                          <span className="text-[11px] font-bold text-muted uppercase">Subtasks Checklist</span>
                           <div className="space-y-1.5">
                             {task.subtasks?.map(sub => (
                               <div 
@@ -295,13 +295,13 @@ function ListView({
 
                       {/* Actions toolbar */}
                       <div className="flex items-center justify-between pt-3 border-t border-border/30">
-                        <div className="text-[10px] text-muted font-semibold">
+                        <div className="text-[11px] text-muted font-semibold">
                           Created {new Date(task.createdAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => onTaskDelete(task.id)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/20 text-red-500 text-[10px] font-bold hover:bg-red-500/10 transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/20 text-red-500 text-[11px] font-bold hover:bg-red-500/10 transition-colors"
                           >
                             <Trash2 size={12} />
                             <span>Delete Task</span>
