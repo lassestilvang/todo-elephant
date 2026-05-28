@@ -5,6 +5,7 @@ import { toast, Toaster } from "sonner";
 import { 
   Plus, 
   Keyboard,
+  Menu,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/src/components/Sidebar";
@@ -50,6 +51,7 @@ export default function Home() {
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Listen for Cmd+K or Ctrl+K Command Palette trigger
   useEffect(() => {
@@ -349,24 +351,43 @@ export default function Home() {
       {/* Toast Notification Container */}
       <Toaster position="bottom-right" richColors theme="system" />
 
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-slate-950/40 backdrop-blur-sm md:hidden animate-fade-in"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Glassmorphic Sidebar */}
-      <Sidebar
-        currentView={currentView}
-        setView={setView}
-        lists={lists}
-        labels={labels}
-        tasks={tasks}
-        selectedListId={selectedListId}
-        setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); setView("list"); }}
-        selectedLabelId={selectedLabelId}
-        setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); setView("list"); }}
-        onCreateList={handleCreateList}
-        onCreateLabel={handleCreateLabel}
-      />
+      <div className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative z-40 transition-transform duration-300 ease-in-out`}>
+        <Sidebar
+          currentView={currentView}
+          setView={(v) => { setView(v); setIsSidebarOpen(false); }}
+          lists={lists}
+          labels={labels}
+          tasks={tasks}
+          selectedListId={selectedListId}
+          setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); setView("list"); setIsSidebarOpen(false); }}
+          selectedLabelId={selectedLabelId}
+          setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); setView("list"); setIsSidebarOpen(false); }}
+          onCreateList={handleCreateList}
+          onCreateLabel={handleCreateLabel}
+        />
+      </div>
 
       {/* Main Workspace Frame */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         
+        {/* Mobile Sidebar Toggle */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-card/80 backdrop-blur-md border border-border shadow-lg hover:bg-card transition-all"
+          aria-label="Toggle sidebar"
+        >
+          <Menu size={20} className="text-foreground" />
+        </button>
+
         {/* Floating Quick Keyboard Shortcuts Banner */}
         <div className="absolute top-4 right-4 z-20 hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-md border border-border text-[10px] text-muted font-bold tracking-tight select-none">
           <Keyboard size={12} />
