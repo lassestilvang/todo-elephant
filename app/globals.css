@@ -173,6 +173,49 @@ body {
   transform-origin: 50% 50%;
 }
 
+/* Scroll-State Container Queries for Dynamic Shadows */
+.scroll-container {
+  overflow-y: auto;
+  container-type: scroll-state;
+  position: relative;
+}
+
+.scroll-indicator-top,
+.scroll-indicator-bottom {
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 24px;
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scroll-indicator-top {
+  top: 0;
+  margin-bottom: -24px;
+  background: linear-gradient(to bottom, hsl(var(--background) / 0.8) 0%, transparent 100%);
+}
+
+.scroll-indicator-bottom {
+  bottom: 0;
+  margin-top: -24px;
+  background: linear-gradient(to top, hsl(var(--background) / 0.8) 0%, transparent 100%);
+}
+
+@container scroll-state(scrollable: top) {
+  .scroll-indicator-top {
+    opacity: 1;
+  }
+}
+
+@container scroll-state(scrollable: bottom) {
+  .scroll-indicator-bottom {
+    opacity: 1;
+  }
+}
+
 /* Focus Visible Styles for Keyboard Navigation */
 .hover-lift:focus-visible {
   transform: translateY(-2px);
