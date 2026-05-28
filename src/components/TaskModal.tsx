@@ -8,6 +8,7 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: "create" | "edit";
+  isSubmitting?: boolean;
   taskTitle: string;
   setTaskTitle: (v: string) => void;
   taskDesc: string;
@@ -36,6 +37,7 @@ function TaskModal({
   isOpen,
   onClose,
   mode,
+  isSubmitting = false,
   taskTitle,
   setTaskTitle,
   taskDesc,
@@ -251,9 +253,17 @@ function TaskModal({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/95 shadow-md hover-lift glow-primary transition-all"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/95 shadow-md hover-lift glow-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
             >
-              {mode === "create" ? "Add Task" : "Save Changes"}
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                mode === "create" ? "Add Task" : "Save Changes"
+              )}
             </button>
           </div>
 

@@ -47,6 +47,7 @@ export default function Home() {
   const [taskLabelsSelected, setTaskLabelsSelected] = useState<number[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Listen for Cmd+K or Ctrl+K Command Palette trigger
   useEffect(() => {
@@ -129,8 +130,9 @@ export default function Home() {
   // Create or Update task handler
   const handleTaskSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskTitle.trim()) return;
+    if (!taskTitle.trim() || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       if (modalMode === "create") {
         const taskData = {
@@ -193,8 +195,10 @@ export default function Home() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to persist task details");
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [taskTitle, taskDesc, taskDueDate, taskPriority, taskStatus, taskListId, taskLabelsSelected, subtasksChecklist, modalMode, currentEditingTask, refreshLogs, resetForm]);
+  }, [taskTitle, taskDesc, taskDueDate, taskPriority, taskStatus, taskListId, taskLabelsSelected, subtasksChecklist, modalMode, currentEditingTask, refreshLogs, resetForm, isSubmitting]);
 
   // Direct fast inline updates (e.g. checkbox status, subtask checked state)
   const handleTaskUpdateDirect = useCallback(async (id: number, updates: Partial<Task>) => {
@@ -428,6 +432,7 @@ export default function Home() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         mode={modalMode}
+        isSubmitting={isSubmitting}
         taskTitle={taskTitle}
         setTaskTitle={setTaskTitle}
         taskDesc={taskDesc}
