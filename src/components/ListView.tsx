@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Calendar, 
   CheckSquare, 
@@ -57,36 +57,38 @@ function ListView({
   };
 
   // Filter tasks
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (task.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const isCompleted = task.status === "completed" || task.status === "done";
-    const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
-    const isArchived = task.status === "archived";
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const isCompleted = task.status === "completed" || task.status === "done";
+      const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
+      const isArchived = task.status === "archived";
 
-    if (statusFilter === "active") return matchesSearch && isActive;
-    if (statusFilter === "completed") return matchesSearch && isCompleted;
-    if (statusFilter === "archived") return matchesSearch && isArchived;
-    return matchesSearch && !isArchived; // "all" shows all except archived by default
-  });
+      if (statusFilter === "active") return matchesSearch && isActive;
+      if (statusFilter === "completed") return matchesSearch && isCompleted;
+      if (statusFilter === "archived") return matchesSearch && isArchived;
+      return matchesSearch && !isArchived;
+    });
+  }, [tasks, searchQuery, statusFilter]);
 
-  // Sort tasks
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (sortBy === "dueDate") {
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    }
-    if (sortBy === "priority") {
-      const priorityWeights = { high: 3, medium: 2, low: 1 };
-      const weightA = priorityWeights[a.priority as "high" | "medium" | "low"] || 0;
-      const weightB = priorityWeights[b.priority as "high" | "medium" | "low"] || 0;
-      return weightB - weightA;
-    }
-    // "newest" or default
-    return b.id - a.id;
-  });
+  const sortedTasks = useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
+      if (sortBy === "dueDate") {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      }
+      if (sortBy === "priority") {
+        const priorityWeights = { high: 3, medium: 2, low: 1 };
+        const weightA = priorityWeights[a.priority as "high" | "medium" | "low"] || 0;
+        const weightB = priorityWeights[b.priority as "high" | "medium" | "low"] || 0;
+        return weightB - weightA;
+      }
+      return b.id - a.id;
+    });
+  }, [filteredTasks, sortBy]);
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden animate-fade-in">

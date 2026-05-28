@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { 
   CheckCircle2, 
   Clock, 
@@ -28,42 +28,44 @@ function DashboardView({
   onTaskClick
 }: DashboardViewProps) {
   
-  // Calculate analytics
-  const total = tasks.length;
-  const completed = tasks.filter(t => t.status === "completed" || t.status === "done").length;
-  const pending = tasks.filter(t => t.status === "pending" || t.status === "todo").length;
-  const inProgress = tasks.filter(t => t.status === "in-progress" || t.status === "in_progress").length;
-  
-  // Overdue calculations
-  const overdueTasks = tasks.filter(t => {
-    if (t.status === "completed" || t.status === "done") return false;
-    if (!t.dueDate) return false;
-    return new Date(t.dueDate) < new Date();
-  });
+  // Calculate analytics (memoized to avoid recalculation on every render)
+  const analytics = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === "completed" || t.status === "done").length;
+    const pending = tasks.filter(t => t.status === "pending" || t.status === "todo").length;
+    const inProgress = tasks.filter(t => t.status === "in-progress" || t.status === "in_progress").length;
+    
+    const overdueTasks = tasks.filter(t => {
+      if (t.status === "completed" || t.status === "done") return false;
+      if (!t.dueDate) return false;
+      return new Date(t.dueDate) < new Date();
+    });
 
-  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  // Subtask analytics
-  let totalSubtasks = 0;
-  let completedSubtasks = 0;
-  tasks.forEach(t => {
-    if (t.subtasks) {
-      totalSubtasks += t.subtasks.length;
-      completedSubtasks += t.subtasks.filter(s => s.completed).length;
-    }
-  });
+    let totalSubtasks = 0;
+    let completedSubtasks = 0;
+    tasks.forEach(t => {
+      if (t.subtasks) {
+        totalSubtasks += t.subtasks.length;
+        completedSubtasks += t.subtasks.filter(s => s.completed).length;
+      }
+    });
 
-  // Priority count
-  const highPriority = tasks.filter(t => t.priority === "high").length;
-  const mediumPriority = tasks.filter(t => t.priority === "medium").length;
-  const lowPriority = tasks.filter(t => t.priority === "low").length;
+    const highPriority = tasks.filter(t => t.priority === "high").length;
+    const mediumPriority = tasks.filter(t => t.priority === "medium").length;
+    const lowPriority = tasks.filter(t => t.priority === "low").length;
 
-  const getPriorityPercent = (count: number) => {
-    return total > 0 ? Math.round((count / total) * 100) : 0;
-  };
+    const getPriorityPercent = (count: number) => {
+      return total > 0 ? Math.round((count / total) * 100) : 0;
+    };
 
-  // Recent 5 tasks
-  const recentTasks = tasks.slice(0, 5);
+    const recentTasks = tasks.slice(0, 5);
+
+    return { total, completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks };
+  }, [tasks]);
+
+  const { total, completed, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks } = analytics;
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 h-screen animate-fade-in">
