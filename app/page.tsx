@@ -20,6 +20,17 @@ const ListView = dynamic(() => import("@/src/components/ListView"));
 export default function Home() {
   // App views: dashboard, kanban, list
   const [currentView, setView] = useState<"dashboard" | "kanban" | "list">("dashboard");
+  const transitionView = useCallback((v: "dashboard" | "kanban" | "list") => {
+    if (typeof document !== "undefined" && document.startViewTransition) {
+      document.startViewTransition(() => {
+        React.startTransition(() => {
+          setView(v);
+        });
+      });
+    } else {
+      setView(v);
+    }
+  }, []);
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [selectedLabelId, setSelectedLabelId] = useState<number | null>(null);
 
@@ -381,14 +392,14 @@ export default function Home() {
       <div className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative z-40 transition-transform duration-300 ease-in-out`}>
         <Sidebar
           currentView={currentView}
-          setView={(v) => { setView(v); setIsSidebarOpen(false); }}
+          setView={(v) => { transitionView(v); setIsSidebarOpen(false); }}
           lists={lists}
           labels={labels}
           tasks={tasks}
           selectedListId={selectedListId}
-          setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); setView("list"); setIsSidebarOpen(false); }}
+          setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); transitionView("list"); setIsSidebarOpen(false); }}
           selectedLabelId={selectedLabelId}
-          setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); setView("list"); setIsSidebarOpen(false); }}
+          setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); transitionView("list"); setIsSidebarOpen(false); }}
           onCreateList={handleCreateList}
           onCreateLabel={handleCreateLabel}
         />
@@ -464,7 +475,7 @@ export default function Home() {
         isOpen={isCommandPaletteOpen}
         onClose={closeCommandPalette}
         tasks={tasks}
-        setView={setView}
+        setView={transitionView}
         onCreateTask={handleCreateTaskFromCommand}
         onSelectTask={handleTaskClick}
       />
