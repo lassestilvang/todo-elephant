@@ -189,13 +189,18 @@ function ListView({
                       {/* Interactive Status Checkbox */}
                       <button
                         onClick={(e) => handleStatusToggle(task, e)}
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 checkbox-pulse transition-all ${
+                        aria-label={isDone ? "Mark as incomplete" : "Mark as complete"}
+                        aria-checked={isDone}
+                        role="checkbox"
+                        className="p-1 -m-1 rounded-full"
+                      >
+                        <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center checkbox-pulse transition-all ${
                           isDone 
                             ? "bg-accent border-accent text-white" 
                             : "border-border hover:border-accent"
-                        }`}
-                      >
-                        {isDone && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+                        }`}>
+                          {isDone && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+                        </span>
                       </button>
 
                       {/* Title */}
@@ -237,7 +242,9 @@ function ListView({
                       {/* Accordion expand toggle button */}
                       <button
                         onClick={(e) => toggleExpanded(task.id, e)}
-                        className="text-muted hover:text-foreground hover:bg-muted/20 p-1.5 rounded-xl transition-all"
+                        aria-expanded={isExpanded}
+                        aria-label={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
+                        className="text-muted hover:text-foreground hover:bg-muted/20 p-2 rounded-xl transition-all"
                       >
                         {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </button>
@@ -270,13 +277,18 @@ function ListView({
                                 className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-muted/10 cursor-pointer"
                               >
                                 <button
-                                  className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 checkbox-pulse transition-all ${
+                                  role="checkbox"
+                                  aria-checked={sub.completed}
+                                  aria-label={sub.completed ? `Mark "${sub.title}" as incomplete` : `Mark "${sub.title}" as complete`}
+                                  className="p-0.5 -m-0.5 rounded"
+                                >
+                                  <span className={`w-4 h-4 rounded-md border flex items-center justify-center checkbox-pulse transition-all ${
                                     sub.completed 
                                       ? "bg-accent/80 border-accent/80 text-white" 
                                       : "border-border hover:border-accent"
-                                  }`}
-                                >
-                                  {sub.completed && <span className="w-1.5 h-1.5 bg-white rounded-sm" />}
+                                  }`}>
+                                    {sub.completed && <span className="w-1.5 h-1.5 bg-white rounded-sm" />}
+                                  </span>
                                 </button>
                                 <span className={`text-xs ${
                                   sub.completed ? "line-through text-muted font-medium" : "text-foreground font-medium"
