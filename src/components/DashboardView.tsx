@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { 
   CheckCircle2, 
   Clock, 
@@ -35,11 +35,10 @@ function DashboardView({
   const inProgress = tasks.filter(t => t.status === "in-progress" || t.status === "in_progress").length;
   
   // Overdue calculations
-  const now = useMemo(() => Date.now(), []);
   const overdueTasks = tasks.filter(t => {
     if (t.status === "completed" || t.status === "done") return false;
     if (!t.dueDate) return false;
-    return new Date(t.dueDate).getTime() < now;
+    return new Date(t.dueDate) < new Date();
   });
 
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;

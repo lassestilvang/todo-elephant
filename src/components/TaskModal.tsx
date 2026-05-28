@@ -124,7 +124,7 @@ function TaskModal({
               <label className="text-xs font-bold text-muted uppercase">Priority</label>
               <select
                 value={taskPriority}
-                onChange={e => setTaskPriority(e.target.value as any)}
+                onChange={e => setTaskPriority(e.target.value as "low" | "medium" | "high")}
                 className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
               >
                 <option value="low">Low Priority</option>
@@ -154,7 +154,7 @@ function TaskModal({
               <label className="text-xs font-bold text-muted uppercase">Workflow Status</label>
               <select
                 value={taskStatus}
-                onChange={e => setTaskStatus(e.target.value as any)}
+                onChange={e => setTaskStatus(e.target.value as Task["status"])}
                 className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
               >
                 <option value="pending">Todo</option>

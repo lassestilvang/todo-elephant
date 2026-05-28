@@ -3,15 +3,12 @@
 import React, { useState } from "react";
 import { 
   Calendar, 
-  Tag, 
   CheckSquare, 
   Trash2, 
-  Edit3, 
   ChevronDown, 
   ChevronUp,
   Search,
-  SlidersHorizontal,
-  Plus
+  SlidersHorizontal
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 
@@ -27,7 +24,6 @@ interface ListViewProps {
 function ListView({
   tasks,
   lists,
-  labels,
   onTaskUpdate,
   onTaskDelete,
   onTaskClick
@@ -141,7 +137,7 @@ function ListView({
               <SlidersHorizontal size={12} className="text-muted" />
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority")}
                 className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
               >
                 <option value="newest" className="bg-background text-foreground">Sort: Newest</option>

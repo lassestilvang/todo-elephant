@@ -7,9 +7,6 @@ import {
   ArrowLeft,
   Calendar, 
   CheckSquare, 
-  Tag, 
-  AlertCircle,
-  Archive,
   Trash2
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
@@ -27,7 +24,6 @@ interface KanbanViewProps {
 function KanbanView({
   tasks,
   lists,
-  labels,
   onTaskUpdate,
   onTaskDelete,
   onTaskClick,
@@ -74,9 +70,9 @@ function KanbanView({
     }
 
     if (direction === "next" && currIndex < statusFlow.length - 1) {
-      onTaskUpdate(id, { status: statusFlow[currIndex + 1] as any });
+      onTaskUpdate(id, { status: statusFlow[currIndex + 1] as Task["status"] });
     } else if (direction === "prev" && currIndex > 0) {
-      onTaskUpdate(id, { status: statusFlow[currIndex - 1] as any });
+      onTaskUpdate(id, { status: statusFlow[currIndex - 1] as Task["status"] });
     }
   };
 
