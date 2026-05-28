@@ -106,6 +106,7 @@ function KanbanView({
                 </span>
                 <button 
                   onClick={() => setAddingInColumn(addingInColumn === col.id ? null : col.id)}
+                  aria-label={`Add task to ${col.title}`}
                   className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors shrink-0"
                 >
                   <Plus size={14} />
@@ -234,10 +235,11 @@ function KanbanView({
                         </div>
 
                         {/* Quick Hover Controls to Shift Column */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent h-10 rounded-b-xl opacity-0 group-hover:opacity-100 flex items-center justify-between px-3 transition-opacity">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent h-10 rounded-b-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-between px-3 transition-opacity">
                           <button
                             onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "prev"); }}
                             disabled={col.id === "pending"}
+                            aria-label="Move to previous column"
                             className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
                           >
                             <ArrowLeft size={12} />
@@ -245,6 +247,7 @@ function KanbanView({
                           
                           <button
                             onClick={(e) => { e.stopPropagation(); onTaskDelete(task.id); }}
+                            aria-label="Delete task"
                             className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all"
                           >
                             <Trash2 size={12} />
@@ -253,6 +256,7 @@ function KanbanView({
                           <button
                             onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "next"); }}
                             disabled={col.id === "archived"}
+                            aria-label="Move to next column"
                             className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
                           >
                             <ArrowRight size={12} />

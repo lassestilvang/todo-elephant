@@ -116,10 +116,11 @@ function Sidebar({
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
         
         {/* Layout Navigation */}
-        <div className="space-y-1">
+        <nav aria-label="View navigation" className="space-y-1">
           <h3 className="text-xs font-semibold tracking-wider text-muted uppercase px-3 mb-2">Views</h3>
           <button
             onClick={() => { setView("dashboard"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "dashboard" && !selectedListId && !selectedLabelId ? "page" : undefined}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
               currentView === "dashboard" && !selectedListId && !selectedLabelId
                 ? "bg-accent/10 text-accent font-semibold"
@@ -133,6 +134,7 @@ function Sidebar({
           
           <button
             onClick={() => { setView("kanban"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "kanban" && !selectedListId && !selectedLabelId ? "page" : undefined}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
               currentView === "kanban" && !selectedListId && !selectedLabelId
                 ? "bg-accent/10 text-accent font-semibold"
@@ -146,6 +148,7 @@ function Sidebar({
 
           <button
             onClick={() => { setView("list"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "list" && !selectedListId && !selectedLabelId ? "page" : undefined}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
               currentView === "list" && !selectedListId && !selectedLabelId
                 ? "bg-accent/10 text-accent font-semibold"
@@ -156,7 +159,7 @@ function Sidebar({
             <span>High-Density List</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
-        </div>
+        </nav>
 
         {/* Categories / Lists */}
         <div className="space-y-1">
@@ -164,6 +167,7 @@ function Sidebar({
             <h3 className="text-xs font-semibold tracking-wider text-muted uppercase">Folders</h3>
             <button 
               onClick={() => setShowAddList(!showAddList)}
+              aria-label="Add folder"
               className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
             >
               <Plus size={14} />
@@ -241,6 +245,7 @@ function Sidebar({
             <h3 className="text-xs font-semibold tracking-wider text-muted uppercase">Labels</h3>
             <button 
               onClick={() => setShowAddLabel(!showAddLabel)}
+              aria-label="Add label"
               className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
             >
               <Plus size={14} />
