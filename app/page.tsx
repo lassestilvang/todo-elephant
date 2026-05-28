@@ -4,17 +4,12 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast, Toaster } from "sonner";
 import { 
   Plus, 
-  Calendar, 
-  Tag, 
-  FolderPlus, 
-  AlertCircle,
-  X,
   Keyboard,
-  ListTodo
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/src/components/Sidebar";
 import CommandPalette from "@/src/components/CommandPalette";
+import TaskModal from "@/src/components/TaskModal";
 import { Task, List, Label, ActivityLog } from "@/types";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
@@ -429,218 +424,33 @@ export default function Home() {
       />
 
       {/* Task Creation & Modification Glass Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden flex flex-col max-h-[90vh]">
-            
-            {/* Modal Top Bar */}
-            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-              <h3 className="font-bold text-sm leading-tight flex items-center gap-2">
-                <ListTodo size={16} className="text-accent" />
-                <span>{modalMode === "create" ? "Create New Task" : "Edit Planner Task"}</span>
-              </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-muted hover:text-foreground hover:bg-muted/20 p-1.5 rounded-xl transition-all"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Scrollable Form Body */}
-            <form onSubmit={handleTaskSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-              
-              {/* Title Field */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted uppercase">Task Title</label>
-                <input
-                  type="text"
-                  required
-                  value={taskTitle}
-                  onChange={e => setTaskTitle(e.target.value)}
-                  placeholder="What needs to be done?"
-                  className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted uppercase">Description</label>
-                <textarea
-                  value={taskDesc}
-                  onChange={e => setTaskDesc(e.target.value)}
-                  placeholder="Task details and instructions..."
-                  rows={2}
-                  className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent resize-none"
-                />
-              </div>
-
-              {/* Due Date & Priority Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                
-                {/* Due Date */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted uppercase">Due Date</label>
-                  <input
-                    type="date"
-                    value={taskDueDate}
-                    onChange={e => setTaskDueDate(e.target.value)}
-                    className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
-                  />
-                </div>
-
-                {/* Priority Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted uppercase">Priority</label>
-                  <select
-                    value={taskPriority}
-                    onChange={e => setTaskPriority(e.target.value as any)}
-                    className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
-                  >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Category Folder & Status Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                
-                {/* Category Folder */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted uppercase">List Folder</label>
-                  <select
-                    value={taskListId}
-                    onChange={e => setTaskListId(Number(e.target.value))}
-                    className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
-                  >
-                    {lists.map(list => (
-                      <option key={list.id} value={list.id}>
-                        {list.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Status Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted uppercase">Workflow Status</label>
-                  <select
-                    value={taskStatus}
-                    onChange={e => setTaskStatus(e.target.value as any)}
-                    className="w-full text-xs bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
-                  >
-                    <option value="pending">Todo</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Labels Multi-Select Section */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-muted uppercase block">Select Labels</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {labels.map(label => {
-                    const isSelected = taskLabelsSelected.includes(label.id);
-                    return (
-                      <button
-                        type="button"
-                        key={label.id}
-                        onClick={() => {
-                          if (isSelected) {
-                            setTaskLabelsSelected(prev => prev.filter(id => id !== label.id));
-                          } else {
-                            setTaskLabelsSelected(prev => [...prev, label.id]);
-                          }
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all duration-150 ${
-                          isSelected
-                            ? "bg-accent text-white shadow-sm font-semibold scale-105"
-                            : "bg-muted/15 text-muted hover:bg-muted/30 hover:text-foreground"
-                        }`}
-                      >
-                        <Tag size={10} className="shrink-0" style={{ color: label.color }} />
-                        <span>{label.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Nested Checklist / Subtasks Form */}
-              <div className="space-y-3 pt-3 border-t border-border/40">
-                <label className="text-[10px] font-bold text-muted uppercase">Checklist Subtasks</label>
-                
-                {/* Subtask input bar */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newSubtaskTitle}
-                    onChange={e => setNewSubtaskTitle(e.target.value)}
-                    placeholder="Add subtask checklist..."
-                    className="w-full text-[11px] bg-background border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-accent"
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddSubtask();
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddSubtask}
-                    className="px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] font-bold hover:bg-accent/90"
-                  >
-                    Add
-                  </button>
-                </div>
-
-                {/* Subtasks List */}
-                <div className="space-y-1.5">
-                  {subtasksChecklist.map((sub, idx) => (
-                    <div 
-                      key={sub.id}
-                      className="flex items-center justify-between gap-3 bg-muted/10 p-2 rounded-xl border border-border/40 text-xs"
-                    >
-                      <span className="font-medium text-foreground truncate">{sub.title}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSubtask(sub.id)}
-                        className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Submit Buttons footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-xs font-semibold text-muted hover:text-foreground px-4 py-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-accent text-white font-semibold text-xs hover:bg-accent/95 shadow-md hover-lift glow-primary transition-all"
-                >
-                  {modalMode === "create" ? "Add Task" : "Save Changes"}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
+      <TaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mode={modalMode}
+        taskTitle={taskTitle}
+        setTaskTitle={setTaskTitle}
+        taskDesc={taskDesc}
+        setTaskDesc={setTaskDesc}
+        taskDueDate={taskDueDate}
+        setTaskDueDate={setTaskDueDate}
+        taskPriority={taskPriority}
+        setTaskPriority={setTaskPriority}
+        taskStatus={taskStatus}
+        setTaskStatus={setTaskStatus}
+        taskListId={taskListId}
+        setTaskListId={setTaskListId}
+        taskLabelsSelected={taskLabelsSelected}
+        setTaskLabelsSelected={setTaskLabelsSelected}
+        newSubtaskTitle={newSubtaskTitle}
+        setNewSubtaskTitle={setNewSubtaskTitle}
+        subtasksChecklist={subtasksChecklist}
+        onSubmit={handleTaskSubmit}
+        onAddSubtask={handleAddSubtask}
+        onRemoveSubtask={handleRemoveSubtask}
+        lists={lists}
+        labels={labels}
+      />
 
     </div>
   );
