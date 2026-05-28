@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast, Toaster } from "sonner";
 import { 
   Plus, 
@@ -12,12 +12,14 @@ import {
   Keyboard,
   ListTodo
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Sidebar from "@/src/components/Sidebar";
 import CommandPalette from "@/src/components/CommandPalette";
-import DashboardView from "@/src/components/DashboardView";
-import KanbanView from "@/src/components/KanbanView";
-import ListView from "@/src/components/ListView";
 import { Task, List, Label, ActivityLog } from "@/types";
+
+const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
+const KanbanView = dynamic(() => import("@/src/components/KanbanView"));
+const ListView = dynamic(() => import("@/src/components/ListView"));
 
 export default function Home() {
   // App views: dashboard, kanban, list
