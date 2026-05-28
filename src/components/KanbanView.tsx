@@ -7,7 +7,11 @@ import {
   ArrowLeft,
   Calendar, 
   CheckSquare, 
-  Trash2
+  Trash2,
+  Inbox,
+  Zap,
+  CheckCircle2,
+  Archive
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 
@@ -33,10 +37,10 @@ function KanbanView({
   const [quickTitle, setQuickTitle] = useState("");
 
   const columns = [
-    { id: "pending", title: "📥 Todo", border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500" },
-    { id: "in-progress", title: "⚡ In Progress", border: "border-t-amber-500", bg: "bg-amber-500/5", text: "text-amber-500" },
-    { id: "completed", title: "✨ Completed", border: "border-t-emerald-500", bg: "bg-emerald-500/5", text: "text-emerald-500" },
-    { id: "archived", title: "🗄️ Archived", border: "border-t-slate-500", bg: "bg-slate-500/5", text: "text-slate-500" }
+    { id: "pending", title: "Todo", icon: Inbox, border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500" },
+    { id: "in-progress", title: "In Progress", icon: Zap, border: "border-t-amber-500", bg: "bg-amber-500/5", text: "text-amber-500" },
+    { id: "completed", title: "Completed", icon: CheckCircle2, border: "border-t-emerald-500", bg: "bg-emerald-500/5", text: "text-emerald-500" },
+    { id: "archived", title: "Archived", icon: Archive, border: "border-t-slate-500", bg: "bg-slate-500/5", text: "text-slate-500" }
   ];
 
   // Helper to resolve task status compatibility
@@ -99,6 +103,7 @@ function KanbanView({
               {/* Column Top Bar */}
               <div className={`px-4 py-3.5 border-b border-border border-t-4 ${col.border} flex items-center justify-between`}>
                 <span className="font-bold text-sm text-foreground flex items-center gap-2">
+                  <col.icon size={14} className={col.text} />
                   <span>{col.title}</span>
                   <span className="text-[11px] font-bold bg-muted/20 px-2 py-0.5 rounded-full shrink-0 opacity-60">
                     {colTasks.length}
