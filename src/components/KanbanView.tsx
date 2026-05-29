@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Plus, 
   ArrowRight, 
@@ -11,7 +11,8 @@ import {
   Inbox,
   Zap,
   CheckCircle2,
-  Archive
+  Archive,
+  GripVertical
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 
@@ -37,10 +38,10 @@ function KanbanView({
   const [quickTitle, setQuickTitle] = useState("");
 
   const columns = [
-    { id: "pending", title: "Todo", icon: Inbox, border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500" },
-    { id: "in-progress", title: "In Progress", icon: Zap, border: "border-t-amber-500", bg: "bg-amber-500/5", text: "text-amber-500" },
-    { id: "completed", title: "Completed", icon: CheckCircle2, border: "border-t-emerald-500", bg: "bg-emerald-500/5", text: "text-emerald-500" },
-    { id: "archived", title: "Archived", icon: Archive, border: "border-t-slate-500", bg: "bg-slate-500/5", text: "text-slate-500" }
+    { id: "pending", title: "Todo", icon: Inbox, border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500", dot: "bg-blue-500" },
+    { id: "in-progress", title: "In Progress", icon: Zap, border: "border-t-amber-500", bg: "bg-amber-500/5", text: "text-amber-500", dot: "bg-amber-500" },
+    { id: "completed", title: "Completed", icon: CheckCircle2, border: "border-t-emerald-500", bg: "bg-emerald-500/5", text: "text-emerald-500", dot: "bg-emerald-500" },
+    { id: "archived", title: "Archived", icon: Archive, border: "border-t-slate-500", bg: "bg-slate-500/5", text: "text-slate-500", dot: "bg-slate-500" }
   ];
 
   // Helper to resolve task status compatibility
@@ -93,17 +94,18 @@ function KanbanView({
 
       {/* Columns Workspace Container */}
       <div className="flex-1 overflow-x-auto px-8 pb-8 flex items-start gap-6 select-none">
-        {columns.map(col => {
+        {columns.map((col, colIdx) => {
           const colTasks = getTasksByStatus(col.id);
           return (
             <div 
               key={col.id} 
-              className={`w-80 shrink-0 max-h-full flex flex-col rounded-2xl border border-border bg-card/25 backdrop-blur-md glass-panel ${col.bg} overflow-hidden`}
+              className={`w-80 shrink-0 max-h-full flex flex-col rounded-2xl border border-border bg-card/25 backdrop-blur-md glass-panel ${col.bg} overflow-hidden animate-fade-in`}
+              style={{ animationDelay: `${colIdx * 80}ms`, animationFillMode: "backwards" }}
             >
               {/* Column Top Bar */}
               <div className={`px-4 py-3.5 border-b border-border border-t-4 ${col.border} flex items-center justify-between`}>
                 <span className="font-bold text-sm text-foreground flex items-center gap-2">
-                  <col.icon size={14} className={col.text} />
+                  <span className={`w-2 h-2 rounded-full ${col.dot} shrink-0`} />
                   <span>{col.title}</span>
                   <span className="text-[11px] font-bold bg-muted/20 px-2 py-0.5 rounded-full shrink-0 opacity-60">
                     {colTasks.length}
@@ -165,7 +167,7 @@ function KanbanView({
                     </button>
                   </div>
                 ) : (
-                  colTasks.map(task => {
+                  colTasks.map((task, taskIdx) => {
                     const list = lists.find(l => l.id === task.listId);
                     
                     // Checklist calculations
@@ -180,11 +182,15 @@ function KanbanView({
                       low: "bg-blue-500/10 text-blue-500 border-blue-500/20"
                     }[task.priority || "low"];
 
+                    // Staggered entrance animation
+                    const animDelay = Math.min(taskIdx * 40, 300);
+
                     return (
                       <div 
                         key={task.id}
                         onClick={() => onTaskClick(task)}
-                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group"
+                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in"
+                        style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
                       >
                         {/* Title & Priority */}
                         <div className="space-y-1">
