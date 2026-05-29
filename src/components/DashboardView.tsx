@@ -11,6 +11,7 @@ import {
   ClipboardList
 } from "lucide-react";
 import { Task, List, ActivityLog } from "@/types";
+import EmptyState from "./EmptyState";
 
 interface DashboardViewProps {
   tasks: Task[];
@@ -282,22 +283,13 @@ function DashboardView({
             </div>
             
             {recentTasks.length === 0 ? (
-              <div className="py-12 text-center space-y-3">
-                <div className="w-12 h-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center mx-auto">
-                  <ClipboardList size={24} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">No tasks yet</p>
-                  <p className="text-xs text-muted mt-1">Create your first task to get started!</p>
-                </div>
-                <button
-                  onClick={onAddTaskClick}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent/95 transition-all"
-                >
-                  <Plus size={14} />
-                  Create Task
-                </button>
-              </div>
+              <EmptyState
+                title="No tasks yet"
+                description="Create your first task to start tracking your progress and staying organized."
+                actionLabel="Create Task"
+                onAction={onAddTaskClick}
+                variant="tasks"
+              />
             ) : (
               <div className="divide-y divide-border/60">
                 {recentTasks.map(task => {
@@ -352,10 +344,16 @@ function DashboardView({
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1">
             {activityLogs.length === 0 ? (
-              <div className="py-16 text-center space-y-2">
-                <Layers size={24} className="text-muted/40 mx-auto" />
-                <p className="text-xs text-muted font-medium">No activity yet</p>
-                <p className="text-[11px] text-muted/60">Activity will appear here as you work on tasks.</p>
+              <div className="py-16 text-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-muted/10 flex items-center justify-center mx-auto">
+                  <Layers size={24} className="text-muted/40" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">No activity yet</p>
+                  <p className="text-xs text-muted mt-1 max-w-[200px] mx-auto leading-relaxed">
+                    Activity will appear here as you work on tasks.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="relative border-l border-border pl-4 ml-2 space-y-5 py-2">

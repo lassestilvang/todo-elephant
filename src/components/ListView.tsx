@@ -11,6 +11,7 @@ import {
   SlidersHorizontal
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
+import EmptyState from "./EmptyState";
 
 interface ListViewProps {
   tasks: Task[];
@@ -156,9 +157,15 @@ function ListView({
       <div className="flex-1 scroll-container px-8 pb-8 pr-4">
         <div className="scroll-indicator-top" />
         {sortedTasks.length === 0 ? (
-          <div className="py-24 text-center text-xs text-muted/60 select-none">
-            No matching tasks found matching your filter criteria.
-          </div>
+          <EmptyState
+            title={searchQuery ? "No matching tasks" : "No tasks found"}
+            description={
+              searchQuery
+                ? "Try adjusting your search terms or clearing the filter."
+                : "Your list is empty. Create a task to get started!"
+            }
+            variant={searchQuery ? "search" : "filter"}
+          />
         ) : (
           <div className="space-y-2">
             {sortedTasks.map(task => {

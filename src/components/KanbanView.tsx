@@ -152,11 +152,11 @@ function KanbanView({
               {/* Tasks List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {colTasks.length === 0 ? (
-                  <div className="py-12 text-center space-y-2 select-none">
-                    <div className="w-10 h-10 rounded-xl bg-muted/10 flex items-center justify-center mx-auto">
-                      <Plus size={16} className="text-muted/40" />
+                  <div className="py-10 text-center space-y-2 select-none">
+                    <div className="w-10 h-10 rounded-xl bg-muted/8 border border-border/40 flex items-center justify-center mx-auto">
+                      <Plus size={16} className="text-muted/30" />
                     </div>
-                    <p className="text-xs text-muted/60 font-medium">No tasks</p>
+                    <p className="text-[11px] text-muted/50 font-medium">No tasks here</p>
                     <button
                       onClick={() => setAddingInColumn(col.id)}
                       className="text-[11px] text-accent font-semibold hover:underline"
