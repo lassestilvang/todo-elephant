@@ -68,45 +68,6 @@ export default function Home() {
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
 
-  // Listen for Cmd+K or Ctrl+K Command Palette trigger
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Don't trigger shortcuts when typing in inputs/textareas/selects
-      const target = e.target as HTMLElement;
-      const isInputFocused = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
-
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsCommandPaletteOpen(prev => !prev);
-        return;
-      }
-
-      // Skip other shortcuts if an input is focused or a modal is open
-      if (isInputFocused || isModalOpen || isCommandPaletteOpen) return;
-
-      switch (e.key) {
-        case "n":
-          e.preventDefault();
-          openCreateModal();
-          break;
-        case "1":
-          e.preventDefault();
-          transitionView("dashboard");
-          break;
-        case "2":
-          e.preventDefault();
-          transitionView("kanban");
-          break;
-        case "3":
-          e.preventDefault();
-          transitionView("list");
-          break;
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, isCommandPaletteOpen, openCreateModal, transitionView]);
-
   // Fetch initial data in parallel
   useEffect(() => {
     async function initApp() {
@@ -172,6 +133,43 @@ export default function Home() {
     setModalMode("create");
     setIsModalOpen(true);
   }, [resetForm]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      const isInputFocused = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
+
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      if (isInputFocused || isModalOpen || isCommandPaletteOpen) return;
+
+      switch (e.key) {
+        case "n":
+          e.preventDefault();
+          openCreateModal();
+          break;
+        case "1":
+          e.preventDefault();
+          transitionView("dashboard");
+          break;
+        case "2":
+          e.preventDefault();
+          transitionView("kanban");
+          break;
+        case "3":
+          e.preventDefault();
+          transitionView("list");
+          break;
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, isCommandPaletteOpen, openCreateModal, transitionView]);
 
   // Create or Update task handler
   const handleTaskSubmit = useCallback(async (e: React.FormEvent) => {
