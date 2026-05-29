@@ -11,6 +11,7 @@ import Sidebar from "@/src/components/Sidebar";
 import CommandPalette from "@/src/components/CommandPalette";
 import TaskModal from "@/src/components/TaskModal";
 import ConfirmDialog from "@/src/components/ConfirmDialog";
+import { DashboardSkeleton, KanbanSkeleton, ListSkeleton } from "@/src/components/Skeleton";
 import { Task, List, Label, ActivityLog } from "@/types";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
@@ -427,10 +428,9 @@ export default function Home() {
 
         {/* View Switch Router */}
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin glow-primary" />
-            <p className="text-xs text-muted font-semibold">Synchronizing planner database...</p>
-          </div>
+          currentView === "dashboard" ? <DashboardSkeleton /> :
+          currentView === "kanban" ? <KanbanSkeleton /> :
+          <ListSkeleton />
         ) : (
           <>
             {currentView === "dashboard" && (
