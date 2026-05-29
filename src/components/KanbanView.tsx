@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { 
   Plus, 
   ArrowRight, 
@@ -11,8 +11,7 @@ import {
   Inbox,
   Zap,
   CheckCircle2,
-  Archive,
-  GripVertical
+  Archive
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 
