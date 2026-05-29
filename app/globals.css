@@ -321,14 +321,3 @@ textarea:focus-visible {
     animation: none;
   }
 }
-
-  .hover-lift:hover,
-/* Focus Visible Styles for Keyboard Navigation */
-.hover-lift:focus-visible {
-    transform: none;
-  }
-
-  .checkbox-pulse:active {
-    transform: none;
-  }
-}
