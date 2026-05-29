@@ -92,10 +92,10 @@ function DashboardView({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* Metric 1: Completion Card */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between">
+        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase">Completion Rate</span>
-            <div className="text-3xl font-extrabold">{completionRate}%</div>
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Completion Rate</span>
+            <div className="text-3xl font-extrabold tabular-nums">{completionRate}%</div>
             <p className="text-[11px] text-emerald-500 font-bold flex items-center gap-0.5">
               <CheckCircle2 size={10} />
               <span>{completed} completed tasks</span>
@@ -130,10 +130,10 @@ function DashboardView({
         </div>
 
         {/* Metric 2: In Progress */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between">
+        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "60ms", animationFillMode: "backwards" }}>
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase">In Progress</span>
-            <div className="text-3xl font-extrabold">{inProgress + pending}</div>
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide">In Progress</span>
+            <div className="text-3xl font-extrabold tabular-nums">{inProgress + pending}</div>
             <p className="text-[11px] text-amber-500 font-bold flex items-center gap-0.5">
               <Clock size={10} />
               <span>{inProgress} active task states</span>
@@ -145,10 +145,10 @@ function DashboardView({
         </div>
 
         {/* Metric 3: Overdue */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between">
+        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase">Overdue Tasks</span>
-            <div className={`text-3xl font-extrabold ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Overdue Tasks</span>
+            <div className={`text-3xl font-extrabold tabular-nums ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>
               {overdueTasks.length}
             </div>
             <p className="text-[11px] text-muted font-medium">Needs immediate focus</p>
@@ -161,10 +161,10 @@ function DashboardView({
         </div>
 
         {/* Metric 4: Subtasks */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between">
+        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "180ms", animationFillMode: "backwards" }}>
           <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase">Subtasks Done</span>
-            <div className="text-3xl font-extrabold">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Subtasks Done</span>
+            <div className="text-3xl font-extrabold tabular-nums">
               {completedSubtasks}<span className="text-sm font-semibold text-muted">/{totalSubtasks}</span>
             </div>
             <p className="text-[11px] text-blue-500 font-bold flex items-center gap-0.5">
@@ -189,7 +189,7 @@ function DashboardView({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Priority Progress Bars */}
-            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4">
+            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "backwards" }}>
               <h3 className="text-sm font-bold tracking-tight">Priority Distribution</h3>
               
               <div className="space-y-3.5">
@@ -244,7 +244,7 @@ function DashboardView({
             </div>
 
             {/* Folder / List Quick Cards */}
-            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4">
+            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "backwards" }}>
               <h3 className="text-sm font-bold tracking-tight">Active Folders</h3>
               <div className="grid grid-cols-2 gap-3">
                 {lists.map(list => {
@@ -273,7 +273,7 @@ function DashboardView({
           </div>
 
           {/* Detailed High Priority Tasks / Checklist */}
-          <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4">
+          <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "360ms", animationFillMode: "backwards" }}>
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
                 <ClipboardList size={16} className="text-accent" />
@@ -292,14 +292,15 @@ function DashboardView({
               />
             ) : (
               <div className="divide-y divide-border/60">
-                {recentTasks.map(task => {
+                {recentTasks.map((task, taskIdx) => {
                   const list = lists.find(l => l.id === task.listId);
                   const isDone = task.status === "completed" || task.status === "done";
                   return (
                     <div 
                       key={task.id}
                       onClick={() => onTaskClick(task)}
-                      className="py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/5 px-2 rounded-xl transition-all duration-150 group"
+                      className="py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/5 px-2 rounded-xl transition-all duration-150 group animate-fade-in"
+                      style={{ animationDelay: `${taskIdx * 40}ms`, animationFillMode: "backwards" }}
                     >
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center gap-2">
@@ -336,7 +337,7 @@ function DashboardView({
         </div>
 
         {/* Right Side (One Column): Elegant Activity Logs Feed */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col h-[540px]">
+        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col h-[540px] animate-fade-in" style={{ animationDelay: "420ms", animationFillMode: "backwards" }}>
           <h3 className="text-sm font-bold tracking-tight mb-4 flex items-center gap-2">
             <Layers size={16} className="text-accent" />
             <span>Activity Trail</span>
@@ -357,8 +358,8 @@ function DashboardView({
               </div>
             ) : (
               <div className="relative border-l border-border pl-4 ml-2 space-y-5 py-2">
-                {activityLogs.map((log) => (
-                  <div key={log.id} className="relative text-xs">
+                {activityLogs.map((log, logIdx) => (
+                  <div key={log.id} className="relative text-xs animate-fade-in" style={{ animationDelay: `${logIdx * 50}ms`, animationFillMode: "backwards" }}>
                     {/* Circle Dot Marker */}
                     <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-accent border-2 border-background shadow-sm shrink-0" />
                     
