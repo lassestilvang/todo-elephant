@@ -71,14 +71,41 @@ export default function Home() {
   // Listen for Cmd+K or Ctrl+K Command Palette trigger
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // Don't trigger shortcuts when typing in inputs/textareas/selects
+      const target = e.target as HTMLElement;
+      const isInputFocused = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
+
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      // Skip other shortcuts if an input is focused or a modal is open
+      if (isInputFocused || isModalOpen || isCommandPaletteOpen) return;
+
+      switch (e.key) {
+        case "n":
+          e.preventDefault();
+          openCreateModal();
+          break;
+        case "1":
+          e.preventDefault();
+          transitionView("dashboard");
+          break;
+        case "2":
+          e.preventDefault();
+          transitionView("kanban");
+          break;
+        case "3":
+          e.preventDefault();
+          transitionView("list");
+          break;
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isModalOpen, isCommandPaletteOpen, openCreateModal, transitionView]);
 
   // Fetch initial data in parallel
   useEffect(() => {
@@ -421,9 +448,12 @@ export default function Home() {
         {/* Floating Quick Keyboard Shortcuts Banner */}
         <div className="absolute top-4 right-4 z-20 hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-md border border-border text-[10px] text-muted font-bold tracking-tight select-none">
           <Keyboard size={12} />
-          <span>Press</span>
-          <kbd className="px-1 py-0.5 bg-muted/15 border border-border/40 rounded shadow-sm">Cmd/Ctrl + K</kbd>
-          <span>to command</span>
+          <span className="px-1 py-0.5 bg-muted/15 border border-border/40 rounded shadow-sm">n</span>
+          <span>new</span>
+          <span className="px-1 py-0.5 bg-muted/15 border border-border/40 rounded shadow-sm">1-3</span>
+          <span>views</span>
+          <span className="px-1 py-0.5 bg-muted/15 border border-border/40 rounded shadow-sm">⌘K</span>
+          <span>cmd</span>
         </div>
 
         {/* View Switch Router */}
