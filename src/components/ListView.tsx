@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Calendar, 
   CheckSquare, 
@@ -12,6 +12,15 @@ import {
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 interface ListViewProps {
   tasks: Task[];
@@ -30,6 +39,7 @@ function ListView({
   onTaskClick
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed" | "archived">("all");
   const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
@@ -60,8 +70,8 @@ function ListView({
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (task.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       
       const isCompleted = task.status === "completed" || task.status === "done";
       const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
@@ -72,7 +82,7 @@ function ListView({
       if (statusFilter === "archived") return matchesSearch && isArchived;
       return matchesSearch && !isArchived;
     });
-  }, [tasks, searchQuery, statusFilter]);
+  }, [tasks, debouncedSearchQuery, statusFilter]);
 
   const sortedTasks = useMemo(() => {
     return [...filteredTasks].sort((a, b) => {
@@ -158,13 +168,13 @@ function ListView({
         <div className="scroll-indicator-top" />
         {sortedTasks.length === 0 ? (
           <EmptyState
-            title={searchQuery ? "No matching tasks" : "No tasks found"}
+            title={debouncedSearchQuery ? "No matching tasks" : "No tasks found"}
             description={
-              searchQuery
+              debouncedSearchQuery
                 ? "Try adjusting your search terms or clearing the filter."
                 : "Your list is empty. Create a task to get started!"
             }
-            variant={searchQuery ? "search" : "filter"}
+            variant={debouncedSearchQuery ? "search" : "filter"}
           />
         ) : (
           <div className="space-y-2">
