@@ -14,6 +14,10 @@ export interface DBStructure {
   currentUser: User | null;
 }
 
+// In-memory cache — avoids disk I/O on every request
+let cachedDB: DBStructure | null = null;
+let lastModified = 0;
+
 // Default initial data
 const defaultDBData: DBStructure = {
   tasks: [
@@ -93,25 +97,38 @@ const defaultDBData: DBStructure = {
   currentUser: { id: 1, name: "Lasse Stilvang", email: "lasse.stilvang@gmail.com", createdAt: new Date().toISOString() }
 };
 
-// Database read helper
+// Database read helper — uses in-memory cache, invalidates on file change
 export function readDB(): DBStructure {
   try {
     if (!fs.existsSync(DB_FILE)) {
       writeDB(defaultDBData);
       return defaultDBData;
     }
+
+    const stat = fs.statSync(DB_FILE);
+    const mtimeMs = stat.mtimeMs;
+
+    // Return cache if file hasn't changed since last read
+    if (cachedDB && mtimeMs === lastModified) {
+      return cachedDB;
+    }
+
     const data = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(data);
+    cachedDB = JSON.parse(data);
+    lastModified = mtimeMs;
+    return cachedDB;
   } catch (error) {
     console.error("Failed to read JSON DB, falling back to defaults", error);
     return defaultDBData;
   }
 }
 
-// Database write helper
+// Database write helper — invalidates in-memory cache
 export function writeDB(data: DBStructure): void {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    cachedDB = data;
+    lastModified = Date.now();
   } catch (error) {
     console.error("Failed to write to JSON DB", error);
   }
