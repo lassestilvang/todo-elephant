@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   CheckCircle2, 
   Clock, 
@@ -8,7 +8,10 @@ import {
   Layers, 
   Plus, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Search,
+  Zap,
+  Star
 } from "lucide-react";
 import { Task, List, ActivityLog } from "@/types";
 import EmptyState from "./EmptyState";
@@ -19,6 +22,7 @@ interface DashboardViewProps {
   activityLogs: ActivityLog[];
   onAddTaskClick: () => void;
   onTaskClick: (task: Task) => void;
+  onQuickAdd?: (title: string) => void;
 }
 
 function DashboardView({
@@ -26,8 +30,10 @@ function DashboardView({
   lists,
   activityLogs,
   onAddTaskClick,
-  onTaskClick
+  onTaskClick,
+  onQuickAdd
 }: DashboardViewProps) {
+  const [quickTitle, setQuickTitle] = useState("");
   
   // Calculate analytics (memoized to avoid recalculation on every render)
   const analytics = useMemo(() => {
@@ -62,11 +68,29 @@ function DashboardView({
     };
 
     const recentTasks = tasks.slice(0, 5);
+    
+    // Find upcoming tasks (due in the next 3 days)
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+    const upcomingTasks = tasks.filter(t => {
+      if (t.status === "completed" || t.status === "done") return false;
+      if (!t.dueDate) return false;
+      const dueDate = new Date(t.dueDate);
+      return dueDate >= now && dueDate <= threeDaysFromNow;
+    }).slice(0, 3);
 
-    return { total, completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks };
+    return { total, completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks };
   }, [tasks]);
 
-  const { completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks } = analytics;
+  const { completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
+
+  const handleQuickAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickTitle.trim() || !onQuickAdd) return;
+    onQuickAdd(quickTitle.trim());
+    setQuickTitle("");
+  };
 
   return (
     <div className="flex-1 scroll-container px-8 py-8 h-screen animate-fade-in">
@@ -74,14 +98,38 @@ function DashboardView({
       <div className="space-y-8">
       
       {/* Page Title & Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dashboard Overview</h2>
-          <p className="text-sm text-muted">Here is an elegant overview of your daily task progress.</p>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <span>Welcome back!</span>
+            <span className="animate-bounce">👋</span>
+          </h2>
+          <p className="text-sm text-muted">You have <span className="text-accent font-bold">{pending + inProgress}</span> tasks to focus on today.</p>
         </div>
+
+        {/* Quick Capture Input */}
+        <form onSubmit={handleQuickAddSubmit} className="flex-1 max-w-md w-full relative group">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <Zap size={16} className="text-accent group-focus-within:animate-pulse" />
+          </div>
+          <input
+            type="text"
+            value={quickTitle}
+            onChange={e => setQuickTitle(e.target.value)}
+            placeholder="Quick capture: press Enter to save..."
+            className="w-full bg-card/40 backdrop-blur-md border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-sm"
+          />
+          <button
+            type="submit"
+            className="absolute right-2 top-1.5 p-1.5 rounded-xl bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all opacity-0 group-focus-within:opacity-100"
+          >
+            <Plus size={16} />
+          </button>
+        </form>
+
         <button
           onClick={onAddTaskClick}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/95 shadow-md hover-lift glow-primary transition-all duration-200 shrink-0"
+          className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/95 shadow-md hover-lift glow-primary transition-all duration-200 shrink-0"
         >
           <Plus size={16} />
           <span>New Task</span>
@@ -243,43 +291,47 @@ function DashboardView({
               </div>
             </div>
 
-            {/* Folder / List Quick Cards */}
+            {/* Upcoming Deadlines Widget */}
             <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "backwards" }}>
-              <h3 className="text-sm font-bold tracking-tight">Active Folders</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {lists.map(list => {
-                  const listTasks = tasks.filter(t => t.listId === list.id);
-                  const listIncomplete = listTasks.filter(t => t.status !== "completed" && t.status !== "done" && t.status !== "archived").length;
-                  return (
+              <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
+                <Star size={16} className="text-amber-500" />
+                <span>Upcoming Deadlines</span>
+              </h3>
+              {upcomingTasks.length === 0 ? (
+                <div className="py-4 text-center">
+                  <p className="text-xs text-muted font-medium italic">No immediate deadlines.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingTasks.map(task => (
                     <div 
-                      key={list.id} 
-                      className="p-3 rounded-xl border border-border/60 bg-muted/10 flex flex-col justify-between hover-lift relative overflow-hidden"
+                      key={task.id} 
+                      onClick={() => onTaskClick(task)}
+                      className="p-2.5 rounded-xl border border-border/40 bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer"
                     >
-                      <span className="absolute top-0 right-0 w-12 h-12 opacity-5 rounded-full" style={{ backgroundColor: list.color }} />
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: list.color }} />
-                        <span className="text-xs font-bold truncate">{list.name}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold truncate flex-1">{task.title}</span>
+                        <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">Soon</span>
                       </div>
-                      <div className="flex items-end justify-between">
-                        <span className="text-lg font-extrabold">{listIncomplete}</span>
-                        <span className="text-[11px] font-semibold text-muted uppercase">remaining</span>
+                      <div className="text-[10px] text-muted mt-1 font-semibold">
+                        Due {new Date(task.dueDate!).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>
 
-          {/* Detailed High Priority Tasks / Checklist */}
+          {/* Detailed Focus Checklist */}
           <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "360ms", animationFillMode: "backwards" }}>
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
                 <ClipboardList size={16} className="text-accent" />
-                <span>Immediate Priority Focus</span>
+                <span>Recent Focus</span>
               </h3>
-              <span className="text-[11px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full uppercase">Top Checklist</span>
+              <span className="text-[11px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full uppercase">Activity Feed</span>
             </div>
             
             {recentTasks.length === 0 ? (
@@ -337,45 +389,70 @@ function DashboardView({
         </div>
 
         {/* Right Side (One Column): Elegant Activity Logs Feed */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col h-[540px] animate-fade-in" style={{ animationDelay: "420ms", animationFillMode: "backwards" }}>
-          <h3 className="text-sm font-bold tracking-tight mb-4 flex items-center gap-2">
-            <Layers size={16} className="text-accent" />
-            <span>Activity Trail</span>
-          </h3>
-
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-            {activityLogs.length === 0 ? (
-              <div className="py-16 text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-muted/10 flex items-center justify-center mx-auto">
-                  <Layers size={24} className="text-muted/40" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">No activity yet</p>
-                  <p className="text-xs text-muted mt-1 max-w-[200px] mx-auto leading-relaxed">
-                    Activity will appear here as you work on tasks.
-                  </p>
-                </div>
+        <div className="space-y-6 flex flex-col h-full">
+          
+          {/* Overdue Alert Widget (Conditional) */}
+          {overdueTasks.length > 0 && (
+            <div className="p-4 rounded-2xl border border-red-500/20 bg-red-500/5 backdrop-blur-md animate-pulse">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={16} className="text-red-500" />
+                <span className="text-xs font-bold text-red-500 uppercase">Action Required</span>
               </div>
-            ) : (
-              <div className="relative border-l border-border pl-4 ml-2 space-y-5 py-2">
-                {activityLogs.map((log, logIdx) => (
-                  <div key={log.id} className="relative text-xs animate-fade-in" style={{ animationDelay: `${logIdx * 50}ms`, animationFillMode: "backwards" }}>
-                    {/* Circle Dot Marker */}
-                    <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-accent border-2 border-background shadow-sm shrink-0" />
-                    
-                    <div className="space-y-1">
-                      <div className="font-semibold text-foreground">{log.action}</div>
-                      {log.details && (
-                        <p className="text-[11px] text-muted leading-relaxed font-medium">{log.details}</p>
-                      )}
-                      <div className="text-[11px] text-muted/60 font-semibold uppercase">
-                        {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
+              <p className="text-xs text-red-600/80 font-medium leading-relaxed">
+                You have {overdueTasks.length} tasks that are past their due date. Address them to stay on track.
+              </p>
+              <div className="mt-3 space-y-1.5">
+                {overdueTasks.slice(0, 2).map(task => (
+                  <div key={task.id} className="text-[11px] font-bold text-red-700/60 flex items-center gap-1 truncate">
+                    <span className="w-1 h-1 rounded-full bg-red-400" />
+                    {task.title}
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+          )}
+
+          {/* Activity Logs */}
+          <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex-1 flex flex-col animate-fade-in overflow-hidden" style={{ animationDelay: "420ms", animationFillMode: "backwards" }}>
+            <h3 className="text-sm font-bold tracking-tight mb-4 flex items-center gap-2">
+              <Layers size={16} className="text-accent" />
+              <span>Activity Trail</span>
+            </h3>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {activityLogs.length === 0 ? (
+                <div className="py-16 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/10 flex items-center justify-center mx-auto">
+                    <Layers size={24} className="text-muted/40" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">No activity yet</p>
+                    <p className="text-xs text-muted mt-1 max-w-[200px] mx-auto leading-relaxed">
+                      Activity will appear here as you work on tasks.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative border-l border-border pl-4 ml-2 space-y-5 py-2">
+                  {activityLogs.map((log, logIdx) => (
+                    <div key={log.id} className="relative text-xs animate-fade-in" style={{ animationDelay: `${logIdx * 50}ms`, animationFillMode: "backwards" }}>
+                      {/* Circle Dot Marker */}
+                      <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-accent border-2 border-background shadow-sm shrink-0" />
+                      
+                      <div className="space-y-1">
+                        <div className="font-semibold text-foreground">{log.action}</div>
+                        {log.details && (
+                          <p className="text-[11px] text-muted leading-relaxed font-medium">{log.details}</p>
+                        )}
+                        <div className="text-[11px] text-muted/60 font-semibold uppercase">
+                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

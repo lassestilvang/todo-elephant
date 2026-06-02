@@ -68,6 +68,7 @@ export default function Home() {
     handleTaskClick,
     handleKanbanAddTask,
     handleCreateTaskFromCommand,
+    handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
     transitionView
@@ -187,6 +188,7 @@ export default function Home() {
                 activityLogs={activityLogs}
                 onAddTaskClick={openCreateModal}
                 onTaskClick={handleTaskClick}
+                onQuickAdd={handleQuickAdd}
               />
             )}
 

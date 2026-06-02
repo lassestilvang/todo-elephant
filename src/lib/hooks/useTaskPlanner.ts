@@ -325,6 +325,44 @@ export function useTaskPlanner() {
     setIsModalOpen(true);
   }, []);
 
+  const handleQuickAdd = useCallback(async (title: string) => {
+    if (!title.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const taskData = {
+        title: title.trim(),
+        description: "",
+        dueDate: new Date().toISOString(),
+        priority: "medium",
+        status: "pending",
+        listId: 1, // Default list
+        labels: [],
+        subtasks: []
+      };
+
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taskData)
+      });
+
+      if (res.ok) {
+        const newTask = await res.json();
+        setTasks(prev => [newTask, ...prev]);
+        toast.success(`Task "${newTask.title}" created successfully!`);
+        refreshLogs();
+      } else {
+        throw new Error("API error creating task");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to quick-add task");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, refreshLogs]);
+
   // Add subtask inline helper
   const handleAddSubtask = useCallback(() => {
     if (!newSubtaskTitle.trim()) return;
@@ -387,6 +425,7 @@ export function useTaskPlanner() {
     handleTaskClick,
     handleKanbanAddTask,
     handleCreateTaskFromCommand,
+    handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
     transitionView
