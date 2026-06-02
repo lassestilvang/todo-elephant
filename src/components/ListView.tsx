@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Calendar, 
   CheckSquare, 
@@ -12,15 +12,7 @@ import {
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debouncedValue;
-}
+import { useDebounce } from "@/src/lib/hooks/useDebounce";
 
 interface ListViewProps {
   tasks: Task[];

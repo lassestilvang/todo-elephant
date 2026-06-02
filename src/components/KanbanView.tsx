@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Plus, 
   ArrowRight, 
@@ -11,9 +11,12 @@ import {
   Inbox,
   Zap,
   CheckCircle2,
-  Archive
+  Archive,
+  Search,
+  SlidersHorizontal
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
+import { useDebounce } from "@/src/lib/hooks/useDebounce";
 
 interface KanbanViewProps {
   tasks: Task[];
@@ -35,6 +38,9 @@ function KanbanView({
 }: KanbanViewProps) {
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
+  const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
 
   const columns = [
     { id: "pending", title: "Todo", icon: Inbox, border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500", dot: "bg-blue-500" },
@@ -43,9 +49,36 @@ function KanbanView({
     { id: "archived", title: "Archived", icon: Archive, border: "border-t-slate-500", bg: "bg-slate-500/5", text: "text-slate-500", dot: "bg-slate-500" }
   ];
 
+  // Filter tasks
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [tasks, debouncedSearchQuery]);
+
+  // Sort tasks
+  const sortedTasks = useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
+      if (sortBy === "dueDate") {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      }
+      if (sortBy === "priority") {
+        const priorityWeights = { high: 3, medium: 2, low: 1 };
+        const weightA = priorityWeights[a.priority as "high" | "medium" | "low"] || 0;
+        const weightB = priorityWeights[b.priority as "high" | "medium" | "low"] || 0;
+        return weightB - weightA;
+      }
+      return b.id - a.id;
+    });
+  }, [filteredTasks, sortBy]);
+
   // Helper to resolve task status compatibility
   const getTasksByStatus = (statusId: string) => {
-    return tasks.filter(t => {
+    return sortedTasks.filter(t => {
       const s = t.status.toLowerCase();
       if (statusId === "pending") return s === "pending" || s === "todo";
       if (statusId === "in-progress") return s === "in-progress" || s === "in_progress";
@@ -84,10 +117,39 @@ function KanbanView({
     <div className="flex-1 flex flex-col h-screen overflow-hidden animate-fade-in">
       
       {/* Kanban Header */}
-      <div className="px-8 pt-8 pb-4 shrink-0 flex items-center justify-between">
+      <div className="px-8 pt-8 pb-4 shrink-0 space-y-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Kanban Board</h2>
           <p className="text-sm text-muted">Visualize task statuses, drag workflows, and complete subtasks dynamically.</p>
+        </div>
+
+        {/* Toolbar: Search & Sorting */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-card/25 backdrop-blur-md border border-border p-3 rounded-2xl glass-panel">
+          {/* Search Box */}
+          <div className="flex items-center gap-2.5 px-3 bg-muted/10 border border-border/80 rounded-xl py-2 flex-1 max-w-sm">
+            <Search size={16} className="text-muted shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search cards..."
+              className="w-full bg-transparent border-0 outline-none text-xs text-foreground placeholder:text-muted/60 focus:ring-0 focus:outline-none"
+            />
+          </div>
+
+          {/* Sorting Selection */}
+          <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
+            <SlidersHorizontal size={12} className="text-muted" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority")}
+              className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
+            >
+              <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
+              <option value="dueDate" className="bg-background text-foreground">Sort: Due Date</option>
+              <option value="priority" className="bg-background text-foreground">Sort: Priority</option>
+            </select>
+          </div>
         </div>
       </div>
 
