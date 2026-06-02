@@ -9,7 +9,6 @@ import {
   Plus, 
   ChevronRight,
   ClipboardList,
-  Search,
   Zap,
   Star
 } from "lucide-react";

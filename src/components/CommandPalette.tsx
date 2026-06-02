@@ -33,9 +33,12 @@ function CommandPalette({
     if (isOpen) {
       if (!dialog.open) {
         dialog.showModal();
-        setQuery("");
-        setSelectedIndex(0);
-        setTimeout(() => inputRef.current?.focus(), 50);
+        // Reset state when opening (using timeout to avoid cascading renders warning)
+        setTimeout(() => {
+          setQuery("");
+          setSelectedIndex(0);
+          inputRef.current?.focus();
+        }, 0);
       }
     } else {
       if (dialog.open) {

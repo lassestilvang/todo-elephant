@@ -117,8 +117,9 @@ export function useTaskPlanner() {
   }, [resetForm]);
 
   const transitionView = useCallback((v: "dashboard" | "kanban" | "list") => {
-    if (typeof document !== "undefined" && (document as any).startViewTransition) {
-      (document as any).startViewTransition(() => {
+    if (typeof document !== "undefined" && "startViewTransition" in document) {
+      // @ts-expect-error - startViewTransition is a new API
+      document.startViewTransition(() => {
         setView(v);
       });
     } else {

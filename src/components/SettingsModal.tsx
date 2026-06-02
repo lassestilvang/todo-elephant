@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useEffect, useRef } from "react";
-import { Settings, X, Palette, Moon, Sun, Monitor } from "lucide-react";
+import { Settings, X, Palette, Monitor } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
