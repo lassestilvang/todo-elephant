@@ -38,6 +38,13 @@ export function useTaskPlanner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [accentColor, setAccentColor] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("accent-color") || "#3b82f6";
+    }
+    return "#3b82f6";
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Ref for tasks lookup to avoid stale closures
   const tasksRef = useRef(tasks);
@@ -415,6 +422,10 @@ export function useTaskPlanner() {
     setPendingDeleteId,
     isSidebarOpen,
     setIsSidebarOpen,
+    accentColor,
+    setAccentColor,
+    isSettingsOpen,
+    setIsSettingsOpen,
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,

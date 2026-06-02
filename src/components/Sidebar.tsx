@@ -10,7 +10,8 @@ import {
   Sun, 
   ChevronRight, 
   Plus,
-  TrendingUp
+  TrendingUp,
+  Settings
 } from "lucide-react";
 import { List, Label, Task } from "@/types";
 
@@ -26,6 +27,7 @@ interface SidebarProps {
   setSelectedLabelId: (id: number | null) => void;
   onCreateList: (name: string, color: string) => void;
   onCreateLabel: (name: string, color: string) => void;
+  onOpenSettings: () => void;
 }
 
 function Sidebar({
@@ -39,7 +41,8 @@ function Sidebar({
   selectedLabelId,
   setSelectedLabelId,
   onCreateList,
-  onCreateLabel
+  onCreateLabel,
+  onOpenSettings
 }: SidebarProps) {
   const [showAddList, setShowAddList] = useState(false);
   const [showAddLabel, setShowAddLabel] = useState(false);
@@ -352,23 +355,35 @@ function Sidebar({
           </div>
         </div>
 
-        {/* Theme Switcher Button */}
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
-        >
-          {themeMode === "light" ? (
-            <>
-              <Moon size={14} />
-              <span>Toggle Dark Mode</span>
-            </>
-          ) : (
-            <>
-              <Sun size={14} />
-              <span>Toggle Light Mode</span>
-            </>
-          )}
-        </button>
+        {/* Theme & Settings Row */}
+        <div className="flex gap-2">
+          {/* Theme Switcher Button */}
+          <button
+            onClick={toggleTheme}
+            className="flex-1 flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
+          >
+            {themeMode === "light" ? (
+              <>
+                <Moon size={14} />
+                <span>Dark</span>
+              </>
+            ) : (
+              <>
+                <Sun size={14} />
+                <span>Light</span>
+              </>
+            )}
+          </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center justify-center p-2 rounded-xl text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
+            aria-label="App settings"
+          >
+            <Settings size={14} />
+          </button>
+        </div>
       </div>
     </aside>
   );

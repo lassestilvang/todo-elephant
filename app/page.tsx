@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/src/components/Sidebar";
 import CommandPalette from "@/src/components/CommandPalette";
 import TaskModal from "@/src/components/TaskModal";
+import SettingsModal from "@/src/components/SettingsModal";
 import ConfirmDialog from "@/src/components/ConfirmDialog";
 import { DashboardSkeleton, KanbanSkeleton, ListSkeleton } from "@/src/components/Skeleton";
 import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
@@ -58,6 +59,10 @@ export default function Home() {
     setPendingDeleteId,
     isSidebarOpen,
     setIsSidebarOpen,
+    accentColor,
+    setAccentColor,
+    isSettingsOpen,
+    setIsSettingsOpen,
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,
@@ -74,6 +79,14 @@ export default function Home() {
     transitionView
   } = useTaskPlanner();
 
+  // Apply accent color on load
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--accent-light", accentColor);
+    root.style.setProperty("--accent-dark", accentColor);
+    root.style.setProperty("--accent", accentColor);
+  }, [accentColor]);
+
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -86,7 +99,7 @@ export default function Home() {
         return;
       }
 
-      if (isInputFocused || isModalOpen || isCommandPaletteOpen) return;
+      if (isInputFocused || isModalOpen || isCommandPaletteOpen || isSettingsOpen) return;
 
       switch (e.key) {
         case "n":
@@ -105,11 +118,17 @@ export default function Home() {
           e.preventDefault();
           transitionView("list");
           break;
+        case ",":
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            setIsSettingsOpen(true);
+          }
+          break;
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, isCommandPaletteOpen, openCreateModal, transitionView, setIsCommandPaletteOpen]);
+  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen]);
 
   // Filter tasks in view by selected Sidebar options
   const filteredTasks = useMemo(() => {
@@ -148,6 +167,7 @@ export default function Home() {
           setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); transitionView("list"); setIsSidebarOpen(false); }}
           onCreateList={handleCreateList}
           onCreateLabel={handleCreateLabel}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
       </div>
 
@@ -257,6 +277,14 @@ export default function Home() {
         onRemoveSubtask={handleRemoveSubtask}
         lists={lists}
         labels={labels}
+      />
+
+      {/* App Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        accentColor={accentColor}
+        setAccentColor={setAccentColor}
       />
 
       {/* Delete Confirmation Dialog */}
