@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { ElephantLogo } from "./ElephantLogo";
 import { 
   Tag, 
   LayoutDashboard, 
@@ -104,8 +105,8 @@ function Sidebar({
       {/* Brand Header */}
       <div className="p-6 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center glow-primary">
-            <span className="text-2xl">🐘</span>
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center glow-primary overflow-hidden">
+            <ElephantLogo size={28} />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight">Todo Elephant</h1>
