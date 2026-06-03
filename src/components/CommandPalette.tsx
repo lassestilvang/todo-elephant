@@ -96,33 +96,57 @@ function CommandPalette({
   ], [setView]);
 
   // Combine commands and tasks matching query
-  const items = useMemo(() => {
-    const filteredTasks = query
-      ? tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description || "").toLowerCase().includes(query.toLowerCase()))
-      : [];
-
+  const sections = useMemo(() => {
     const matchedCommands = viewCommands.filter(c => c.title.toLowerCase().includes(query.toLowerCase()));
+    
+    const matchedTasks = query
+      ? tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description || "").toLowerCase().includes(query.toLowerCase()))
+      : tasks.slice(0, 5); // Show first 5 tasks if query is empty
 
-    const result = [
-      ...matchedCommands,
-      ...filteredTasks.map(t => ({ id: `t-${t.id}`, title: `Search Task: ${t.title}`, type: "task", action: () => onSelectTask(t) }))
-    ];
+    const groups: { title: string; items: any[] }[] = [];
 
-    if (query.trim() && result.length === 0) {
-      result.push({
-        id: "create-new-task",
-        title: `Create new task: "${query.trim()}"`,
-        type: "create",
-        action: () => {
-          onCreateTask(query.trim());
-          setQuery("");
-          onClose();
-        }
+    if (matchedCommands.length > 0) {
+      groups.push({
+        title: "Navigation & Actions",
+        items: matchedCommands.map(c => ({ ...c, type: "navigation" }))
       });
     }
 
-    return result;
+    if (matchedTasks.length > 0) {
+      groups.push({
+        title: query ? "Matching Tasks" : "Recent Tasks",
+        items: matchedTasks.map(t => ({ 
+          id: `t-${t.id}`, 
+          title: t.title, 
+          type: "task", 
+          subtitle: t.description,
+          priority: t.priority,
+          action: () => onSelectTask(t) 
+        }))
+      });
+    }
+
+    if (query.trim() && matchedTasks.length === 0 && matchedCommands.length === 0) {
+      groups.push({
+        title: "Quick Create",
+        items: [{
+          id: "create-new-task",
+          title: `Create task "${query.trim()}"`,
+          type: "create",
+          action: () => {
+            onCreateTask(query.trim());
+            setQuery("");
+            onClose();
+          }
+        }]
+      });
+    }
+
+    return groups;
   }, [query, tasks, viewCommands, onSelectTask, onCreateTask, onClose]);
+
+  // Flattened items for keyboard navigation
+  const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
 
   // Handle keyboard navigation inside the open dialog
   useEffect(() => {
@@ -131,14 +155,14 @@ function CommandPalette({
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % items.length);
+        setSelectedIndex(prev => (prev + 1) % flatItems.length);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex(prev => (prev - 1 + items.length) % items.length);
+        setSelectedIndex(prev => (prev - 1 + flatItems.length) % flatItems.length);
       } else if (e.key === "Enter") {
         e.preventDefault();
-        if (items[selectedIndex]) {
-          items[selectedIndex].action();
+        if (flatItems[selectedIndex]) {
+          flatItems[selectedIndex].action();
           onClose();
         }
       }
@@ -146,72 +170,106 @@ function CommandPalette({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, items, selectedIndex, onClose]);
+  }, [isOpen, flatItems, selectedIndex, onClose]);
 
   // Clamp selected index to valid range
-  const clampedIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : 0;
+  const clampedIndex = flatItems.length > 0 ? Math.min(selectedIndex, flatItems.length - 1) : 0;
 
   return (
     <dialog
       ref={dialogRef}
-      closedby="any"
       aria-label="Command palette"
-      className="fixed top-[15vh] mx-auto w-full max-w-xl rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden p-0 backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm focus:outline-none animate-scale-up"
+      className="fixed top-[15vh] mx-auto w-full max-w-xl rounded-2xl border border-border bg-card/95 shadow-2xl glass-panel glow-primary overflow-hidden p-0 backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm focus:outline-none animate-scale-up"
     >
       {/* Input Bar */}
-      <div className="flex items-center gap-3 px-4 border-b border-border py-4">
-        <Search size={20} className="text-muted shrink-0" />
+      <div className="flex items-center gap-3 px-5 border-b border-border py-5 bg-muted/5">
+        <Search size={22} className="text-accent shrink-0" />
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Type a command or search for tasks..."
-          className="w-full bg-transparent border-0 outline-none text-foreground placeholder:text-muted/60 text-sm focus:ring-0 focus:outline-none"
+          placeholder="Search tasks, navigate views, or type to create..."
+          className="w-full bg-transparent border-0 outline-none text-foreground placeholder:text-muted/50 text-base focus:ring-0 focus:outline-none font-medium"
         />
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-1 text-[11px] font-bold text-muted bg-muted/20 border border-border/40 rounded-lg select-none shrink-0 shadow-sm">
-          ESC
-        </kbd>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold text-muted bg-muted/20 border border-border/40 rounded shadow-sm">ESC</kbd>
+        </div>
       </div>
 
       {/* Results List */}
-      <div className="max-h-[350px] overflow-y-auto p-2">
-        {items.length === 0 ? (
-          <div className="py-8 px-4 text-center">
-            <Sparkles size={24} className="text-accent/60 mx-auto mb-2 animate-pulse" />
-            <p className="text-sm font-semibold text-foreground">No matches found</p>
-            <p className="text-xs text-muted mt-1">Type something to create a new task instantly!</p>
+      <div className="max-h-[420px] overflow-y-auto p-2 scrollbar-none">
+        {sections.length === 0 ? (
+          <div className="py-12 px-4 text-center">
+            <Sparkles size={32} className="text-accent/40 mx-auto mb-3" />
+            <p className="text-sm font-bold text-foreground">No matches found</p>
+            <p className="text-xs text-muted mt-1">Press enter to create a new task with this name.</p>
           </div>
         ) : (
-          <div className="space-y-0.5">
-            {items.map((item, idx) => {
-              const isSelected = idx === clampedIndex;
-              return (
-                <button
-                  type="button"
-                  key={item.id}
-                  onClick={() => {
-                    item.action();
-                    onClose();
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm transition-all duration-150 cursor-pointer ${
-                    isSelected
-                      ? "bg-accent text-white shadow-md font-semibold scale-[1.01]"
-                      : "text-muted hover:bg-muted/10 hover:text-foreground"
-                  }`}
-                >
-                  {item.type === "navigation" && <Sparkles size={16} className={isSelected ? "text-white" : "text-accent"} />}
-                  {item.type === "task" && <Folder size={16} className={isSelected ? "text-white" : "text-emerald-500"} />}
-                  {item.type === "create" && <Plus size={16} className={isSelected ? "text-white" : "text-accent"} />}
-                  <span className="truncate flex-1">{item.title}</span>
-                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
-                    isSelected ? "bg-white/20 text-white" : "bg-muted/10 text-muted"
-                  }`}>
-                    {item.type.toUpperCase()}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="space-y-4 py-2">
+            {sections.map((section, sIdx) => (
+              <div key={section.title} className="space-y-1">
+                <h3 className="px-3 text-[10px] font-bold text-muted uppercase tracking-widest">{section.title}</h3>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const globalIdx = flatItems.indexOf(item);
+                    const isSelected = globalIdx === clampedIndex;
+                    
+                    const priorityColor = {
+                      high: "bg-red-500",
+                      medium: "bg-amber-500",
+                      low: "bg-blue-500"
+                    }[item.priority as "high" | "medium" | "low"] || "bg-muted";
+
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => {
+                          item.action();
+                          onClose();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                          isSelected
+                            ? "bg-accent text-white shadow-lg shadow-accent/20 scale-[1.01]"
+                            : "text-muted hover:bg-muted/10 hover:text-foreground"
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isSelected ? "bg-white/20" : "bg-muted/15"
+                        }`}>
+                          {item.type === "navigation" && <Sparkles size={16} className={isSelected ? "text-white" : "text-accent"} />}
+                          {item.type === "task" && <Folder size={16} className={isSelected ? "text-white" : "text-emerald-500"} />}
+                          {item.type === "create" && <Plus size={16} className={isSelected ? "text-white" : "text-accent"} />}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold truncate ${isSelected ? "text-white" : "text-foreground"}`}>
+                              {item.title}
+                            </span>
+                            {item.type === "task" && (
+                              <div className={`w-1.5 h-1.5 rounded-full ${priorityColor}`} />
+                            )}
+                          </div>
+                          {item.subtitle && (
+                            <p className={`text-[11px] truncate mt-0.5 ${isSelected ? "text-white/70" : "text-muted"}`}>
+                              {item.subtitle}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className={`text-[10px] font-bold px-2 py-1 rounded-md shrink-0 uppercase tracking-tighter ${
+                          isSelected ? "bg-white/20 text-white" : "bg-muted/10 text-muted"
+                        }`}>
+                          {isSelected ? "↵ Enter" : item.type}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
