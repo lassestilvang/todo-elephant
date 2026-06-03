@@ -48,13 +48,16 @@ function DashboardView({
     });
 
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    // Productivity score (arbitrary but looks cool)
+    const productivityScore = Math.min(100, Math.round((completed * 10 + (completedSubtasks || 0) * 2) / (total > 0 ? total : 1) * 5));
 
     let totalSubtasks = 0;
-    let completedSubtasks = 0;
+    let completedSubtasksCount = 0;
     tasks.forEach(t => {
       if (t.subtasks) {
         totalSubtasks += t.subtasks.length;
-        completedSubtasks += t.subtasks.filter(s => s.completed).length;
+        completedSubtasksCount += t.subtasks.filter(s => s.completed).length;
       }
     });
 
@@ -79,10 +82,10 @@ function DashboardView({
       return dueDate >= now && dueDate <= threeDaysFromNow;
     }).slice(0, 3);
 
-    return { total, completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks };
+    return { total, completed, pending, inProgress, overdueTasks, completionRate, productivityScore, totalSubtasks, completedSubtasks: completedSubtasksCount, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks };
   }, [tasks]);
 
-  const { completed, pending, inProgress, overdueTasks, completionRate, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
+  const { completed, pending, inProgress, overdueTasks, completionRate, productivityScore, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
 
   const handleQuickAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,89 +141,70 @@ function DashboardView({
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        {/* Metric 1: Completion Card */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Completion Rate</span>
-            <div className="text-3xl font-extrabold tabular-nums">{completionRate}%</div>
-            <p className="text-[11px] text-emerald-500 font-bold flex items-center gap-0.5">
-              <CheckCircle2 size={10} />
-              <span>{completed} completed tasks</span>
-            </p>
-          </div>
-          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-            <svg className="w-14 h-14 radial-progress-ring">
-              <circle
-                className="text-border/40"
-                strokeWidth="4"
-                stroke="currentColor"
-                fill="transparent"
-                r="22"
-                cx="28"
-                cy="28"
-              />
-              <circle
-                className="text-accent transition-all duration-500"
-                strokeWidth="4"
-                strokeDasharray={`${2 * Math.PI * 22}`}
-                strokeDashoffset={`${2 * Math.PI * 22 * (1 - completionRate / 100)}`}
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="transparent"
-                r="22"
-                cx="28"
-                cy="28"
-              />
-            </svg>
-            <span className="absolute text-[11px] font-bold">{completionRate}%</span>
-          </div>
-        </div>
-
-        {/* Metric 2: In Progress */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "60ms", animationFillMode: "backwards" }}>
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wide">In Progress</span>
-            <div className="text-3xl font-extrabold tabular-nums">{inProgress + pending}</div>
-            <p className="text-[11px] text-amber-500 font-bold flex items-center gap-0.5">
-              <Clock size={10} />
-              <span>{inProgress} active task states</span>
-            </p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-            <Clock size={24} />
-          </div>
-        </div>
-
-        {/* Metric 3: Overdue */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Overdue Tasks</span>
-            <div className={`text-3xl font-extrabold tabular-nums ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>
-              {overdueTasks.length}
+        {/* Metric 1: Productivity Score */}
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Productivity Score</span>
+            <div className="p-2 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-all">
+              <Zap size={16} />
             </div>
-            <p className="text-[11px] text-muted font-medium">Needs immediate focus</p>
           </div>
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-            overdueTasks.length > 0 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-muted/10 text-muted"
-          }`}>
-            <AlertTriangle size={24} />
+          <div className="space-y-1">
+            <div className="text-4xl font-black tabular-nums tracking-tighter">{productivityScore}</div>
+            <div className="flex items-center gap-1">
+              <div className="flex-1 h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                <div className="h-full bg-accent rounded-full transition-all duration-1000" style={{ width: `${productivityScore}%` }} />
+              </div>
+              <span className="text-[10px] font-bold text-muted">Goal: 100</span>
+            </div>
           </div>
         </div>
 
-        {/* Metric 4: Subtasks */}
-        <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex items-center justify-between hover-lift animate-fade-in" style={{ animationDelay: "180ms", animationFillMode: "backwards" }}>
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Subtasks Done</span>
-            <div className="text-3xl font-extrabold tabular-nums">
-              {completedSubtasks}<span className="text-sm font-semibold text-muted">/{totalSubtasks}</span>
+        {/* Metric 2: Completion Card */}
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "60ms", animationFillMode: "backwards" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Tasks Completed</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+              <CheckCircle2 size={16} />
             </div>
-            <p className="text-[11px] text-blue-500 font-bold flex items-center gap-0.5">
-              <ClipboardList size={10} />
-              <span>Checklist efficiency</span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-4xl font-black tabular-nums tracking-tighter">{completed}</div>
+            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>{completionRate}% of total workload</span>
             </p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-            <ClipboardList size={24} />
+        </div>
+
+        {/* Metric 3: Active Focus */}
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Active Focus</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:bg-accent group-hover:text-white transition-all">
+              <Clock size={16} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-4xl font-black tabular-nums tracking-tighter">{inProgress + pending}</div>
+            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-tight flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <span>{inProgress} currently in progress</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Metric 4: Overdue Alert */}
+        <div className={`p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group ${overdueTasks.length > 0 ? "border-red-500/30" : ""}`} style={{ animationDelay: "180ms", animationFillMode: "backwards" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Overdue Items</span>
+            <div className={`p-2 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all ${overdueTasks.length > 0 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-muted/10 text-muted"}`}>
+              <AlertTriangle size={16} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className={`text-4xl font-black tabular-nums tracking-tighter ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>{overdueTasks.length}</div>
+            <p className="text-[10px] text-muted font-bold uppercase tracking-tight">Requires attention</p>
           </div>
         </div>
 
