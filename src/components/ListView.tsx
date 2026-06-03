@@ -178,11 +178,14 @@ function ListView({
               // Checklist stats
               const subCount = task.subtasks?.length || 0;
               const subCompleted = task.subtasks?.filter(s => s.completed).length || 0;
+              const subPercent = subCount > 0 ? Math.round((subCompleted / subCount) * 100) : 0;
+
+              const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isDone;
 
               const priorityPill = {
-                high: "bg-red-500/10 text-red-500",
-                medium: "bg-amber-500/10 text-amber-500",
-                low: "bg-blue-500/10 text-blue-500"
+                high: "bg-red-500/10 text-red-600 border border-red-500/20",
+                medium: "bg-amber-500/10 text-amber-600 border border-amber-500/20",
+                low: "bg-blue-500/10 text-blue-600 border border-blue-500/20"
               }[task.priority || "low"];
 
               return (
@@ -191,7 +194,7 @@ function ListView({
                   onClick={() => onTaskClick(task)}
                   className={`rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden ${
                     isExpanded 
-                      ? "border-accent/40 bg-accent/[0.02] shadow-sm" 
+                      ? "border-accent/40 bg-accent/[0.02] shadow-sm scale-[1.01]" 
                       : "border-border/80 bg-card/45 hover:border-border hover:bg-card/90"
                   }`}
                 >
@@ -237,15 +240,16 @@ function ListView({
                       </span>
 
                       {task.dueDate && (
-                        <span className="text-[11px] font-medium text-muted flex items-center gap-1">
+                        <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${isOverdue ? "bg-red-500/10 text-red-500 animate-pulse" : "text-muted bg-muted/10"}`}>
                           <Calendar size={10} />
                           <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                          {isOverdue && <span className="text-[9px] uppercase">Overdue</span>}
                         </span>
                       )}
 
                       {/* Subtask checklist gauge */}
                       {subCount > 0 && (
-                        <span className="text-[11px] font-bold bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[11px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
                           <CheckSquare size={10} />
                           <span>{subCompleted}/{subCount}</span>
                         </span>
@@ -279,14 +283,25 @@ function ListView({
 
                       {/* Subtask check-off checklist */}
                       {subCount > 0 && (
-                        <div className="space-y-2">
-                          <span className="text-[11px] font-bold text-muted uppercase">Subtasks Checklist</span>
-                          <div className="space-y-1.5">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-muted uppercase">Subtasks Progress</span>
+                            <span className="text-[11px] font-bold text-accent">{subPercent}% complete</span>
+                          </div>
+                          
+                          <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                              style={{ width: `${subPercent}%` }}
+                            />
+                          </div>
+
+                          <div className="space-y-1">
                             {task.subtasks?.map(sub => (
                               <div 
                                 key={sub.id}
                                 onClick={(e) => handleSubtaskToggle(task, sub.id, e)}
-                                className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-muted/10 cursor-pointer"
+                                className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-muted/10 cursor-pointer transition-colors"
                               >
                                 <button
                                   role="checkbox"
@@ -299,7 +314,7 @@ function ListView({
                                       ? "bg-accent/80 border-accent/80 text-white" 
                                       : "border-border hover:border-accent"
                                   }`}>
-                                    {sub.completed && <span className="w-1.5 h-1.5 bg-white rounded-sm" />}
+                                    {sub.completed && <CheckSquare size={10} className="text-white" />}
                                   </span>
                                 </button>
                                 <span className={`text-xs ${

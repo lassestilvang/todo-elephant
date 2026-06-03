@@ -235,12 +235,15 @@ function KanbanView({
                     const subCount = task.subtasks?.length || 0;
                     const subCompleted = task.subtasks?.filter(s => s.completed).length || 0;
                     const subPercent = subCount > 0 ? Math.round((subCompleted / subCount) * 100) : 0;
+                    
+                    const isDone = task.status === "completed" || task.status === "done";
+                    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isDone;
 
                     // Priority color mappings
                     const priorityPill = {
-                      high: "bg-red-500/10 text-red-500 border-red-500/20",
-                      medium: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-                      low: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                      high: "bg-red-500/10 text-red-600 border border-red-500/20",
+                      medium: "bg-amber-500/10 text-amber-600 border border-amber-500/20",
+                      low: "bg-blue-500/10 text-blue-600 border border-blue-500/20"
                     }[task.priority || "low"];
 
                     // Staggered entrance animation
@@ -250,16 +253,16 @@ function KanbanView({
                       <div 
                         key={task.id}
                         onClick={() => onTaskClick(task)}
-                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in"
+                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all"
                         style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
                       >
                         {/* Title & Priority */}
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-semibold leading-relaxed text-foreground truncate group-hover:text-accent transition-colors flex-1">
+                            <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
                               {task.title}
                             </span>
-                            <span className={`text-[11px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
+                            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
                               {task.priority}
                             </span>
                           </div>
@@ -270,19 +273,37 @@ function KanbanView({
                           )}
                         </div>
 
+                        {/* Labels display on card */}
+                        {task.labels && task.labels.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {task.labels.map(labelId => {
+                              const label = labels.find(l => l.id === labelId);
+                              if (!label) return null;
+                              return (
+                                <span 
+                                  key={labelId} 
+                                  className="w-4 h-1 rounded-full" 
+                                  style={{ backgroundColor: label.color }} 
+                                  title={label.name}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {/* Checklist progress */}
                         {subCount > 0 && (
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-[11px] text-muted font-semibold">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[10px] text-muted font-bold uppercase tracking-tight">
                               <span className="flex items-center gap-1">
-                                <CheckSquare size={10} />
+                                <CheckSquare size={10} className="text-accent" />
                                 <span>Checklist</span>
                               </span>
-                              <span>{subCompleted}/{subCount} ({subPercent}%)</span>
+                              <span>{subCompleted}/{subCount}</span>
                             </div>
                             <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-accent rounded-full transition-all duration-300"
+                                className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
                                 style={{ width: `${subPercent}%` }}
                               />
                             </div>
@@ -290,18 +311,19 @@ function KanbanView({
                         )}
 
                         {/* Card metadata footer */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border/40">
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
                           {list && (
-                            <span className="text-[11px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
                               <span>{list.name}</span>
                             </span>
                           )}
                           
                           {task.dueDate && (
-                            <span className="text-[11px] font-semibold text-muted flex items-center gap-1 shrink-0 ml-auto">
+                            <span className={`text-[10px] font-bold flex items-center gap-1 shrink-0 ml-auto ${isOverdue ? "text-red-500" : "text-muted"}`}>
                               <Calendar size={10} />
                               <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                              {isOverdue && <span className="text-[8px] uppercase">!!</span>}
                             </span>
                           )}
                         </div>
