@@ -234,24 +234,50 @@ export function useTaskPlanner() {
 
   // Task deletion handler
   const handleTaskDelete = useCallback(async (id: number) => {
+    const taskToDelete = tasksRef.current.find(t => t.id === id);
+    if (!taskToDelete) return;
+
+    // Optimistic Update
+    const previousTasks = tasksRef.current;
+    setTasks(prev => prev.filter(t => t.id !== id));
+
     try {
-      const taskToDelete = tasksRef.current.find(t => t.id === id);
-
-      setTasks(prev => prev.filter(t => t.id !== id));
-
-      const res = await fetch(`/api/tasks?id=${id}`, {
+      const res = await fetch(`/api/tasks/${id}`, {
         method: "DELETE"
       });
 
       if (res.ok || res.status === 204) {
-        toast.success(`Deleted task "${taskToDelete?.title || ""}"`);
+        toast.success(`Deleted task "${taskToDelete.title}"`, {
+          action: {
+            label: "Undo",
+            onClick: async () => {
+              // Simple undo: re-create the task
+              try {
+                const recoverRes = await fetch("/api/tasks", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(taskToDelete)
+                });
+                if (recoverRes.ok) {
+                  const restoredTask = await recoverRes.json();
+                  setTasks(prev => [restoredTask, ...prev]);
+                  toast.success("Task restored");
+                  refreshLogs();
+                }
+              } catch (err) {
+                toast.error("Failed to restore task");
+              }
+            }
+          }
+        });
         refreshLogs();
       } else {
         throw new Error("API error deleting task");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete task");
+      setTasks(previousTasks); // Rollback
+      toast.error("Failed to delete task. Please try again.");
     }
   }, [refreshLogs]);
 
