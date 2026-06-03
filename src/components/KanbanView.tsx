@@ -95,6 +95,41 @@ function KanbanView({
     setAddingInColumn(null);
   };
 
+  // Drag and Drop handlers
+  const onDragStart = (e: React.DragEvent, taskId: number) => {
+    e.dataTransfer.setData("taskId", taskId.toString());
+    e.dataTransfer.effectAllowed = "move";
+    
+    // Add a visual styling to the dragging element
+    const target = e.target as HTMLElement;
+    target.style.opacity = "0.4";
+  };
+
+  const onDragEnd = (e: React.DragEvent) => {
+    const target = e.target as HTMLElement;
+    target.style.opacity = "1";
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const onDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    const taskId = parseInt(e.dataTransfer.getData("taskId"));
+    if (isNaN(taskId)) return;
+
+    // Map status if needed
+    let statusValue = newStatus as Task["status"];
+    if (newStatus === "pending") statusValue = "pending";
+    if (newStatus === "in-progress") statusValue = "in-progress";
+    if (newStatus === "completed") statusValue = "completed";
+    if (newStatus === "archived") statusValue = "archived";
+
+    onTaskUpdate(taskId, { status: statusValue });
+  };
+
   const moveStatus = (id: number, currentStatus: string, direction: "next" | "prev") => {
     const statusFlow = ["pending", "in-progress", "completed", "archived"];
     let currIndex = statusFlow.indexOf(currentStatus);
@@ -160,6 +195,8 @@ function KanbanView({
           return (
             <div 
               key={col.id} 
+              onDragOver={onDragOver}
+              onDrop={(e) => onDrop(e, col.id)}
               className={`w-80 shrink-0 max-h-full flex flex-col rounded-2xl border border-border bg-card/25 backdrop-blur-md glass-panel ${col.bg} overflow-hidden animate-fade-in`}
               style={{ animationDelay: `${colIdx * 80}ms`, animationFillMode: "backwards" }}
             >
@@ -252,8 +289,11 @@ function KanbanView({
                     return (
                       <div 
                         key={task.id}
+                        draggable
+                        onDragStart={(e) => onDragStart(e, task.id)}
+                        onDragEnd={onDragEnd}
                         onClick={() => onTaskClick(task)}
-                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all"
+                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1"
                         style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
                       >
                         {/* Title & Priority */}
