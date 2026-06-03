@@ -173,67 +173,75 @@ function TaskModal({
         {/* Due Date & Priority Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="task-due-date" className="text-xs font-bold text-muted uppercase">Due Date</label>
+            <label htmlFor="task-due-date" className="text-[10px] font-black text-muted uppercase tracking-widest">Due Date</label>
             <input
               id="task-due-date"
               type="date"
               value={taskDueDate}
               onChange={e => setTaskDueDate(e.target.value)}
-              className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+              className="w-full text-sm bg-muted/10 border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer transition-all"
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="task-priority" className="text-xs font-bold text-muted uppercase">Priority</label>
-            <select
-              id="task-priority"
-              value={taskPriority}
-              onChange={e => setTaskPriority(e.target.value as "low" | "medium" | "high")}
-              className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
-            >
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
-            </select>
+            <label className="text-[10px] font-black text-muted uppercase tracking-widest">Priority</label>
+            <div className="flex p-1 bg-muted/10 rounded-xl border border-border/60">
+              {(["low", "medium", "high"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setTaskPriority(p)}
+                  className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                    taskPriority === p
+                      ? p === "high" ? "bg-red-500 text-white shadow-sm" :
+                        p === "medium" ? "bg-amber-500 text-white shadow-sm" :
+                        "bg-blue-500 text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Category Folder & Status Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="task-list" className="text-xs font-bold text-muted uppercase">List Folder</label>
+            <label htmlFor="task-list" className="text-[10px] font-black text-muted uppercase tracking-widest">List Folder</label>
             <select
               id="task-list"
               value={taskListId}
               onChange={e => setTaskListId(Number(e.target.value))}
-              className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+              className="w-full text-sm bg-muted/10 border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer transition-all"
             >
               {lists.map(list => (
-                <option key={list.id} value={list.id}>
+                <option key={list.id} value={list.id} className="bg-background text-foreground">
                   {list.name}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="task-status" className="text-xs font-bold text-muted uppercase">Workflow Status</label>
+            <label htmlFor="task-status" className="text-[10px] font-black text-muted uppercase tracking-widest">Workflow Status</label>
             <select
               id="task-status"
               value={taskStatus}
               onChange={e => setTaskStatus(e.target.value as Task["status"])}
-              className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+              className="w-full text-sm bg-muted/10 border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer transition-all"
             >
-              <option value="pending">Todo</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="archived">Archived</option>
+              <option value="pending" className="bg-background text-foreground">Todo</option>
+              <option value="in-progress" className="bg-background text-foreground">In Progress</option>
+              <option value="completed" className="bg-background text-foreground">Completed</option>
+              <option value="archived" className="bg-background text-foreground">Archived</option>
             </select>
           </div>
         </div>
 
         {/* Labels Multi-Select Section */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-muted uppercase block">Select Labels</label>
-          <div className="flex flex-wrap gap-1.5">
+          <label className="text-[10px] font-black text-muted uppercase block tracking-widest">Select Labels</label>
+          <div className="flex flex-wrap gap-1.5 p-3 bg-muted/5 rounded-2xl border border-border/40">
             {labels.map(label => {
               const isSelected = taskLabelsSelected.includes(label.id);
               return (
@@ -247,9 +255,9 @@ function TaskModal({
                       setTaskLabelsSelected(prev => [...prev, label.id]);
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all duration-150 cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all duration-150 cursor-pointer ${
                     isSelected
-                      ? "bg-accent text-white shadow-sm font-semibold scale-105"
+                      ? "bg-accent text-white shadow-sm scale-105"
                       : "bg-muted/15 text-muted hover:bg-muted/30 hover:text-foreground"
                   }`}
                 >
