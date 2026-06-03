@@ -12,6 +12,7 @@ import CommandPalette from "@/src/components/CommandPalette";
 import TaskModal from "@/src/components/TaskModal";
 import SettingsModal from "@/src/components/SettingsModal";
 import ConfirmDialog from "@/src/components/ConfirmDialog";
+import { ShortcutsModal } from "@/src/components/ShortcutsModal";
 import { DashboardSkeleton, KanbanSkeleton, ListSkeleton } from "@/src/components/Skeleton";
 import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
 
@@ -21,10 +22,13 @@ const ListView = dynamic(() => import("@/src/components/ListView"));
 
 export default function Home() {
   const {
-    currentView,
-    selectedListId,
-    setSelectedListId,
-    selectedLabelId,
+...
+    handleRemoveSubtask,
+    transitionView
+  } = useTaskPlanner();
+
+  const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
+
     setSelectedLabelId,
     tasks,
     lists,
@@ -98,7 +102,7 @@ export default function Home() {
         return;
       }
 
-      if (isInputFocused || isModalOpen || isCommandPaletteOpen || isSettingsOpen) return;
+      if (isInputFocused || isModalOpen || isCommandPaletteOpen || isSettingsOpen || isShortcutsOpen) return;
 
       switch (e.key) {
         case "n":
@@ -117,6 +121,10 @@ export default function Home() {
           e.preventDefault();
           transitionView("list");
           break;
+        case "?":
+          e.preventDefault();
+          setIsShortcutsOpen(true);
+          break;
         case ",":
           if (e.metaKey || e.ctrlKey) {
             e.preventDefault();
@@ -127,7 +135,7 @@ export default function Home() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen]);
+  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, isShortcutsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen]);
 
   // Filter tasks in view by selected Sidebar options
   const filteredTasks = useMemo(() => {
@@ -284,6 +292,12 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         accentColor={accentColor}
         setAccentColor={setAccentColor}
+      />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
 
       {/* Delete Confirmation Dialog */}
