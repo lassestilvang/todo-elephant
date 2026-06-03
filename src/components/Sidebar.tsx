@@ -56,19 +56,35 @@ function Sidebar({
   const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("color-scheme");
-      return (saved as "light" | "dark") || "system";
+      return (saved as "light" | "dark" | "system") || "system";
     }
     return "system";
   });
 
-  const toggleTheme = () => {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const nextTheme = currentTheme === "dark" ? "light" : "dark";
-    
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    localStorage.setItem("color-scheme", nextTheme);
-    setThemeMode(nextTheme);
+  const updateTheme = (mode: "light" | "dark" | "system") => {
+    setThemeMode(mode);
+    if (mode === "system") {
+      localStorage.removeItem("color-scheme");
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+    } else {
+      localStorage.setItem("color-scheme", mode);
+      document.documentElement.setAttribute("data-theme", mode);
+    }
   };
+
+  // Listen for system theme changes if in system mode
+  useEffect(() => {
+    if (themeMode !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      document.documentElement.setAttribute("data-theme", mediaQuery.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [themeMode]);
 
   const handleCreateList = (e: React.FormEvent) => {
     e.preventDefault();
@@ -357,32 +373,34 @@ function Sidebar({
         </div>
 
         {/* Theme & Settings Row */}
-        <div className="flex gap-2">
-          {/* Theme Switcher Button */}
-          <button
-            onClick={toggleTheme}
-            className="flex-1 flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
-          >
-            {themeMode === "light" ? (
-              <>
-                <Moon size={14} />
-                <span>Dark</span>
-              </>
-            ) : (
-              <>
-                <Sun size={14} />
-                <span>Light</span>
-              </>
-            )}
-          </button>
+        <div className="flex flex-col gap-2">
+          {/* Theme Switcher Segment Control */}
+          <div className="flex p-1 bg-muted/10 rounded-xl border border-border">
+            {(["light", "system", "dark"] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => updateTheme(mode)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                  themeMode === mode
+                    ? "bg-card text-accent shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {mode === "light" && <Sun size={12} />}
+                {mode === "system" && <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent rotate-45 shrink-0" />}
+                {mode === "dark" && <Moon size={12} />}
+                <span>{mode}</span>
+              </button>
+            ))}
+          </div>
 
           {/* Settings Button */}
           <button
             onClick={onOpenSettings}
-            className="flex items-center justify-center p-2 rounded-xl text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
-            aria-label="App settings"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
           >
             <Settings size={14} />
+            <span>App Settings</span>
           </button>
         </div>
       </div>
