@@ -85,7 +85,7 @@ function DashboardView({
     return { total, completed, pending, inProgress, overdueTasks, completionRate, productivityScore, totalSubtasks, completedSubtasks: completedSubtasksCount, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks };
   }, [tasks]);
 
-  const { completed, pending, inProgress, overdueTasks, completionRate, productivityScore, totalSubtasks, completedSubtasks, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
+  const { completed, pending, inProgress, overdueTasks, completionRate, productivityScore, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
 
   const handleQuickAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();

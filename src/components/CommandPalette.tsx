@@ -103,7 +103,15 @@ function CommandPalette({
       ? tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description || "").toLowerCase().includes(query.toLowerCase()))
       : tasks.slice(0, 5); // Show first 5 tasks if query is empty
 
-    const groups: { title: string; items: any[] }[] = [];
+    interface CommandItem {
+      id: string;
+      title: string;
+      type: string;
+      subtitle?: string;
+      priority?: string;
+      action: () => void;
+    }
+    const groups: { title: string; items: CommandItem[] }[] = [];
 
     if (matchedCommands.length > 0) {
       groups.push({
@@ -207,7 +215,7 @@ function CommandPalette({
           </div>
         ) : (
           <div className="space-y-4 py-2">
-            {sections.map((section, sIdx) => (
+            {sections.map((section) => (
               <div key={section.title} className="space-y-1">
                 <h3 className="px-3 text-[10px] font-bold text-muted uppercase tracking-widest">{section.title}</h3>
                 <div className="space-y-0.5">

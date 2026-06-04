@@ -118,7 +118,7 @@ export function useTaskPlanner() {
 
   const transitionView = useCallback((v: "dashboard" | "kanban" | "list") => {
     if (typeof document !== "undefined" && "startViewTransition" in document) {
-      (document as any).startViewTransition(() => {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
         setView(v);
       });
     } else {
@@ -286,7 +286,7 @@ export function useTaskPlanner() {
                   toast.success("Task restored");
                   refreshLogs();
                 }
-              } catch (err) {
+              } catch {
                 toast.error("Failed to restore task");
               }
             }

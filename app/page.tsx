@@ -23,7 +23,6 @@ const ListView = dynamic(() => import("@/src/components/ListView"));
 export default function Home() {
   const {
     currentView,
-    setView,
     selectedListId,
     setSelectedListId,
     selectedLabelId,
@@ -38,7 +37,6 @@ export default function Home() {
     isModalOpen,
     setIsModalOpen,
     modalMode,
-    currentEditingTask,
     taskTitle,
     setTaskTitle,
     taskDesc,
