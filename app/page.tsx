@@ -76,7 +76,9 @@ export default function Home() {
     handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
-    transitionView
+    transitionView,
+    soundEnabled,
+    setSoundEnabled
   } = useTaskPlanner();
 
   const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
@@ -291,6 +293,8 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         accentColor={accentColor}
         setAccentColor={setAccentColor}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
       />
 
       {/* Keyboard Shortcuts Help Modal */}

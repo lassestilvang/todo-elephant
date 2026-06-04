@@ -1,13 +1,15 @@
 "use client";
 
+import { Settings, X, Palette, Monitor, Volume2 } from "lucide-react";
 import React, { memo, useEffect, useRef } from "react";
-import { Settings, X, Palette, Monitor } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   accentColor: string;
   setAccentColor: (color: string) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
 }
 
 const ACCENT_COLORS = [
@@ -26,6 +28,8 @@ function SettingsModal({
   onClose,
   accentColor,
   setAccentColor,
+  soundEnabled,
+  setSoundEnabled,
 }: SettingsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -146,6 +150,30 @@ function SettingsModal({
           <div className="p-4 rounded-xl bg-muted/10 border border-border/40 text-xs text-muted leading-relaxed">
             Theme switching is available in the sidebar. Todo Elephant supports light, dark, and system preference modes with a premium glassmorphic interface.
           </div>
+        </div>
+
+        {/* Sound Effects Toggle */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider">
+            <Volume2 size={14} />
+            <span>Preferences</span>
+          </div>
+          
+          <label className="flex items-center justify-between p-4 rounded-xl bg-muted/10 border border-border/40 cursor-pointer transition-all hover:bg-muted/15 select-none">
+            <div className="space-y-0.5">
+              <span className="text-xs font-semibold text-foreground">Sound Effects</span>
+              <p className="text-[10px] text-muted leading-none">Play melodic chimes on task completion</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={soundEnabled}
+              onChange={(e) => {
+                setSoundEnabled(e.target.checked);
+                localStorage.setItem("sound-enabled", e.target.checked ? "true" : "false");
+              }}
+              className="w-4 h-4 rounded border-border text-accent focus:ring-accent bg-background cursor-pointer"
+            />
+          </label>
         </div>
 
         {/* About / Credits */}

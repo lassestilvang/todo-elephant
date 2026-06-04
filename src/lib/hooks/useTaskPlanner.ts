@@ -4,6 +4,45 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Task, List, Label, ActivityLog } from "@/types";
 
+function playCompletionSound() {
+  if (typeof window === "undefined") return;
+  try {
+    const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc1.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.15); // G5
+    
+    gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.05); // E5
+    osc2.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.2); // C6
+    
+    gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain2.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.05);
+    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+    
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    
+    osc1.start(audioCtx.currentTime);
+    osc1.stop(audioCtx.currentTime + 0.3);
+    osc2.start(audioCtx.currentTime + 0.05);
+    osc2.stop(audioCtx.currentTime + 0.45);
+  } catch (e) {
+    console.error("Audio playback error", e);
+  }
+}
+
 export function useTaskPlanner() {
   // App views: dashboard, kanban, list
   const [currentView, setView] = useState<"dashboard" | "kanban" | "list">("dashboard");
@@ -45,6 +84,13 @@ export function useTaskPlanner() {
     return "#3b82f6";
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sound-enabled");
+      return saved !== "false";
+    }
+    return true;
+  });
 
   // Ref for tasks lookup to avoid stale closures
   const tasksRef = useRef(tasks);
@@ -208,6 +254,7 @@ export function useTaskPlanner() {
         if (updates.status && (updates.status === "completed" || updates.status === "done")) {
           if (originalTask.status !== "completed" && originalTask.status !== "done") {
             toast.success(`Completed: "${originalTask.title}" 🎉`);
+            if (soundEnabled) playCompletionSound();
           }
         } else if (updates.status) {
           if (originalTask.status === "completed" || originalTask.status === "done") {
@@ -221,6 +268,7 @@ export function useTaskPlanner() {
           );
           if (newlyCompleted) {
             toast.success(`Subtask completed: "${newlyCompleted.title}"!`);
+            if (soundEnabled) playCompletionSound();
           }
         }
       }
@@ -252,7 +300,7 @@ export function useTaskPlanner() {
       console.error(err);
       toast.error("Network synchronization failed");
     }
-  }, [refreshLogs]);
+  }, [refreshLogs, soundEnabled]);
 
   // Task deletion handler
   const handleTaskDelete = useCallback(async (id: number) => {
@@ -488,6 +536,8 @@ export function useTaskPlanner() {
     handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
-    transitionView
+    transitionView,
+    soundEnabled,
+    setSoundEnabled
   };
 }
