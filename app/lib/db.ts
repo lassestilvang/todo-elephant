@@ -114,9 +114,10 @@ export function readDB(): DBStructure {
     }
 
     const data = fs.readFileSync(DB_FILE, 'utf-8');
-    cachedDB = JSON.parse(data);
+    const parsed = JSON.parse(data) as DBStructure;
+    cachedDB = parsed;
     lastModified = mtimeMs;
-    return cachedDB;
+    return parsed;
   } catch (error) {
     console.error("Failed to read JSON DB, falling back to defaults", error);
     return defaultDBData;

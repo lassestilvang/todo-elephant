@@ -22,13 +22,11 @@ const ListView = dynamic(() => import("@/src/components/ListView"));
 
 export default function Home() {
   const {
-...
-    handleRemoveSubtask,
-    transitionView
-  } = useTaskPlanner();
-
-  const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
-
+    currentView,
+    setView,
+    selectedListId,
+    setSelectedListId,
+    selectedLabelId,
     setSelectedLabelId,
     tasks,
     lists,
@@ -40,6 +38,7 @@ export default function Home() {
     isModalOpen,
     setIsModalOpen,
     modalMode,
+    currentEditingTask,
     taskTitle,
     setTaskTitle,
     taskDesc,
@@ -81,6 +80,8 @@ export default function Home() {
     handleRemoveSubtask,
     transitionView
   } = useTaskPlanner();
+
+  const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
 
   // Apply accent color on load
   useEffect(() => {

@@ -31,6 +31,7 @@ interface KanbanViewProps {
 function KanbanView({
   tasks,
   lists,
+  labels,
   onTaskUpdate,
   onTaskDelete,
   onTaskClick,

@@ -59,7 +59,7 @@ function SettingsModal({
     };
   }, [onClose]);
 
-  const handleBackdropClick = (event: MouseEvent) => {
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
     const dialog = dialogRef.current;
     if (event.target === dialog) {
       onClose();

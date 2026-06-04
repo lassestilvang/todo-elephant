@@ -118,8 +118,7 @@ export function useTaskPlanner() {
 
   const transitionView = useCallback((v: "dashboard" | "kanban" | "list") => {
     if (typeof document !== "undefined" && "startViewTransition" in document) {
-      // @ts-expect-error - startViewTransition is a new API
-      document.startViewTransition(() => {
+      (document as any).startViewTransition(() => {
         setView(v);
       });
     } else {
