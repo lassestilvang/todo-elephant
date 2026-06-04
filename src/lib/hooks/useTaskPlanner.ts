@@ -202,6 +202,29 @@ export function useTaskPlanner() {
   // Direct fast inline updates (e.g. checkbox status, subtask checked state)
   const handleTaskUpdateDirect = useCallback(async (id: number, updates: Partial<Task>) => {
     try {
+      const originalTask = tasksRef.current.find(t => t.id === id);
+
+      if (originalTask) {
+        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
+          if (originalTask.status !== "completed" && originalTask.status !== "done") {
+            toast.success(`Completed: "${originalTask.title}" 🎉`);
+          }
+        } else if (updates.status) {
+          if (originalTask.status === "completed" || originalTask.status === "done") {
+            toast("Reopened task", { description: `"${originalTask.title}" is now active again.` });
+          }
+        }
+
+        if (updates.subtasks && originalTask.subtasks) {
+          const newlyCompleted = updates.subtasks.find(
+            s => s.completed && !originalTask.subtasks!.find(ps => ps.id === s.id)?.completed
+          );
+          if (newlyCompleted) {
+            toast.success(`Subtask completed: "${newlyCompleted.title}"!`);
+          }
+        }
+      }
+
       setTasks(prev => prev.map(t => {
         if (t.id === id) {
           const updated = { ...t, ...updates };
