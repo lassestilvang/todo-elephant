@@ -121,8 +121,8 @@ function Sidebar({
       {/* Brand Header */}
       <div className="p-6 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center glow-primary overflow-hidden">
-            <ElephantLogo size={28} />
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center glow-primary overflow-hidden group/logo cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95">
+            <ElephantLogo size={28} className="transition-transform duration-500 ease-out group-hover/logo:scale-115 group-hover/logo:-rotate-12" />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight">Todo Elephant</h1>
