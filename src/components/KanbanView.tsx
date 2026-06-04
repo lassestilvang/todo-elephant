@@ -28,6 +28,23 @@ interface KanbanViewProps {
   onAddTask: (title: string, status: string) => void;
 }
 
+const highlightText = (text: string, highlight: string) => {
+  if (!highlight.trim()) {
+    return <span>{text}</span>;
+  }
+  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, i) => 
+        regex.test(part) 
+          ? <mark key={i} className="bg-accent/25 text-accent rounded px-0.5 font-semibold">{part}</mark>
+          : part
+      )}
+    </span>
+  );
+};
+
 function KanbanView({
   tasks,
   lists,
@@ -318,7 +335,7 @@ function KanbanView({
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
-                              {task.title}
+                              {highlightText(task.title, searchQuery)}
                             </span>
                             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
                               {task.priority}
@@ -326,7 +343,7 @@ function KanbanView({
                           </div>
                           {task.description && (
                             <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
-                              {task.description}
+                              {highlightText(task.description, searchQuery)}
                             </p>
                           )}
                         </div>

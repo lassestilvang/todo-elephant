@@ -23,6 +23,23 @@ interface ListViewProps {
   onTaskClick: (task: Task) => void;
 }
 
+const highlightText = (text: string, highlight: string) => {
+  if (!highlight.trim()) {
+    return <span>{text}</span>;
+  }
+  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, i) => 
+        regex.test(part) 
+          ? <mark key={i} className="bg-accent/25 text-accent rounded px-0.5 font-semibold">{part}</mark>
+          : part
+      )}
+    </span>
+  );
+};
+
 function ListView({
   tasks,
   lists,
@@ -227,7 +244,7 @@ function ListView({
                       <span className={`text-xs font-semibold truncate ${
                         isDone ? "line-through text-muted" : "text-foreground"
                       }`}>
-                        {task.title}
+                        {highlightText(task.title, searchQuery)}
                       </span>
                     </div>
 
@@ -300,7 +317,7 @@ function ListView({
                       <div className="space-y-1.5">
                         <span className="text-[11px] font-bold text-muted uppercase">Description</span>
                         <p className="text-xs text-foreground leading-relaxed">
-                          {task.description || "No description provided."}
+                          {task.description ? highlightText(task.description, searchQuery) : "No description provided."}
                         </p>
                       </div>
 
