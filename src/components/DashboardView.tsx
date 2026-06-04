@@ -47,11 +47,6 @@ function DashboardView({
       return new Date(t.dueDate) < new Date();
     });
 
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
-    // Productivity score (arbitrary but looks cool)
-    const productivityScore = Math.min(100, Math.round((completed * 10 + (completedSubtasks || 0) * 2) / (total > 0 ? total : 1) * 5));
-
     let totalSubtasks = 0;
     let completedSubtasksCount = 0;
     tasks.forEach(t => {
@@ -60,6 +55,11 @@ function DashboardView({
         completedSubtasksCount += t.subtasks.filter(s => s.completed).length;
       }
     });
+
+    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    // Productivity score (arbitrary but looks cool)
+    const productivityScore = Math.min(100, Math.round((completed * 10 + (completedSubtasksCount || 0) * 2) / (total > 0 ? total : 1) * 5));
 
     const highPriority = tasks.filter(t => t.priority === "high").length;
     const mediumPriority = tasks.filter(t => t.priority === "medium").length;
