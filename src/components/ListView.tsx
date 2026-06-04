@@ -26,6 +26,7 @@ interface ListViewProps {
 function ListView({
   tasks,
   lists,
+  labels,
   onTaskUpdate,
   onTaskDelete,
   onTaskClick
@@ -233,6 +234,24 @@ function ListView({
                           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
                           <span>{list.name}</span>
                         </span>
+                      )}
+
+                      {task.labels && task.labels.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {task.labels.map(labelId => {
+                            const label = labels.find(l => l.id === labelId);
+                            if (!label) return null;
+                            return (
+                              <span 
+                                key={labelId} 
+                                className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border border-border/40 text-foreground"
+                                style={{ backgroundColor: `${label.color}15`, color: label.color, borderColor: `${label.color}35` }}
+                              >
+                                {label.name}
+                              </span>
+                            );
+                          })}
+                        </div>
                       )}
 
                       <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full ${priorityPill}`}>
