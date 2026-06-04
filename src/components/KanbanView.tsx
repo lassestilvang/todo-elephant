@@ -55,10 +55,14 @@ function KanbanView({
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        (task.labels || []).some(labelId => {
+          const label = labels.find(l => l.id === labelId);
+          return label?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        });
       return matchesSearch;
     });
-  }, [tasks, debouncedSearchQuery]);
+  }, [tasks, debouncedSearchQuery, labels]);
 
   // Sort tasks
   const sortedTasks = useMemo(() => {

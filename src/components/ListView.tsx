@@ -64,7 +64,11 @@ function ListView({
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        (task.labels || []).some(labelId => {
+          const label = labels.find(l => l.id === labelId);
+          return label?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        });
       
       const isCompleted = task.status === "completed" || task.status === "done";
       const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
@@ -75,7 +79,7 @@ function ListView({
       if (statusFilter === "archived") return matchesSearch && isArchived;
       return matchesSearch && !isArchived;
     });
-  }, [tasks, debouncedSearchQuery, statusFilter]);
+  }, [tasks, debouncedSearchQuery, statusFilter, labels]);
 
   const sortedTasks = useMemo(() => {
     return [...filteredTasks].sort((a, b) => {
