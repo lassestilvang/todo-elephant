@@ -38,6 +38,7 @@ function KanbanView({
   onAddTask
 }: KanbanViewProps) {
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
+  const [draggedOverCol, setDraggedOverCol] = useState<string | null>(null);
   const [quickTitle, setQuickTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -111,13 +112,19 @@ function KanbanView({
     target.style.opacity = "1";
   };
 
-  const onDragOver = (e: React.DragEvent) => {
+  const onDragOver = (e: React.DragEvent, colId: string) => {
     e.preventDefault();
+    setDraggedOverCol(colId);
     e.dataTransfer.dropEffect = "move";
+  };
+
+  const onDragLeave = () => {
+    setDraggedOverCol(null);
   };
 
   const onDrop = (e: React.DragEvent, newStatus: string) => {
     e.preventDefault();
+    setDraggedOverCol(null);
     const taskId = parseInt(e.dataTransfer.getData("taskId"));
     if (isNaN(taskId)) return;
 
@@ -193,12 +200,18 @@ function KanbanView({
       <div className="flex-1 overflow-x-auto px-8 pb-8 flex items-start gap-6 select-none">
         {columns.map((col, colIdx) => {
           const colTasks = getTasksByStatus(col.id);
+          const isOver = draggedOverCol === col.id;
           return (
             <div 
               key={col.id} 
-              onDragOver={onDragOver}
+              onDragOver={(e) => onDragOver(e, col.id)}
+              onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e, col.id)}
-              className={`w-80 shrink-0 max-h-full flex flex-col rounded-2xl border border-border bg-card/25 backdrop-blur-md glass-panel ${col.bg} overflow-hidden animate-fade-in`}
+              className={`w-80 shrink-0 max-h-full flex flex-col rounded-2xl border transition-all duration-200 bg-card/25 backdrop-blur-md glass-panel ${col.bg} overflow-hidden animate-fade-in ${
+                isOver 
+                  ? "border-accent ring-2 ring-accent/25 scale-[1.01] bg-card/35" 
+                  : "border-border"
+              }`}
               style={{ animationDelay: `${colIdx * 80}ms`, animationFillMode: "backwards" }}
             >
               {/* Column Top Bar */}
