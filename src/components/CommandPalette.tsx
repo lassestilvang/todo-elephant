@@ -194,10 +194,13 @@ function CommandPalette({
         <Search size={22} className="text-accent shrink-0" />
         <input
           ref={inputRef}
+          id="command-palette-search"
+          name="command-palette-search"
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search tasks, navigate views, or type to create..."
+          aria-label="Search and create tasks"
           className="w-full bg-transparent border-0 outline-none text-foreground placeholder:text-muted/50 text-base focus:ring-0 focus:outline-none font-medium"
         />
         <div className="flex items-center gap-1.5 shrink-0">
