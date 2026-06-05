@@ -11,7 +11,8 @@ import {
   SlidersHorizontal,
   Tag,
   Archive,
-  Copy
+  Copy,
+  X
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
@@ -489,51 +490,84 @@ function ListView({
                       </div>
 
                       {/* Subtask check-off checklist */}
-                      {subCount > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-muted uppercase">Subtasks Progress</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-muted uppercase">Subtasks Checklist</span>
+                          {subCount > 0 && (
                             <span className="text-[11px] font-bold text-accent">{subPercent}% complete</span>
-                          </div>
-                          
+                          )}
+                        </div>
+                        
+                        {subCount > 0 && (
                           <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
                               style={{ width: `${subPercent}%` }}
                             />
                           </div>
+                        )}
 
-                          <div className="space-y-1">
-                            {task.subtasks?.map(sub => (
-                              <div 
-                                key={sub.id}
-                                onClick={(e) => handleSubtaskToggle(task, sub.id, e)}
-                                className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-muted/10 cursor-pointer transition-colors"
+                        <div className="space-y-1">
+                          {task.subtasks?.map(sub => (
+                            <div 
+                              key={sub.id}
+                              onClick={(e) => handleSubtaskToggle(task, sub.id, e)}
+                              className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-muted/10 cursor-pointer transition-colors group/subtask"
+                            >
+                              <button
+                                role="checkbox"
+                                aria-checked={sub.completed}
+                                aria-label={sub.completed ? `Mark "${sub.title}" as incomplete` : `Mark "${sub.title}" as complete`}
+                                className="p-0.5 -m-0.5 rounded"
                               >
-                                <button
-                                  role="checkbox"
-                                  aria-checked={sub.completed}
-                                  aria-label={sub.completed ? `Mark "${sub.title}" as incomplete` : `Mark "${sub.title}" as complete`}
-                                  className="p-0.5 -m-0.5 rounded"
-                                >
-                                  <span className={`w-4 h-4 rounded-md border flex items-center justify-center checkbox-pulse transition-all ${
-                                    sub.completed 
-                                      ? "bg-accent/80 border-accent/80 text-white" 
-                                      : "border-border hover:border-accent"
-                                  }`}>
-                                    {sub.completed && <CheckSquare size={10} className="text-white" />}
-                                  </span>
-                                </button>
-                                <span className={`text-xs ${
-                                  sub.completed ? "line-through text-muted font-medium" : "text-foreground font-medium"
+                                <span className={`w-4 h-4 rounded-md border flex items-center justify-center checkbox-pulse transition-all ${
+                                  sub.completed 
+                                    ? "bg-accent/80 border-accent/80 text-white" 
+                                    : "border-border hover:border-accent"
                                 }`}>
-                                  {sub.title}
+                                  {sub.completed && <CheckSquare size={10} className="text-white" />}
                                 </span>
-                              </div>
-                            ))}
-                          </div>
+                              </button>
+                              <span className={`text-xs ${
+                                sub.completed ? "line-through text-muted font-medium" : "text-foreground font-medium"
+                              }`}>
+                                {sub.title}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const updatedSubs = task.subtasks?.filter(s => s.id !== sub.id) || [];
+                                  onTaskUpdate(task.id, { subtasks: updatedSubs });
+                                }}
+                                aria-label={`Remove subtask "${sub.title}"`}
+                                className="ml-auto opacity-0 group-hover/subtask:opacity-100 text-muted hover:text-red-500 p-1 rounded transition-opacity"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      )}
+
+                        {/* Inline Add Subtask Input */}
+                        <div className="pt-1">
+                          <input
+                            type="text"
+                            placeholder="Add a checklist item..."
+                            className="w-full text-xs bg-background/50 border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                const input = e.target as HTMLInputElement;
+                                if (input.value.trim()) {
+                                  const newSub = { id: Date.now(), title: input.value.trim(), completed: false };
+                                  const updatedSubs = [...(task.subtasks || []), newSub];
+                                  onTaskUpdate(task.id, { subtasks: updatedSubs });
+                                  input.value = "";
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
 
                       {/* Actions toolbar */}
                       <div className="flex items-center justify-between pt-3 border-t border-border/30">
