@@ -171,12 +171,38 @@ function DashboardView({
               <CheckCircle2 size={16} />
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="text-4xl font-black tabular-nums tracking-tighter">{completed}</div>
-            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>{completionRate}% of total workload</span>
-            </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-4xl font-black tabular-nums tracking-tighter">{completed}</div>
+              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>{completionRate}% of workload</span>
+              </p>
+            </div>
+            <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  className="stroke-muted/10"
+                  strokeWidth="4.5"
+                  fill="transparent"
+                />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  className="stroke-emerald-500 transition-all duration-1000 ease-out"
+                  strokeWidth="4.5"
+                  fill="transparent"
+                  strokeDasharray={125.6}
+                  strokeDashoffset={125.6 - (125.6 * completionRate) / 100}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute text-[9px] font-bold text-foreground tabular-nums">{completionRate}%</span>
+            </div>
           </div>
         </div>
 
