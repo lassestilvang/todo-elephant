@@ -48,6 +48,23 @@ const highlightText = (text: string, highlight: string) => {
   );
 };
 
+const getRelativeDateString = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffTime = dDate.getTime() - dNow.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays === -1) return "Yesterday";
+  if (diffDays > 1 && diffDays <= 7) return `In ${diffDays} days`;
+  if (diffDays < -1 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
+  
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+};
+
 function KanbanView({
   tasks,
   lists,
@@ -485,7 +502,7 @@ function KanbanView({
                             {task.dueDate && (
                               <span className={`text-[10px] font-bold flex items-center gap-1 shrink-0 ml-auto ${isOverdue ? "text-red-500" : "text-muted"}`}>
                                 <Calendar size={10} />
-                                <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                                <span>{getRelativeDateString(task.dueDate)}</span>
                                 {isOverdue && <span className="text-[8px] uppercase">!!</span>}
                               </span>
                             )}
