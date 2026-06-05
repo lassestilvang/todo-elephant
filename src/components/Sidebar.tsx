@@ -348,20 +348,28 @@ function Sidebar({
           )}
 
           <div className="flex flex-wrap gap-1.5 px-3">
-            {filteredLabels.map(label => (
-              <button
-                key={label.id}
-                onClick={() => { setSelectedLabelId(label.id); setSelectedListId(null); }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all duration-150 ${
-                  selectedLabelId === label.id
-                    ? "bg-accent text-white shadow-sm font-semibold scale-105"
-                    : "bg-muted/15 text-muted hover:bg-muted/30 hover:text-foreground"
-                }`}
-              >
-                <Tag size={10} className="shrink-0" style={{ color: label.color }} />
-                <span>{label.name}</span>
-              </button>
-            ))}
+            {filteredLabels.map(label => {
+              const labelTasks = tasks.filter(t => t.labels?.includes(label.id) && t.status !== "completed" && t.status !== "done" && t.status !== "archived");
+              return (
+                <button
+                  key={label.id}
+                  onClick={() => { setSelectedLabelId(label.id); setSelectedListId(null); }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all duration-150 ${
+                    selectedLabelId === label.id
+                      ? "bg-accent text-white shadow-sm font-semibold scale-105"
+                      : "bg-muted/15 text-muted hover:bg-muted/30 hover:text-foreground"
+                  }`}
+                >
+                  <Tag size={10} className="shrink-0" style={{ color: label.color }} />
+                  <span>{label.name}</span>
+                  <span className={`text-[10px] opacity-75 font-bold px-1.5 py-0.2 rounded-full ${
+                    selectedLabelId === label.id ? "bg-white/20 text-white" : "bg-muted/30 text-muted"
+                  }`}>
+                    {labelTasks.length}
+                  </span>
+                </button>
+              );
+            })}
             {filteredLabels.length === 0 && labelSearchQuery && (
               <div className="w-full text-center py-2 text-xs text-muted">No labels found</div>
             )}
