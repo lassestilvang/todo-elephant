@@ -60,6 +60,7 @@ function KanbanView({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
 
   const columns = [
     { id: "pending", title: "Todo", icon: Inbox, border: "border-t-blue-500", bg: "bg-blue-500/5", text: "text-blue-500", dot: "bg-blue-500" },
@@ -77,9 +78,11 @@ function KanbanView({
           const label = labels.find(l => l.id === labelId);
           return label?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
         });
-      return matchesSearch;
+      
+      const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      return matchesSearch && matchesPriority;
     });
-  }, [tasks, debouncedSearchQuery, labels]);
+  }, [tasks, debouncedSearchQuery, priorityFilter, labels]);
 
   // Sort tasks
   const sortedTasks = useMemo(() => {
@@ -218,6 +221,24 @@ function KanbanView({
               <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
               <option value="dueDate" className="bg-background text-foreground">Sort: Due Date</option>
               <option value="priority" className="bg-background text-foreground">Sort: Priority</option>
+            </select>
+          </div>
+
+          {/* Priority Filter Selection */}
+          <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
+            <span className="text-muted text-[11px] font-bold">Priority:</span>
+            <select
+              id="kanban-priority-filter"
+              name="kanban-priority-filter"
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as "all" | "high" | "medium" | "low")}
+              aria-label="Filter by Priority"
+              className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
+            >
+              <option value="all" className="bg-background text-foreground">All</option>
+              <option value="high" className="bg-background text-foreground">High</option>
+              <option value="medium" className="bg-background text-foreground">Medium</option>
+              <option value="low" className="bg-background text-foreground">Low</option>
             </select>
           </div>
         </div>
