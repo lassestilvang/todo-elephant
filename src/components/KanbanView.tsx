@@ -193,10 +193,13 @@ function KanbanView({
           <div className="flex items-center gap-2.5 px-3 bg-muted/10 border border-border/80 rounded-xl py-2 flex-1 max-w-sm">
             <Search size={16} className="text-muted shrink-0" />
             <input
+              id="kanban-search"
+              name="kanban-search"
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search cards..."
+              aria-label="Search kanban cards"
               className="w-full bg-transparent border-0 outline-none text-xs text-foreground placeholder:text-muted/60 focus:ring-0 focus:outline-none"
             />
           </div>
@@ -205,8 +208,11 @@ function KanbanView({
           <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
             <SlidersHorizontal size={12} className="text-muted" />
             <select
+              id="kanban-sort"
+              name="kanban-sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority")}
+              aria-label="Sort kanban cards"
               className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
