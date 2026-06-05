@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Keyboard, Sparkles, Folder, Plus } from "lucide-react";
+import { Search, Keyboard, Sparkles, Folder, Plus, Sun, Moon, Palette } from "lucide-react";
 import { Task } from "@/types";
 
 interface CommandPaletteProps {
@@ -11,6 +11,8 @@ interface CommandPaletteProps {
   setView: (view: "dashboard" | "kanban" | "list") => void;
   onCreateTask: (title: string) => void;
   onSelectTask: (task: Task) => void;
+  setThemeMode?: (mode: "light" | "dark" | "system") => void;
+  setAccentColor?: (color: string) => void;
 }
 
 function CommandPalette({
@@ -19,7 +21,9 @@ function CommandPalette({
   tasks,
   setView,
   onCreateTask,
-  onSelectTask
+  onSelectTask,
+  setThemeMode,
+  setAccentColor
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -89,11 +93,51 @@ function CommandPalette({
   }, [onClose]);
 
   // Command palette filter options
-  const viewCommands = useMemo(() => [
-    { id: "v-dash", title: "Switch to Dashboard Overview", type: "navigation", action: () => setView("dashboard") },
-    { id: "v-kanb", title: "Switch to Kanban Board View", type: "navigation", action: () => setView("kanban") },
-    { id: "v-list", title: "Switch to High-Density List View", type: "navigation", action: () => setView("list") }
-  ], [setView]);
+  const viewCommands = useMemo(() => {
+    const list = [
+      { id: "v-dash", title: "Switch to Dashboard Overview", type: "navigation", action: () => { setView("dashboard"); } },
+      { id: "v-kanb", title: "Switch to Kanban Board View", type: "navigation", action: () => { setView("kanban"); } },
+      { id: "v-list", title: "Switch to High-Density List View", type: "navigation", action: () => { setView("list"); } }
+    ];
+
+    if (setThemeMode) {
+      list.push(
+        { id: "t-light", title: "Theme: Switch to Light Mode", type: "theme", action: () => { setThemeMode("light"); } },
+        { id: "t-dark", title: "Theme: Switch to Dark Mode", type: "theme", action: () => { setThemeMode("dark"); } },
+        { id: "t-system", title: "Theme: Switch to System Mode", type: "theme", action: () => { setThemeMode("system"); } }
+      );
+    }
+
+    if (setAccentColor) {
+      const ACCENT_COLORS = [
+        { name: "Elephant Blue", value: "#3b82f6" },
+        { name: "Royal Purple", value: "#8b5cf6" },
+        { name: "Sunset Pink", value: "#ec4899" },
+        { name: "Forest Green", value: "#10b981" },
+        { name: "Golden Amber", value: "#f59e0b" },
+        { name: "Ruby Red", value: "#ef4444" },
+        { name: "Ocean Teal", value: "#0d9488" },
+        { name: "Slate Grey", value: "#64748b" },
+      ];
+      ACCENT_COLORS.forEach(color => {
+        list.push({
+          id: `a-${color.name.toLowerCase().replace(" ", "-")}`,
+          title: `Accent: Set to ${color.name}`,
+          type: "accent",
+          action: () => {
+            setAccentColor(color.value);
+            localStorage.setItem("accent-color", color.value);
+            const root = document.documentElement;
+            root.style.setProperty("--accent-light", color.value);
+            root.style.setProperty("--accent-dark", color.value);
+            root.style.setProperty("--accent", color.value);
+          }
+        });
+      });
+    }
+
+    return list;
+  }, [setView, setThemeMode, setAccentColor]);
 
   // Combine commands and tasks matching query
   const sections = useMemo(() => {
@@ -252,6 +296,8 @@ function CommandPalette({
                           {item.type === "navigation" && <Sparkles size={16} className={isSelected ? "text-white" : "text-accent"} />}
                           {item.type === "task" && <Folder size={16} className={isSelected ? "text-white" : "text-emerald-500"} />}
                           {item.type === "create" && <Plus size={16} className={isSelected ? "text-white" : "text-accent"} />}
+                          {item.type === "theme" && <Moon size={16} className={isSelected ? "text-white" : "text-indigo-400"} />}
+                          {item.type === "accent" && <Palette size={16} className={isSelected ? "text-white" : "text-amber-500"} />}
                         </div>
                         
                         <div className="flex-1 min-w-0">

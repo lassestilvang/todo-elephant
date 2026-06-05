@@ -272,6 +272,8 @@ export default function Home() {
         setView={transitionView}
         onCreateTask={handleCreateTaskFromCommand}
         onSelectTask={handleTaskClick}
+        setThemeMode={updateTheme}
+        setAccentColor={setAccentColor}
       />
 
       {/* Task Creation & Modification Glass Modal */}
