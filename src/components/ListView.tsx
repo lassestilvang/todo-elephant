@@ -10,7 +10,8 @@ import {
   Search,
   SlidersHorizontal,
   Tag,
-  Archive
+  Archive,
+  Copy
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
@@ -25,6 +26,7 @@ interface ListViewProps {
   onTaskClick: (task: Task) => void;
   selectedListId?: number | null;
   selectedLabelId?: number | null;
+  onTaskDuplicate?: (task: Task) => void;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -52,7 +54,8 @@ function ListView({
   onTaskDelete,
   onTaskClick,
   selectedListId = null,
-  selectedLabelId = null
+  selectedLabelId = null,
+  onTaskDuplicate
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -526,6 +529,18 @@ function ListView({
                           Created {new Date(task.createdAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </div>
                         <div className="flex gap-2">
+                          {onTaskDuplicate && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onTaskDuplicate(task);
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-muted text-[11px] font-bold hover:bg-muted/10 hover:text-foreground transition-colors"
+                            >
+                              <Copy size={12} />
+                              <span>Duplicate</span>
+                            </button>
+                          )}
                           {task.status === "archived" ? (
                             <button
                               onClick={(e) => {

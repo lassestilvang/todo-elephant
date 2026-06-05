@@ -356,6 +356,39 @@ export function useTaskPlanner() {
     }
   }, [refreshLogs, soundEnabled]);
 
+  const handleTaskDuplicate = useCallback(async (task: Task) => {
+    try {
+      const taskData = {
+        title: `${task.title} (Copy)`,
+        description: task.description || "",
+        dueDate: task.dueDate || new Date().toISOString(),
+        priority: task.priority,
+        status: "pending", // Reset to pending for the duplicated task
+        listId: task.listId || 1,
+        labels: task.labels || [],
+        subtasks: task.subtasks?.map(s => ({ ...s, id: Math.floor(Math.random() * 10000) + 10000, completed: false })) || []
+      };
+
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taskData)
+      });
+
+      if (res.ok) {
+        const newTask = await res.json();
+        setTasks(prev => [newTask, ...prev]);
+        toast.success(`Task duplicated successfully!`);
+        refreshLogs();
+      } else {
+        throw new Error("API error duplicating task");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to duplicate task");
+    }
+  }, [refreshLogs]);
+
   // Task deletion handler
   const handleTaskDelete = useCallback(async (id: number) => {
     const taskToDelete = tasksRef.current.find(t => t.id === id);
@@ -580,6 +613,7 @@ export function useTaskPlanner() {
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,
+    handleTaskDuplicate,
     requestDelete,
     confirmDelete,
     handleCreateList,

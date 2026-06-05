@@ -67,6 +67,7 @@ export default function Home() {
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,
+    handleTaskDuplicate,
     requestDelete,
     confirmDelete,
     handleCreateList,
@@ -250,6 +251,7 @@ export default function Home() {
                 onTaskClick={handleTaskClick}
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
+                onTaskDuplicate={handleTaskDuplicate}
               />
             )}
           </>
