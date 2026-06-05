@@ -91,6 +91,49 @@ export function useTaskPlanner() {
     }
     return true;
   });
+  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">("system");
+
+  const updateTheme = useCallback((mode: "light" | "dark" | "system") => {
+    setThemeMode(mode);
+    if (mode === "system") {
+      localStorage.removeItem("color-scheme");
+      if (typeof window !== "undefined") {
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+      }
+    } else {
+      localStorage.setItem("color-scheme", mode);
+      document.documentElement.setAttribute("data-theme", mode);
+    }
+  }, []);
+
+  // Sync state and attribute on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("color-scheme") as "light" | "dark" | "system" | null;
+    const mode = saved || "system";
+    setThemeMode(mode);
+    if (mode === "system") {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+    } else {
+      document.documentElement.setAttribute("data-theme", mode);
+    }
+  }, []);
+
+  // Listen for system theme changes if in system mode
+  useEffect(() => {
+    if (themeMode !== "system") return;
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      document.documentElement.setAttribute("data-theme", mediaQuery.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [themeMode]);
 
   // Ref for tasks lookup to avoid stale closures
   const tasksRef = useRef(tasks);
@@ -550,6 +593,8 @@ export function useTaskPlanner() {
     transitionView,
     soundEnabled,
     setSoundEnabled,
-    refreshData
+    refreshData,
+    themeMode,
+    updateTheme
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ElephantLogo } from "./ElephantLogo";
 import { 
   Tag, 
@@ -29,6 +29,8 @@ interface SidebarProps {
   onCreateList: (name: string, color: string) => void;
   onCreateLabel: (name: string, color: string) => void;
   onOpenSettings: () => void;
+  themeMode: "light" | "dark" | "system";
+  updateTheme: (mode: "light" | "dark" | "system") => void;
 }
 
 function Sidebar({
@@ -43,7 +45,9 @@ function Sidebar({
   setSelectedLabelId,
   onCreateList,
   onCreateLabel,
-  onOpenSettings
+  onOpenSettings,
+  themeMode,
+  updateTheme
 }: SidebarProps) {
   const [showAddList, setShowAddList] = useState(false);
   const [showAddLabel, setShowAddLabel] = useState(false);
@@ -52,40 +56,6 @@ function Sidebar({
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#64748b");
   
-  // Theme state: tracking if dark mode is explicitly enabled
-  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("color-scheme");
-      return (saved as "light" | "dark" | "system") || "system";
-    }
-    return "system";
-  });
-
-  const updateTheme = (mode: "light" | "dark" | "system") => {
-    setThemeMode(mode);
-    if (mode === "system") {
-      localStorage.removeItem("color-scheme");
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-    } else {
-      localStorage.setItem("color-scheme", mode);
-      document.documentElement.setAttribute("data-theme", mode);
-    }
-  };
-
-  // Listen for system theme changes if in system mode
-  useEffect(() => {
-    if (themeMode !== "system") return;
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      document.documentElement.setAttribute("data-theme", mediaQuery.matches ? "dark" : "light");
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [themeMode]);
-
   const handleCreateList = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newListName.trim()) return;

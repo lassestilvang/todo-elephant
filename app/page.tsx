@@ -80,7 +80,9 @@ export default function Home() {
     transitionView,
     soundEnabled,
     setSoundEnabled,
-    refreshData
+    refreshData,
+    themeMode,
+    updateTheme
   } = useTaskPlanner();
 
   const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
@@ -178,6 +180,8 @@ export default function Home() {
           onCreateList={handleCreateList}
           onCreateLabel={handleCreateLabel}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          themeMode={themeMode}
+          updateTheme={updateTheme}
         />
       </div>
 
@@ -298,6 +302,8 @@ export default function Home() {
         soundEnabled={soundEnabled}
         setSoundEnabled={setSoundEnabled}
         refreshData={refreshData}
+        themeMode={themeMode}
+        setThemeMode={updateTheme}
       />
 
       {/* Keyboard Shortcuts Help Modal */}

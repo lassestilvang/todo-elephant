@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, X, Palette, Monitor, Volume2, Download, Upload } from "lucide-react";
+import { Settings, X, Palette, Monitor, Volume2, Download, Upload, Sun, Moon } from "lucide-react";
 import React, { memo, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +12,8 @@ interface SettingsModalProps {
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
   refreshData: () => Promise<void>;
+  themeMode: "light" | "dark" | "system";
+  setThemeMode: (mode: "light" | "dark" | "system") => void;
 }
 
 const ACCENT_COLORS = [
@@ -33,6 +35,8 @@ function SettingsModal({
   soundEnabled,
   setSoundEnabled,
   refreshData,
+  themeMode,
+  setThemeMode,
 }: SettingsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -201,15 +205,31 @@ function SettingsModal({
           </div>
         </div>
 
-        {/* Theme Mode Info */}
+        {/* Theme Mode Segmented Toggle */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider">
             <Monitor size={14} />
             <span>Display Mode</span>
           </div>
           
-          <div className="p-4 rounded-xl bg-muted/10 border border-border/40 text-xs text-muted leading-relaxed">
-            Theme switching is available in the sidebar. Todo Elephant supports light, dark, and system preference modes with a premium glassmorphic interface.
+          <div className="flex p-1 bg-muted/10 rounded-xl border border-border/40 select-none">
+            {(["light", "system", "dark"] as const).map((mode) => (
+              <button
+                type="button"
+                key={mode}
+                onClick={() => setThemeMode(mode)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  themeMode === mode
+                    ? "bg-card text-accent shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {mode === "light" && <Sun size={12} />}
+                {mode === "system" && <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent rotate-45 shrink-0" />}
+                {mode === "dark" && <Moon size={12} />}
+                <span>{mode}</span>
+              </button>
+            ))}
           </div>
         </div>
 
