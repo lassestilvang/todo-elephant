@@ -292,7 +292,7 @@ function KanbanView({
 
               {/* Tasks List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {colTasks.length === 0 ? (
+                {colTasks.length === 0 && !isOver ? (
                   <div className="py-10 text-center space-y-2 select-none">
                     <div className="w-10 h-10 rounded-xl bg-muted/8 border border-border/40 flex items-center justify-center mx-auto">
                       <Plus size={16} className="text-muted/30" />
@@ -306,141 +306,148 @@ function KanbanView({
                     </button>
                   </div>
                 ) : (
-                  colTasks.map((task, taskIdx) => {
-                    const list = lists.find(l => l.id === task.listId);
-                    
-                    // Checklist calculations
-                    const subCount = task.subtasks?.length || 0;
-                    const subCompleted = task.subtasks?.filter(s => s.completed).length || 0;
-                    const subPercent = subCount > 0 ? Math.round((subCompleted / subCount) * 100) : 0;
-                    
-                    const isDone = task.status === "completed" || task.status === "done";
-                    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isDone;
+                  <>
+                    {colTasks.map((task, taskIdx) => {
+                      const list = lists.find(l => l.id === task.listId);
+                      
+                      // Checklist calculations
+                      const subCount = task.subtasks?.length || 0;
+                      const subCompleted = task.subtasks?.filter(s => s.completed).length || 0;
+                      const subPercent = subCount > 0 ? Math.round((subCompleted / subCount) * 100) : 0;
+                      
+                      const isDone = task.status === "completed" || task.status === "done";
+                      const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isDone;
 
-                    // Priority color mappings
-                    const priorityPill = {
-                      high: "bg-red-500/10 text-red-600 border border-red-500/20",
-                      medium: "bg-amber-500/10 text-amber-600 border border-amber-500/20",
-                      low: "bg-blue-500/10 text-blue-600 border border-blue-500/20"
-                    }[task.priority || "low"];
+                      // Priority color mappings
+                      const priorityPill = {
+                        high: "bg-red-500/10 text-red-600 border border-red-500/20",
+                        medium: "bg-amber-500/10 text-amber-600 border border-amber-500/20",
+                        low: "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                      }[task.priority || "low"];
 
-                    // Staggered entrance animation
-                    const animDelay = Math.min(taskIdx * 40, 300);
+                      // Staggered entrance animation
+                      const animDelay = Math.min(taskIdx * 40, 300);
 
-                    return (
-                      <div 
-                        key={task.id}
-                        draggable
-                        onDragStart={(e) => onDragStart(e, task.id)}
-                        onDragEnd={onDragEnd}
-                        onClick={() => onTaskClick(task)}
-                        className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1"
-                        style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
-                      >
-                        {/* Title & Priority */}
-                        <div className="space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
-                              {highlightText(task.title, searchQuery)}
-                            </span>
-                            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
-                              {task.priority}
-                            </span>
-                          </div>
-                          {task.description && (
-                            <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
-                              {highlightText(task.description, searchQuery)}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Labels display on card */}
-                        {task.labels && task.labels.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {task.labels.map(labelId => {
-                              const label = labels.find(l => l.id === labelId);
-                              if (!label) return null;
-                              return (
-                                <span 
-                                  key={labelId} 
-                                  className="w-4 h-1 rounded-full" 
-                                  style={{ backgroundColor: label.color }} 
-                                  title={label.name}
-                                />
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Checklist progress */}
-                        {subCount > 0 && (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-[10px] text-muted font-bold uppercase tracking-tight">
-                              <span className="flex items-center gap-1">
-                                <CheckSquare size={10} className="text-accent" />
-                                <span>Checklist</span>
+                      return (
+                        <div 
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => onDragStart(e, task.id)}
+                          onDragEnd={onDragEnd}
+                          onClick={() => onTaskClick(task)}
+                          className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1"
+                          style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
+                        >
+                          {/* Title & Priority */}
+                          <div className="space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
+                                {highlightText(task.title, searchQuery)}
                               </span>
-                              <span>{subCompleted}/{subCount}</span>
+                              <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
+                                {task.priority}
+                              </span>
                             </div>
-                            <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                                style={{ width: `${subPercent}%` }}
-                              />
-                            </div>
+                            {task.description && (
+                              <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
+                                {highlightText(task.description, searchQuery)}
+                              </p>
+                            )}
                           </div>
-                        )}
 
-                        {/* Card metadata footer */}
-                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
-                          {list && (
-                            <span className="text-[10px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
-                              <span>{list.name}</span>
-                            </span>
+                          {/* Labels display on card */}
+                          {task.labels && task.labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {task.labels.map(labelId => {
+                                const label = labels.find(l => l.id === labelId);
+                                if (!label) return null;
+                                return (
+                                  <span 
+                                    key={labelId} 
+                                    className="w-4 h-1 rounded-full" 
+                                    style={{ backgroundColor: label.color }} 
+                                    title={label.name}
+                                  />
+                                );
+                              })}
+                            </div>
                           )}
-                          
-                          {task.dueDate && (
-                            <span className={`text-[10px] font-bold flex items-center gap-1 shrink-0 ml-auto ${isOverdue ? "text-red-500" : "text-muted"}`}>
-                              <Calendar size={10} />
-                              <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
-                              {isOverdue && <span className="text-[8px] uppercase">!!</span>}
-                            </span>
+
+                          {/* Checklist progress */}
+                          {subCount > 0 && (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between text-[10px] text-muted font-bold uppercase tracking-tight">
+                                <span className="flex items-center gap-1">
+                                  <CheckSquare size={10} className="text-accent" />
+                                  <span>Checklist</span>
+                                </span>
+                                <span>{subCompleted}/{subCount}</span>
+                              </div>
+                              <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                                  style={{ width: `${subPercent}%` }}
+                                />
+                              </div>
+                            </div>
                           )}
+
+                          {/* Card metadata footer */}
+                          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
+                            {list && (
+                              <span className="text-[10px] font-bold bg-muted/25 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />
+                                <span>{list.name}</span>
+                              </span>
+                            )}
+                            
+                            {task.dueDate && (
+                              <span className={`text-[10px] font-bold flex items-center gap-1 shrink-0 ml-auto ${isOverdue ? "text-red-500" : "text-muted"}`}>
+                                <Calendar size={10} />
+                                <span>{new Date(task.dueDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                                {isOverdue && <span className="text-[8px] uppercase">!!</span>}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Quick Hover Controls to Shift Column */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent h-10 rounded-b-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-between px-3 transition-opacity">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "prev"); }}
+                              disabled={col.id === "pending"}
+                              aria-label="Move to previous column"
+                              className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
+                            >
+                              <ArrowLeft size={12} />
+                            </button>
+                            
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onTaskDelete(task.id); }}
+                              aria-label="Delete task"
+                              className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+
+                            <button
+                              onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "next"); }}
+                              disabled={col.id === "archived"}
+                              aria-label="Move to next column"
+                              className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
+                            >
+                              <ArrowRight size={12} />
+                            </button>
+                          </div>
+
                         </div>
-
-                        {/* Quick Hover Controls to Shift Column */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent h-10 rounded-b-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-between px-3 transition-opacity">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "prev"); }}
-                            disabled={col.id === "pending"}
-                            aria-label="Move to previous column"
-                            className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
-                          >
-                            <ArrowLeft size={12} />
-                          </button>
-                          
-                          <button
-                            onClick={(e) => { e.stopPropagation(); onTaskDelete(task.id); }}
-                            aria-label="Delete task"
-                            className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-
-                          <button
-                            onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "next"); }}
-                            disabled={col.id === "archived"}
-                            aria-label="Move to next column"
-                            className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg disabled:opacity-20 transition-all"
-                          >
-                            <ArrowRight size={12} />
-                          </button>
-                        </div>
-
+                      );
+                    })}
+                    {isOver && (
+                      <div className="border-2 border-dashed border-accent/40 rounded-xl h-24 bg-accent/5 flex items-center justify-center text-accent/60 text-xs font-semibold animate-pulse transition-all">
+                        Drop Card Here
                       </div>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </div>
 
