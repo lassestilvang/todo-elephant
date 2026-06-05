@@ -15,6 +15,7 @@ import ConfirmDialog from "@/src/components/ConfirmDialog";
 import { ShortcutsModal } from "@/src/components/ShortcutsModal";
 import { DashboardSkeleton, KanbanSkeleton, ListSkeleton } from "@/src/components/Skeleton";
 import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
+import ConfettiCanvas from "@/src/components/ConfettiCanvas";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
 const KanbanView = dynamic(() => import("@/src/components/KanbanView"));
@@ -314,6 +315,9 @@ export default function Home() {
         message="Are you sure you want to delete this task? This action cannot be undone."
         confirmLabel="Delete Task"
       />
+
+      {/* Confetti canvas animation overlay */}
+      <ConfettiCanvas />
 
     </div>
   );

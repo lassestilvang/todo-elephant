@@ -260,6 +260,9 @@ export function useTaskPlanner() {
           if (originalTask.status !== "completed" && originalTask.status !== "done") {
             toast.success(`Completed: "${originalTask.title}" 🎉`);
             if (soundEnabled) playCompletionSound();
+            if (typeof window !== "undefined" && (window as any).triggerConfetti) {
+              (window as any).triggerConfetti();
+            }
           }
         } else if (updates.status) {
           if (originalTask.status === "completed" || originalTask.status === "done") {
