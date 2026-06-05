@@ -9,7 +9,8 @@ import {
   ChevronUp,
   Search,
   SlidersHorizontal,
-  Tag
+  Tag,
+  Archive
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
@@ -525,6 +526,29 @@ function ListView({
                           Created {new Date(task.createdAt).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </div>
                         <div className="flex gap-2">
+                          {task.status === "archived" ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onTaskUpdate(task.id, { status: "pending" });
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[11px] font-bold hover:bg-accent/10 transition-colors"
+                            >
+                              <Archive size={12} />
+                              <span>Restore Task</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onTaskUpdate(task.id, { status: "archived" });
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-muted text-[11px] font-bold hover:bg-muted/10 hover:text-foreground transition-colors"
+                            >
+                              <Archive size={12} />
+                              <span>Archive Task</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => onTaskDelete(task.id)}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/20 text-red-500 text-[11px] font-bold hover:bg-red-500/10 transition-colors"
