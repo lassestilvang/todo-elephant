@@ -27,6 +27,7 @@ interface ListViewProps {
   selectedListId?: number | null;
   selectedLabelId?: number | null;
   onTaskDuplicate?: (task: Task) => void;
+  onClearCompleted?: () => void;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -55,7 +56,8 @@ function ListView({
   onTaskClick,
   selectedListId = null,
   selectedLabelId = null,
-  onTaskDuplicate
+  onTaskDuplicate,
+  onClearCompleted
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -254,6 +256,16 @@ function ListView({
             >
               {selectedTaskIds.length === sortedTasks.length && sortedTasks.length > 0 ? "Deselect All" : "Select All"}
             </button>
+
+            {/* Clear Completed tasks action button */}
+            {onClearCompleted && tasks.some(t => t.status === "completed" || t.status === "done") && (
+              <button
+                onClick={onClearCompleted}
+                className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl border border-red-500/20 text-red-500 bg-red-500/5 hover:bg-red-500/10 transition-all duration-150 cursor-pointer animate-fade-in"
+              >
+                Clear Completed
+              </button>
+            )}
             
             {/* Status Filter Toggles */}
             <div className="flex border border-border rounded-xl p-1 bg-muted/10 shrink-0">

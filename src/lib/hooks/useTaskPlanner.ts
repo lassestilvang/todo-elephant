@@ -449,6 +449,31 @@ export function useTaskPlanner() {
     }
   }, [pendingDeleteId, handleTaskDelete]);
 
+  const handleClearCompleted = useCallback(async () => {
+    const completedTasks = tasksRef.current.filter(t => t.status === "completed" || t.status === "done");
+    if (completedTasks.length === 0) return;
+
+    if (!window.confirm(`Are you sure you want to delete all ${completedTasks.length} completed tasks?`)) {
+      return;
+    }
+
+    const previousTasks = tasksRef.current;
+    setTasks(prev => prev.filter(t => t.status !== "completed" && t.status !== "done"));
+
+    try {
+      const promises = completedTasks.map(t => 
+        fetch(`/api/tasks/${t.id}`, { method: "DELETE" })
+      );
+      await Promise.all(promises);
+      toast.success(`Cleared ${completedTasks.length} completed tasks!`);
+      refreshLogs();
+    } catch (err) {
+      console.error(err);
+      setTasks(previousTasks);
+      toast.error("Failed to clear completed tasks");
+    }
+  }, [refreshLogs]);
+
   // Add folder helper
   const handleCreateList = useCallback(async (name: string, color: string) => {
     try {
@@ -616,6 +641,7 @@ export function useTaskPlanner() {
     handleTaskDuplicate,
     requestDelete,
     confirmDelete,
+    handleClearCompleted,
     handleCreateList,
     handleCreateLabel,
     handleTaskClick,

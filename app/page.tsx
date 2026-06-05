@@ -70,6 +70,7 @@ export default function Home() {
     handleTaskDuplicate,
     requestDelete,
     confirmDelete,
+    handleClearCompleted,
     handleCreateList,
     handleCreateLabel,
     handleTaskClick,
@@ -252,6 +253,7 @@ export default function Home() {
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
                 onTaskDuplicate={handleTaskDuplicate}
+                onClearCompleted={handleClearCompleted}
               />
             )}
           </>
