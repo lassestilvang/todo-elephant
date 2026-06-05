@@ -457,9 +457,19 @@ function ListView({
                         </div>
                       )}
 
-                      <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full ${priorityPill}`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const priorities: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
+                          const currIndex = priorities.indexOf(task.priority || "low");
+                          const nextPriority = priorities[(currIndex + 1) % priorities.length];
+                          onTaskUpdate(task.id, { priority: nextPriority });
+                        }}
+                        title="Click to cycle priority"
+                        className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full hover:scale-105 active:scale-95 transition-all cursor-pointer ${priorityPill}`}
+                      >
                         {task.priority}
-                      </span>
+                      </button>
 
                       {task.dueDate && (
                         <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${isOverdue ? "bg-red-500/10 text-red-500 animate-pulse" : "text-muted bg-muted/10"}`}>

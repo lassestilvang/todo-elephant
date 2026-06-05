@@ -440,9 +440,19 @@ function KanbanView({
                               <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
                                 {highlightText(task.title, searchQuery)}
                               </span>
-                              <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 ${priorityPill}`}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const priorities: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
+                                  const currIndex = priorities.indexOf(task.priority || "low");
+                                  const nextPriority = priorities[(currIndex + 1) % priorities.length];
+                                  onTaskUpdate(task.id, { priority: nextPriority });
+                                }}
+                                title="Click to cycle priority"
+                                className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 ${priorityPill}`}
+                              >
                                 {task.priority}
-                              </span>
+                              </button>
                             </div>
                             {task.description && (
                               <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
