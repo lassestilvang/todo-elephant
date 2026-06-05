@@ -22,6 +22,7 @@ interface DashboardViewProps {
   onAddTaskClick: () => void;
   onTaskClick: (task: Task) => void;
   onQuickAdd?: (title: string) => void;
+  onClearLogs?: () => void;
 }
 
 function DashboardView({
@@ -30,7 +31,8 @@ function DashboardView({
   activityLogs,
   onAddTaskClick,
   onTaskClick,
-  onQuickAdd
+  onQuickAdd,
+  onClearLogs
 }: DashboardViewProps) {
   const [quickTitle, setQuickTitle] = useState("");
   
@@ -513,10 +515,21 @@ function DashboardView({
 
           {/* Activity Logs */}
           <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel flex-1 flex flex-col animate-fade-in overflow-hidden" style={{ animationDelay: "420ms", animationFillMode: "backwards" }}>
-            <h3 className="text-sm font-bold tracking-tight mb-4 flex items-center gap-2">
-              <Layers size={16} className="text-accent" />
-              <span>Activity Trail</span>
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
+                <Layers size={16} className="text-accent" />
+                <span>Activity Trail</span>
+              </h3>
+              {activityLogs.length > 0 && onClearLogs && (
+                <button
+                  onClick={onClearLogs}
+                  title="Clear activity trail"
+                  className="text-muted hover:text-red-500 hover:bg-red-500/10 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all duration-150 cursor-pointer"
+                >
+                  Clear Trail
+                </button>
+              )}
+            </div>
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
               {activityLogs.length === 0 ? (

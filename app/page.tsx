@@ -71,6 +71,7 @@ export default function Home() {
     requestDelete,
     confirmDelete,
     handleClearCompleted,
+    handleClearLogs,
     handleCreateList,
     handleCreateLabel,
     handleTaskClick,
@@ -225,6 +226,7 @@ export default function Home() {
                 onAddTaskClick={openCreateModal}
                 onTaskClick={handleTaskClick}
                 onQuickAdd={handleQuickAdd}
+                onClearLogs={handleClearLogs}
               />
             )}
 

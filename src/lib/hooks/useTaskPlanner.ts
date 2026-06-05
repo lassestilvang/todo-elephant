@@ -474,6 +474,21 @@ export function useTaskPlanner() {
     }
   }, [refreshLogs]);
 
+  const handleClearLogs = useCallback(async () => {
+    if (!window.confirm("Are you sure you want to clear the activity trail?")) return;
+    try {
+      const res = await fetch("/api/activity-logs", { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json();
+        setActivityLogs(data.activityLogs || []);
+        toast.success("Activity trail cleared!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to clear activity trail");
+    }
+  }, []);
+
   // Add folder helper
   const handleCreateList = useCallback(async (name: string, color: string) => {
     try {
@@ -642,6 +657,7 @@ export function useTaskPlanner() {
     requestDelete,
     confirmDelete,
     handleClearCompleted,
+    handleClearLogs,
     handleCreateList,
     handleCreateLabel,
     handleTaskClick,
