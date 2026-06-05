@@ -285,6 +285,7 @@ export default function Home() {
         onSelectTask={handleTaskClick}
         setThemeMode={updateTheme}
         setAccentColor={setAccentColor}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
       />
 
       {/* Task Creation & Modification Glass Modal */}

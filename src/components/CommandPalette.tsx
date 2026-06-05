@@ -13,6 +13,7 @@ interface CommandPaletteProps {
   onSelectTask: (task: Task) => void;
   setThemeMode?: (mode: "light" | "dark" | "system") => void;
   setAccentColor?: (color: string) => void;
+  onOpenShortcuts?: () => void;
 }
 
 function CommandPalette({
@@ -23,7 +24,8 @@ function CommandPalette({
   onCreateTask,
   onSelectTask,
   setThemeMode,
-  setAccentColor
+  setAccentColor,
+  onOpenShortcuts
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -136,8 +138,17 @@ function CommandPalette({
       });
     }
 
+    if (onOpenShortcuts) {
+      list.push({
+        id: "v-shortcuts",
+        title: "Help: Show Keyboard Shortcuts Dialog",
+        type: "navigation",
+        action: () => { onOpenShortcuts(); }
+      });
+    }
+
     return list;
-  }, [setView, setThemeMode, setAccentColor]);
+  }, [setView, setThemeMode, setAccentColor, onOpenShortcuts]);
 
   // Combine commands and tasks matching query
   const sections = useMemo(() => {
