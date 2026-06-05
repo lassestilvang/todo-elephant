@@ -65,6 +65,23 @@ const getRelativeDateString = (dateStr: string) => {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 };
 
+const getDueDateBadgeClass = (dateStr: string, isDone: boolean) => {
+  if (isDone) return "text-muted bg-muted/10";
+  
+  const date = new Date(dateStr);
+  const now = new Date();
+  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffTime = dDate.getTime() - dNow.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return "bg-red-500/10 text-red-500 animate-pulse";
+  if (diffDays === 0) return "bg-amber-500/10 text-amber-500 border border-amber-500/20";
+  if (diffDays === 1) return "bg-blue-500/10 text-blue-500 border border-blue-500/20";
+  
+  return "text-muted bg-muted/10";
+};
+
 function ListView({
   tasks,
   lists,
@@ -472,7 +489,7 @@ function ListView({
                       </button>
 
                       {task.dueDate && (
-                        <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${isOverdue ? "bg-red-500/10 text-red-500 animate-pulse" : "text-muted bg-muted/10"}`}>
+                        <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${getDueDateBadgeClass(task.dueDate, isDone)}`}>
                           <Calendar size={10} />
                           <span>{getRelativeDateString(task.dueDate)}</span>
                           {isOverdue && <span className="text-[9px] uppercase">Overdue</span>}
