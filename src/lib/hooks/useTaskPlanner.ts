@@ -606,6 +606,10 @@ export function useTaskPlanner() {
     setSubtasksChecklist(prev => prev.filter(s => s.id !== id));
   }, []);
 
+  const handleToggleSubtask = useCallback((id: number) => {
+    setSubtasksChecklist(prev => prev.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
+  }, []);
+
   return {
     currentView,
     setView,
@@ -666,6 +670,7 @@ export function useTaskPlanner() {
     handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
+    handleToggleSubtask,
     transitionView,
     soundEnabled,
     setSoundEnabled,

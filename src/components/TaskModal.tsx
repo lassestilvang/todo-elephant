@@ -29,6 +29,7 @@ interface TaskModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onAddSubtask: () => void;
   onRemoveSubtask: (id: number) => void;
+  onToggleSubtask?: (id: number) => void;
   lists: List[];
   labels: Label[];
 }
@@ -58,6 +59,7 @@ function TaskModal({
   onSubmit,
   onAddSubtask,
   onRemoveSubtask,
+  onToggleSubtask,
   lists,
   labels,
 }: TaskModalProps) {
@@ -303,11 +305,33 @@ function TaskModal({
                 key={sub.id}
                 className="flex items-center justify-between gap-3 bg-muted/10 p-2 rounded-xl border border-border/40 text-sm"
               >
-                <span className="font-medium text-foreground truncate">{sub.title}</span>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {onToggleSubtask && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleSubtask(sub.id)}
+                      aria-label={sub.completed ? "Mark as incomplete" : "Mark as complete"}
+                      aria-checked={sub.completed}
+                      role="checkbox"
+                      className="p-1 -m-1 rounded"
+                    >
+                      <span className={`w-4 h-4 rounded border flex items-center justify-center transition-all cursor-pointer ${
+                        sub.completed 
+                          ? "bg-accent border-accent text-white" 
+                          : "border-border hover:border-accent"
+                      }`}>
+                        {sub.completed && <span className="w-1 h-1 bg-white rounded-full" />}
+                      </span>
+                    </button>
+                  )}
+                  <span className={`font-medium truncate ${sub.completed ? "line-through text-muted" : "text-foreground"}`}>
+                    {sub.title}
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => onRemoveSubtask(sub.id)}
-                  className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors cursor-pointer"
+                  className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 p-1 rounded transition-colors cursor-pointer shrink-0"
                 >
                   <X size={12} />
                 </button>

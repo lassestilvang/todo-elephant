@@ -80,6 +80,7 @@ export default function Home() {
     handleQuickAdd,
     handleAddSubtask,
     handleRemoveSubtask,
+    handleToggleSubtask,
     transitionView,
     soundEnabled,
     setSoundEnabled,
@@ -302,6 +303,7 @@ export default function Home() {
         onSubmit={handleTaskSubmit}
         onAddSubtask={handleAddSubtask}
         onRemoveSubtask={handleRemoveSubtask}
+        onToggleSubtask={handleToggleSubtask}
         lists={lists}
         labels={labels}
       />
