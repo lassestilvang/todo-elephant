@@ -385,10 +385,12 @@ function KanbanView({
                                 return (
                                   <span 
                                     key={labelId} 
-                                    className="w-4 h-1 rounded-full" 
-                                    style={{ backgroundColor: label.color }} 
+                                    className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md border border-border/45 text-foreground"
+                                    style={{ backgroundColor: `${label.color}15`, color: label.color, borderColor: `${label.color}30` }}
                                     title={label.name}
-                                  />
+                                  >
+                                    {label.name}
+                                  </span>
                                 );
                               })}
                             </div>
