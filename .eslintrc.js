@@ -1,4 +1,4 @@
-export default {
+const config = {
   src: ["./src/**/*.{js,ts,jsx,tsx}"],
   plugins: [
     "@babel/plugin-proposal-class-properties",
@@ -11,4 +11,6 @@ export default {
     "no-console": ["warn", { allow: ["error", "warn"] }],
     "import/prefer-default-export": "off"
   }
-}
+};
+
+export default config;

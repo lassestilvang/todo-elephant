@@ -260,8 +260,8 @@ export function useTaskPlanner() {
           if (originalTask.status !== "completed" && originalTask.status !== "done") {
             toast.success(`Completed: "${originalTask.title}" 🎉`);
             if (soundEnabled) playCompletionSound();
-            if (typeof window !== "undefined" && (window as any).triggerConfetti) {
-              (window as any).triggerConfetti();
+            if (typeof window !== "undefined" && (window as Window & { triggerConfetti?: () => void }).triggerConfetti) {
+              (window as Window & { triggerConfetti?: () => void }).triggerConfetti();
             }
           }
         } else if (updates.status) {

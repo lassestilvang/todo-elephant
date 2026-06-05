@@ -77,7 +77,7 @@ export default function ConfettiCanvas() {
     };
 
     // Attach to window so it can be triggered globally
-    (window as any).triggerConfetti = createConfetti;
+    (window as Window & { triggerConfetti?: () => void }).triggerConfetti = createConfetti;
 
     const animate = () => {
       if (!canvas || !ctx) return;
@@ -126,7 +126,7 @@ export default function ConfettiCanvas() {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      delete (window as any).triggerConfetti;
+      delete (window as Window & { triggerConfetti?: () => void }).triggerConfetti;
     };
   }, []);
 
