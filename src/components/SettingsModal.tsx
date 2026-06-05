@@ -165,6 +165,8 @@ function SettingsModal({
               <p className="text-[10px] text-muted leading-none">Play melodic chimes on task completion</p>
             </div>
             <input
+              id="sound-effects-toggle"
+              name="sound-effects-toggle"
               type="checkbox"
               checked={soundEnabled}
               onChange={(e) => {
