@@ -124,10 +124,11 @@ function TaskModal({
       ref={dialogRef}
       closedby="any"
       aria-labelledby="task-modal-title"
-      className="w-full max-w-lg rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden p-0 backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm max-h-[90vh] flex flex-col focus:outline-none"
+      className="w-full max-w-lg rounded-2xl border border-border bg-card/90 shadow-2xl glass-panel glow-primary overflow-hidden p-0 backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm max-h-[90vh] focus:outline-none"
     >
-      {/* Modal Top Bar */}
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="flex flex-col h-full max-h-[90vh]">
+        {/* Modal Top Bar */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
         <h3 id="task-modal-title" className="font-bold text-sm leading-tight flex items-center gap-2">
           <ListTodo size={16} className="text-accent" />
           <span>{mode === "create" ? "Create New Task" : "Edit Planner Task"}</span>
@@ -340,6 +341,7 @@ function TaskModal({
           </button>
         </div>
       </form>
+      </div>
     </dialog>
   );
 }
