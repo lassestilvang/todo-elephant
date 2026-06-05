@@ -115,10 +115,13 @@ function DashboardView({
             <Zap size={16} className="text-accent group-focus-within:animate-pulse" />
           </div>
           <input
+            id="dashboard-quick-capture"
+            name="dashboard-quick-capture"
             type="text"
             value={quickTitle}
             onChange={e => setQuickTitle(e.target.value)}
             placeholder="Quick capture: press Enter to save..."
+            aria-label="Quick capture task name"
             className="w-full bg-card/40 backdrop-blur-md border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-sm"
           />
           <button
