@@ -235,6 +235,8 @@ export default function Home() {
                 onTaskDelete={requestDelete}
                 onTaskClick={handleTaskClick}
                 onAddTask={handleKanbanAddTask}
+                selectedListId={selectedListId}
+                selectedLabelId={selectedLabelId}
               />
             )}
 
@@ -246,6 +248,8 @@ export default function Home() {
                 onTaskUpdate={handleTaskUpdateDirect}
                 onTaskDelete={requestDelete}
                 onTaskClick={handleTaskClick}
+                selectedListId={selectedListId}
+                selectedLabelId={selectedLabelId}
               />
             )}
           </>
