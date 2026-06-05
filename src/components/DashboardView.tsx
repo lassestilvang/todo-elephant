@@ -82,10 +82,67 @@ function DashboardView({
       return dueDate >= now && dueDate <= threeDaysFromNow;
     }).slice(0, 3);
 
-    return { total, completed, pending, inProgress, overdueTasks, completionRate, productivityScore, totalSubtasks, completedSubtasks: completedSubtasksCount, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks };
+    // Last 7 days activity
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d;
+    }).reverse();
+
+    const activityData = last7Days.map(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const count = tasks.filter(t => {
+        const isDone = t.status === "completed" || t.status === "done";
+        if (!isDone) return false;
+        const refDate = t.completedAt || t.updatedAt || t.createdAt;
+        if (!refDate) return false;
+        return refDate.split('T')[0] === dateStr;
+      }).length;
+      return {
+        label: date.toLocaleDateString([], { weekday: 'short' }),
+        count
+      };
+    });
+
+    const maxActivityCount = Math.max(...activityData.map(d => d.count), 1);
+
+    return { 
+      total, 
+      completed, 
+      pending, 
+      inProgress, 
+      overdueTasks, 
+      completionRate, 
+      productivityScore, 
+      totalSubtasks, 
+      completedSubtasks: completedSubtasksCount, 
+      highPriority, 
+      mediumPriority, 
+      lowPriority, 
+      getPriorityPercent, 
+      recentTasks, 
+      upcomingTasks,
+      activityData,
+      maxActivityCount
+    };
   }, [tasks]);
 
-  const { completed, pending, inProgress, overdueTasks, completionRate, productivityScore, highPriority, mediumPriority, lowPriority, getPriorityPercent, recentTasks, upcomingTasks } = analytics;
+  const { 
+    completed, 
+    pending, 
+    inProgress, 
+    overdueTasks, 
+    completionRate, 
+    productivityScore, 
+    highPriority, 
+    mediumPriority, 
+    lowPriority, 
+    getPriorityPercent, 
+    recentTasks, 
+    upcomingTasks,
+    activityData,
+    maxActivityCount
+  } = analytics;
 
   const handleQuickAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,8 +302,8 @@ function DashboardView({
         {/* Left Side (Two Columns): Active List & Priority breakdown */}
         <div className="xl:col-span-2 space-y-8">
           
-          {/* Priority Breakdown & Folder Categories cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Priority Breakdown, Weekly Activity, & Upcoming Deadlines cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Priority Progress Bars */}
             <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "backwards" }}>
@@ -303,8 +360,38 @@ function DashboardView({
               </div>
             </div>
 
+            {/* Weekly Activity Trend */}
+            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "280ms", animationFillMode: "backwards" }}>
+              <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-500" />
+                <span>Weekly Activity</span>
+              </h3>
+              <div className="flex items-end justify-between h-28 pt-2 px-1 relative">
+                {activityData.map((day, idx) => {
+                  const percent = (day.count / maxActivityCount) * 100;
+                  return (
+                    <div key={idx} className="flex flex-col items-center gap-2 flex-1 group relative">
+                      {/* Tooltip on hover */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded absolute -translate-y-8 pointer-events-none shadow-md whitespace-nowrap z-10">
+                        {day.count} {day.count === 1 ? 'task' : 'tasks'}
+                      </div>
+                      {/* Bar */}
+                      <div className="w-5 bg-muted/20 rounded-t-md relative overflow-hidden h-20 flex items-end">
+                        <div 
+                          className="w-full bg-gradient-to-t from-accent/80 to-accent rounded-t-md transition-all duration-700 origin-bottom"
+                          style={{ height: `${Math.max(percent, 5)}%` }}
+                        />
+                      </div>
+                      {/* Label */}
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-tight">{day.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Upcoming Deadlines Widget */}
-            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "backwards" }}>
+            <div className="p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-md glass-panel space-y-4 animate-fade-in" style={{ animationDelay: "320ms", animationFillMode: "backwards" }}>
               <h3 className="text-sm font-bold tracking-tight flex items-center gap-2">
                 <Star size={16} className="text-amber-500" />
                 <span>Upcoming Deadlines</span>
