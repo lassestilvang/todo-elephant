@@ -14,7 +14,8 @@ import {
   Archive,
   Search,
   SlidersHorizontal,
-  Tag
+  Tag,
+  Copy
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
@@ -27,6 +28,7 @@ interface KanbanViewProps {
   onTaskDelete: (id: number) => void;
   onTaskClick: (task: Task) => void;
   onAddTask: (title: string, status: string) => void;
+  onTaskDuplicate?: (task: Task) => void;
   selectedListId?: number | null;
   selectedLabelId?: number | null;
 }
@@ -90,6 +92,7 @@ function KanbanView({
   onTaskDelete,
   onTaskClick,
   onAddTask,
+  onTaskDuplicate,
   selectedListId = null,
   selectedLabelId = null
 }: KanbanViewProps) {
@@ -553,6 +556,16 @@ function KanbanView({
                             >
                               <Trash2 size={12} />
                             </button>
+
+                            {onTaskDuplicate && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onTaskDuplicate(task); }}
+                                aria-label="Duplicate task"
+                                className="text-muted hover:text-foreground hover:bg-muted/30 p-1.5 rounded-lg transition-all"
+                              >
+                                <Copy size={12} />
+                              </button>
+                            )}
 
                             <button
                               onClick={(e) => { e.stopPropagation(); moveStatus(task.id, col.id, "next"); }}
