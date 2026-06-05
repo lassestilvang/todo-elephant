@@ -96,39 +96,44 @@ export function useTaskPlanner() {
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
 
+  const refreshData = useCallback(async () => {
+    try {
+      const [tRes, lRes, tagRes, logRes] = await Promise.all([
+        fetch("/api/tasks"),
+        fetch("/api/lists"),
+        fetch("/api/labels"),
+        fetch("/api/activity-logs"),
+      ]);
+
+      const [tData, lData, tagData, logData] = await Promise.all([
+        tRes.ok ? tRes.json() : [],
+        lRes.ok ? lRes.json() : [],
+        tagRes.ok ? tagRes.json() : [],
+        logRes.ok ? logRes.json() : [],
+      ]);
+
+      setTasks(tData);
+      setLists(lData);
+      setLabels(tagData);
+      setActivityLogs(logData);
+    } catch (err) {
+      console.error("Data refresh error:", err);
+      toast.error("Failed to refresh planner data");
+    }
+  }, []);
+
   // Fetch initial data in parallel
   useEffect(() => {
     async function initApp() {
       try {
         setLoading(true);
-
-        const [tRes, lRes, tagRes, logRes] = await Promise.all([
-          fetch("/api/tasks"),
-          fetch("/api/lists"),
-          fetch("/api/labels"),
-          fetch("/api/activity-logs"),
-        ]);
-
-        const [tData, lData, tagData, logData] = await Promise.all([
-          tRes.ok ? tRes.json() : [],
-          lRes.ok ? lRes.json() : [],
-          tagRes.ok ? tagRes.json() : [],
-          logRes.ok ? logRes.json() : [],
-        ]);
-
-        setTasks(tData);
-        setLists(lData);
-        setLabels(tagData);
-        setActivityLogs(logData);
-      } catch (err) {
-        console.error("Initialization error:", err);
-        toast.error("Failed to load initial planner data");
+        await refreshData();
       } finally {
         setLoading(false);
       }
     }
     initApp();
-  }, []);
+  }, [refreshData]);
 
   // Refresh logs helper
   const refreshLogs = useCallback(async () => {
@@ -538,6 +543,7 @@ export function useTaskPlanner() {
     handleRemoveSubtask,
     transitionView,
     soundEnabled,
-    setSoundEnabled
+    setSoundEnabled,
+    refreshData
   };
 }
