@@ -134,6 +134,15 @@ export default function Home() {
           e.preventDefault();
           setIsShortcutsOpen(true);
           break;
+        case "/":
+          e.preventDefault();
+          const searchInput = document.getElementById(
+            currentView === "kanban" ? "kanban-search" : "list-search"
+          );
+          if (searchInput) {
+            searchInput.focus();
+          }
+          break;
         case ",":
           if (e.metaKey || e.ctrlKey) {
             e.preventDefault();

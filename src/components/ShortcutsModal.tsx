@@ -53,6 +53,7 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
     { key: "1", description: "Switch to Dashboard" },
     { key: "2", description: "Switch to Kanban" },
     { key: "3", description: "Switch to List" },
+    { key: "/", description: "Focus search input" },
     { key: "⌘ K", description: "Open Command Palette" },
     { key: "⌘ ,", description: "Open Settings" },
     { key: "?", description: "Show this help" },
