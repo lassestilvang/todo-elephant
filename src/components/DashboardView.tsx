@@ -23,6 +23,7 @@ interface DashboardViewProps {
   onTaskClick: (task: Task) => void;
   onQuickAdd?: (title: string) => void;
   onClearLogs?: () => void;
+  onTaskUpdate?: (id: number, updates: Partial<Task>) => void;
 }
 
 function DashboardView({
@@ -32,7 +33,8 @@ function DashboardView({
   onAddTaskClick,
   onTaskClick,
   onQuickAdd,
-  onClearLogs
+  onClearLogs,
+  onTaskUpdate
 }: DashboardViewProps) {
   const [quickTitle, setQuickTitle] = useState("");
   
@@ -455,20 +457,42 @@ function DashboardView({
                       className="py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/5 px-2 rounded-xl transition-all duration-150 group animate-fade-in"
                       style={{ animationDelay: `${taskIdx * 40}ms`, animationFillMode: "backwards" }}
                     >
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold truncate ${
-                            isDone ? "line-through text-muted" : "text-foreground"
-                          }`}>
-                            {task.title}
-                          </span>
-                          {task.priority === "high" && (
-                            <span className="px-1.5 py-0.5 text-[11px] font-bold bg-red-500/10 text-red-500 rounded uppercase">high</span>
-                          )}
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        {onTaskUpdate && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTaskUpdate(task.id, { status: isDone ? "pending" : "completed" });
+                            }}
+                            aria-label={isDone ? "Mark as incomplete" : "Mark as complete"}
+                            aria-checked={isDone}
+                            role="checkbox"
+                            className="p-1 -m-1 rounded-full mt-0.5 shrink-0"
+                          >
+                            <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center checkbox-pulse transition-all ${
+                              isDone 
+                                ? "bg-accent border-accent text-white" 
+                                : "border-border hover:border-accent"
+                            }`}>
+                              {isDone && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+                            </span>
+                          </button>
+                        )}
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-semibold truncate ${
+                              isDone ? "line-through text-muted" : "text-foreground"
+                            }`}>
+                              {task.title}
+                            </span>
+                            {task.priority === "high" && (
+                              <span className="px-1.5 py-0.5 text-[11px] font-bold bg-red-500/10 text-red-500 rounded uppercase">high</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted truncate max-w-md">
+                            {task.description || "No description provided."}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted truncate max-w-md">
-                          {task.description || "No description provided."}
-                        </p>
                       </div>
                       
                       <div className="flex items-center gap-3 shrink-0">

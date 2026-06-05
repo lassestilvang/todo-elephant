@@ -227,6 +227,7 @@ export default function Home() {
                 onTaskClick={handleTaskClick}
                 onQuickAdd={handleQuickAdd}
                 onClearLogs={handleClearLogs}
+                onTaskUpdate={handleTaskUpdateDirect}
               />
             )}
 
