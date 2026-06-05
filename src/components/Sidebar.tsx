@@ -12,7 +12,8 @@ import {
   ChevronRight, 
   Plus,
   TrendingUp,
-  Settings
+  Settings,
+  Search
 } from "lucide-react";
 import { List, Label, Task } from "@/types";
 
@@ -55,6 +56,19 @@ function Sidebar({
   const [newListColor, setNewListColor] = useState("#3b82f6");
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#64748b");
+  
+  const [listSearchQuery, setListSearchQuery] = useState("");
+  const [showListSearch, setShowListSearch] = useState(false);
+  const [labelSearchQuery, setLabelSearchQuery] = useState("");
+  const [showLabelSearch, setShowLabelSearch] = useState(false);
+
+  const filteredLists = lists.filter(list => 
+    list.name.toLowerCase().includes(listSearchQuery.toLowerCase())
+  );
+
+  const filteredLabels = labels.filter(label => 
+    label.name.toLowerCase().includes(labelSearchQuery.toLowerCase())
+  );
   
   const handleCreateList = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,14 +168,35 @@ function Sidebar({
         <div className="space-y-1">
           <div className="flex items-center justify-between px-3 mb-2">
             <h3 className="text-xs font-semibold tracking-wider text-muted uppercase">Folders</h3>
-            <button 
-              onClick={() => setShowAddList(!showAddList)}
-              aria-label="Add folder"
-              className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
-            >
-              <Plus size={14} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => { setShowListSearch(!showListSearch); if (showListSearch) setListSearchQuery(""); }}
+                aria-label="Search folders"
+                className={`text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors ${showListSearch ? "text-accent bg-accent/10" : ""}`}
+              >
+                <Search size={14} />
+              </button>
+              <button 
+                onClick={() => setShowAddList(!showAddList)}
+                aria-label="Add folder"
+                className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
           </div>
+
+          {showListSearch && (
+            <div className="px-3 mb-2 animate-fade-in">
+              <input
+                type="text"
+                value={listSearchQuery}
+                onChange={e => setListSearchQuery(e.target.value)}
+                placeholder="Search folders..."
+                className="w-full text-xs bg-background/50 border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
+            </div>
+          )}
 
           {showAddList && (
             <form onSubmit={handleCreateList} className="p-3 mb-2 rounded-xl bg-muted/20 border border-border space-y-3 animate-fade-in">
@@ -205,7 +240,7 @@ function Sidebar({
           )}
 
           <div className="space-y-0.5">
-            {lists.map(list => {
+            {filteredLists.map(list => {
               const listTasks = tasks.filter(t => t.listId === list.id && t.status !== "completed" && t.status !== "done" && t.status !== "archived");
               return (
                 <button
@@ -225,6 +260,9 @@ function Sidebar({
                 </button>
               );
             })}
+            {filteredLists.length === 0 && listSearchQuery && (
+              <div className="text-center py-2 text-xs text-muted">No folders found</div>
+            )}
           </div>
         </div>
 
@@ -232,14 +270,35 @@ function Sidebar({
         <div className="space-y-1">
           <div className="flex items-center justify-between px-3 mb-2">
             <h3 className="text-xs font-semibold tracking-wider text-muted uppercase">Labels</h3>
-            <button 
-              onClick={() => setShowAddLabel(!showAddLabel)}
-              aria-label="Add label"
-              className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
-            >
-              <Plus size={14} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => { setShowLabelSearch(!showLabelSearch); if (showLabelSearch) setLabelSearchQuery(""); }}
+                aria-label="Search labels"
+                className={`text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors ${showLabelSearch ? "text-accent bg-accent/10" : ""}`}
+              >
+                <Search size={14} />
+              </button>
+              <button 
+                onClick={() => setShowAddLabel(!showAddLabel)}
+                aria-label="Add label"
+                className="text-muted hover:text-foreground hover:bg-muted/20 p-1 rounded-lg transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
           </div>
+
+          {showLabelSearch && (
+            <div className="px-3 mb-2 animate-fade-in">
+              <input
+                type="text"
+                value={labelSearchQuery}
+                onChange={e => setLabelSearchQuery(e.target.value)}
+                placeholder="Search labels..."
+                className="w-full text-xs bg-background/50 border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
+            </div>
+          )}
 
           {showAddLabel && (
             <form onSubmit={handleCreateLabel} className="p-3 mb-2 rounded-xl bg-muted/20 border border-border space-y-3 animate-fade-in">
@@ -283,7 +342,7 @@ function Sidebar({
           )}
 
           <div className="flex flex-wrap gap-1.5 px-3">
-            {labels.map(label => (
+            {filteredLabels.map(label => (
               <button
                 key={label.id}
                 onClick={() => { setSelectedLabelId(label.id); setSelectedListId(null); }}
@@ -297,6 +356,9 @@ function Sidebar({
                 <span>{label.name}</span>
               </button>
             ))}
+            {filteredLabels.length === 0 && labelSearchQuery && (
+              <div className="w-full text-center py-2 text-xs text-muted">No labels found</div>
+            )}
           </div>
         </div>
 
