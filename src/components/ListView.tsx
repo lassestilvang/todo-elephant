@@ -54,6 +54,7 @@ function ListView({
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
 
   // Toggle collapsible subtask checklist accordion
   const toggleExpanded = (id: number, e: React.MouseEvent) => {
@@ -119,6 +120,41 @@ function ListView({
     });
   }, [filteredTasks, sortBy]);
 
+  const handleSelectTask = (id: number) => {
+    setSelectedTaskIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkComplete = () => {
+    selectedTaskIds.forEach(id => {
+      onTaskUpdate(id, { status: "completed" });
+    });
+    setSelectedTaskIds([]);
+  };
+
+  const handleBulkPending = () => {
+    selectedTaskIds.forEach(id => {
+      onTaskUpdate(id, { status: "pending" });
+    });
+    setSelectedTaskIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    selectedTaskIds.forEach(id => {
+      onTaskDelete(id);
+    });
+    setSelectedTaskIds([]);
+  };
+
+  const handleSelectAllToggle = () => {
+    if (selectedTaskIds.length === sortedTasks.length) {
+      setSelectedTaskIds([]);
+    } else {
+      setSelectedTaskIds(sortedTasks.map(t => t.id));
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden animate-fade-in">
       
@@ -148,6 +184,14 @@ function ListView({
 
           {/* Quick Filters */}
           <div className="flex flex-wrap items-center gap-2">
+            
+            {/* Bulk Selection toggle */}
+            <button
+              onClick={handleSelectAllToggle}
+              className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl border border-border bg-muted/10 text-muted hover:text-foreground hover:bg-muted/20 transition-all duration-150"
+            >
+              {selectedTaskIds.length === sortedTasks.length && sortedTasks.length > 0 ? "Deselect All" : "Select All"}
+            </button>
             
             {/* Status Filter Toggles */}
             <div className="flex border border-border rounded-xl p-1 bg-muted/10 shrink-0">
@@ -251,6 +295,24 @@ function ListView({
                   {/* Task Header row */}
                   <div className="px-5 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Bulk Selection Checkbox */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectTask(task.id);
+                        }}
+                        aria-label="Select task for bulk action"
+                        className="p-1 -m-1 rounded-md shrink-0"
+                      >
+                        <span className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                          selectedTaskIds.includes(task.id)
+                            ? "bg-accent/25 border-accent text-accent"
+                            : "border-border/60 hover:border-accent"
+                        }`}>
+                          {selectedTaskIds.includes(task.id) && <span className="w-1.5 h-1.5 bg-accent rounded-sm animate-scale-in" />}
+                        </span>
+                      </button>
+
                       {/* Interactive Status Checkbox */}
                       <button
                         onClick={(e) => handleStatusToggle(task, e)}
@@ -425,6 +487,41 @@ function ListView({
         )}
         <div className="scroll-indicator-bottom" />
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {selectedTaskIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3.5 rounded-2xl bg-card/90 backdrop-blur-md border border-accent/20 shadow-2xl animate-slide-up">
+          <span className="text-[11px] font-bold text-foreground">
+            {selectedTaskIds.length} selected
+          </span>
+          <div className="w-px h-4 bg-border" />
+          <button
+            onClick={handleBulkComplete}
+            className="text-[11px] font-bold text-accent hover:underline transition-all"
+          >
+            Complete
+          </button>
+          <button
+            onClick={handleBulkPending}
+            className="text-[11px] font-bold text-muted hover:text-foreground transition-all"
+          >
+            Mark Active
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            className="text-[11px] font-bold text-red-500 hover:text-red-400 transition-all"
+          >
+            Delete
+          </button>
+          <div className="w-px h-4 bg-border" />
+          <button
+            onClick={() => setSelectedTaskIds([])}
+            className="text-[11px] font-bold text-muted hover:text-foreground transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
     </div>
   );
