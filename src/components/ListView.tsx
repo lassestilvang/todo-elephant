@@ -208,6 +208,13 @@ function ListView({
     setSelectedTaskIds([]);
   };
 
+  const handleBulkPriority = (priority: "high" | "medium" | "low") => {
+    selectedTaskIds.forEach(id => {
+      onTaskUpdate(id, { priority });
+    });
+    setSelectedTaskIds([]);
+  };
+
   const handleSelectAllToggle = () => {
     if (selectedTaskIds.length === sortedTasks.length) {
       setSelectedTaskIds([]);
@@ -699,6 +706,25 @@ function ListView({
             className="text-[11px] font-bold text-red-500 hover:text-red-400 transition-all"
           >
             Delete
+          </button>
+          <div className="w-px h-4 bg-border" />
+          <button
+            onClick={() => handleBulkPriority("high")}
+            className="text-[11px] font-bold text-red-500/80 hover:text-red-500 transition-all"
+          >
+            High
+          </button>
+          <button
+            onClick={() => handleBulkPriority("medium")}
+            className="text-[11px] font-bold text-amber-500/80 hover:text-amber-500 transition-all"
+          >
+            Medium
+          </button>
+          <button
+            onClick={() => handleBulkPriority("low")}
+            className="text-[11px] font-bold text-blue-500/80 hover:text-blue-500 transition-all"
+          >
+            Low
           </button>
           <div className="w-px h-4 bg-border" />
           <button
