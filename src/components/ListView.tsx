@@ -295,10 +295,13 @@ function ListView({
 
                       {/* Subtask checklist gauge */}
                       {subCount > 0 && (
-                        <span className="text-[11px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <div className="text-[11px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1.5">
                           <CheckSquare size={10} />
                           <span>{subCompleted}/{subCount}</span>
-                        </span>
+                          <div className="w-8 h-1 bg-accent/20 rounded-full overflow-hidden hidden sm:block">
+                            <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${subPercent}%` }} />
+                          </div>
+                        </div>
                       )}
 
                       {/* Accordion expand toggle button */}
