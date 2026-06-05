@@ -1,7 +1,8 @@
 "use client";
 
-import { Settings, X, Palette, Monitor, Volume2 } from "lucide-react";
+import { Settings, X, Palette, Monitor, Volume2, Download, Upload } from "lucide-react";
 import React, { memo, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface SettingsModalProps {
   setAccentColor: (color: string) => void;
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
+  refreshData: () => Promise<void>;
 }
 
 const ACCENT_COLORS = [
@@ -30,6 +32,7 @@ function SettingsModal({
   setAccentColor,
   soundEnabled,
   setSoundEnabled,
+  refreshData,
 }: SettingsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -88,6 +91,64 @@ function SettingsModal({
     // Re-calculating HSL from Hex is complex in pure JS without a library, 
     // so I'll just set the raw color and update the theme to use it.
     root.style.setProperty("--accent", color); 
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch("/api/backup");
+      if (!response.ok) throw new Error("Failed to fetch backup");
+      const data = await response.json();
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `todo-elephant-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Backup downloaded successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export database");
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        
+        if (!json || !Array.isArray(json.tasks) || !Array.isArray(json.lists) || !Array.isArray(json.labels)) {
+          toast.error("Invalid backup file format");
+          return;
+        }
+
+        const response = await fetch("/api/backup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(json),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to restore backup");
+        }
+
+        toast.success("Database restored successfully!");
+        await refreshData();
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to parse or restore backup file");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
   };
 
   return (
@@ -176,6 +237,35 @@ function SettingsModal({
               className="w-4 h-4 rounded border-border text-accent focus:ring-accent bg-background cursor-pointer"
             />
           </label>
+        </div>
+
+        {/* Data Portability */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider">
+            <Download size={14} />
+            <span>Data Portability</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={handleExport}
+              className="flex items-center justify-center gap-2 p-3 rounded-xl bg-muted/10 border border-border/40 text-xs font-semibold text-foreground transition-all hover:bg-muted/15 cursor-pointer"
+            >
+              <Download size={14} />
+              <span>Export Backup</span>
+            </button>
+            
+            <label className="flex items-center justify-center gap-2 p-3 rounded-xl bg-muted/10 border border-border/40 text-xs font-semibold text-foreground cursor-pointer transition-all hover:bg-muted/15">
+              <Upload size={14} />
+              <span>Import Backup</span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </label>
+          </div>
         </div>
 
         {/* About / Credits */}
