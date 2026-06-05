@@ -131,10 +131,13 @@ function ListView({
           <div className="flex items-center gap-2.5 px-3 bg-muted/10 border border-border/80 rounded-xl py-2 flex-1 max-w-sm">
             <Search size={16} className="text-muted shrink-0" />
             <input
+              id="list-search"
+              name="list-search"
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search in planner..."
+              aria-label="Search tasks"
               className="w-full bg-transparent border-0 outline-none text-xs text-foreground placeholder:text-muted/60 focus:ring-0 focus:outline-none"
             />
           </div>
@@ -163,8 +166,11 @@ function ListView({
             <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
               <SlidersHorizontal size={12} className="text-muted" />
               <select
+                id="list-sort"
+                name="list-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority")}
+                aria-label="Sort tasks"
                 className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
               >
                 <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
