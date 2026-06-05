@@ -51,6 +51,7 @@ function ListView({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed" | "archived">("all");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
 
@@ -87,6 +88,9 @@ function ListView({
           return label?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
         });
       
+      const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      if (!matchesPriority) return false;
+      
       const isCompleted = task.status === "completed" || task.status === "done";
       const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
       const isArchived = task.status === "archived";
@@ -96,7 +100,7 @@ function ListView({
       if (statusFilter === "archived") return matchesSearch && isArchived;
       return matchesSearch && !isArchived;
     });
-  }, [tasks, debouncedSearchQuery, statusFilter, labels]);
+  }, [tasks, debouncedSearchQuery, statusFilter, priorityFilter, labels]);
 
   const sortedTasks = useMemo(() => {
     return [...filteredTasks].sort((a, b) => {
@@ -176,6 +180,24 @@ function ListView({
                 <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
                 <option value="dueDate" className="bg-background text-foreground">Sort: Due Date</option>
                 <option value="priority" className="bg-background text-foreground">Sort: Priority</option>
+              </select>
+            </div>
+
+            {/* Priority Filter Selection */}
+            <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
+              <span className="text-muted text-[11px] font-bold">Priority:</span>
+              <select
+                id="list-priority-filter"
+                name="list-priority-filter"
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value as "all" | "high" | "medium" | "low")}
+                aria-label="Filter by Priority"
+                className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
+              >
+                <option value="all" className="bg-background text-foreground">All</option>
+                <option value="high" className="bg-background text-foreground">High</option>
+                <option value="medium" className="bg-background text-foreground">Medium</option>
+                <option value="low" className="bg-background text-foreground">Low</option>
               </select>
             </div>
 
