@@ -209,18 +209,18 @@ function DashboardView({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* Metric 1: Productivity Score */}
-        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group hover:border-accent/30 transition-all" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Productivity Score</span>
-            <div className="p-2 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-all">
+            <div className="p-2 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm">
               <Zap size={16} />
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-4xl font-black tabular-nums tracking-tighter">{productivityScore}</div>
+            <div className="text-4xl font-black tabular-nums tracking-tighter group-hover:text-accent transition-colors">{productivityScore}</div>
             <div className="flex items-center gap-1">
               <div className="flex-1 h-1.5 bg-muted/20 rounded-full overflow-hidden">
-                <div className="h-full bg-accent rounded-full transition-all duration-1000" style={{ width: `${productivityScore}%` }} />
+                <div className="h-full bg-accent rounded-full transition-all duration-1000 group-hover:scale-x-105 origin-left" style={{ width: `${productivityScore}%` }} />
               </div>
               <span className="text-[10px] font-bold text-muted">Goal: 100</span>
             </div>
@@ -228,16 +228,16 @@ function DashboardView({
         </div>
 
         {/* Metric 2: Completion Card */}
-        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "60ms", animationFillMode: "backwards" }}>
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group hover:border-emerald-500/30 transition-all" style={{ animationDelay: "60ms", animationFillMode: "backwards" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Tasks Completed</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
               <CheckCircle2 size={16} />
             </div>
           </div>
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="text-4xl font-black tabular-nums tracking-tighter">{completed}</div>
+              <div className="text-4xl font-black tabular-nums tracking-tighter group-hover:text-emerald-500 transition-colors">{completed}</div>
               <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>{completionRate}% of workload</span>
@@ -271,15 +271,15 @@ function DashboardView({
         </div>
 
         {/* Metric 3: Active Focus */}
-        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
+        <div className="p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group hover:border-amber-500/30 transition-all" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Active Focus</span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:bg-accent group-hover:text-white transition-all">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
               <Clock size={16} />
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-4xl font-black tabular-nums tracking-tighter">{inProgress + pending}</div>
+            <div className="text-4xl font-black tabular-nums tracking-tighter group-hover:text-amber-500 transition-colors">{inProgress + pending}</div>
             <p className="text-[10px] text-amber-500 font-bold uppercase tracking-tight flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               <span>{inProgress} currently in progress</span>
@@ -288,15 +288,15 @@ function DashboardView({
         </div>
 
         {/* Metric 4: Overdue Alert */}
-        <div className={`p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group ${overdueTasks.length > 0 ? "border-red-500/30" : ""}`} style={{ animationDelay: "180ms", animationFillMode: "backwards" }}>
+        <div className={`p-6 rounded-3xl border border-border bg-card/40 backdrop-blur-md glass-panel flex flex-col justify-between hover-lift animate-fade-in group transition-all ${overdueTasks.length > 0 ? "border-red-500/30" : "hover:border-red-500/30"}`} style={{ animationDelay: "180ms", animationFillMode: "backwards" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Overdue Items</span>
-            <div className={`p-2 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all ${overdueTasks.length > 0 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-muted/10 text-muted"}`}>
+            <div className={`p-2 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all shadow-sm ${overdueTasks.length > 0 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-muted/10 text-muted"}`}>
               <AlertTriangle size={16} />
             </div>
           </div>
           <div className="space-y-1">
-            <div className={`text-4xl font-black tabular-nums tracking-tighter ${overdueTasks.length > 0 ? "text-red-500" : ""}`}>{overdueTasks.length}</div>
+            <div className={`text-4xl font-black tabular-nums tracking-tighter ${overdueTasks.length > 0 ? "text-red-500" : "group-hover:text-red-500"} transition-colors`}>{overdueTasks.length}</div>
             <p className="text-[10px] text-muted font-bold uppercase tracking-tight">Requires attention</p>
           </div>
         </div>
