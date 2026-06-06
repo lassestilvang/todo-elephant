@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useEffect, useRef } from "react";
-import { Tag, X, ListTodo } from "lucide-react";
+import { Tag, X, ListTodo, Sparkles } from "lucide-react";
 import { Task, List, Label } from "@/types";
 
 interface TaskModalProps {
@@ -30,6 +30,7 @@ interface TaskModalProps {
   onAddSubtask: () => void;
   onRemoveSubtask: (id: number) => void;
   onToggleSubtask?: (id: number) => void;
+  onMagicBreakdown?: () => void;
   lists: List[];
   labels: Label[];
 }
@@ -60,6 +61,7 @@ function TaskModal({
   onAddSubtask,
   onRemoveSubtask,
   onToggleSubtask,
+  onMagicBreakdown,
   lists,
   labels,
 }: TaskModalProps) {
@@ -274,7 +276,19 @@ function TaskModal({
 
         {/* Nested Checklist / Subtasks Form */}
         <div className="space-y-3 pt-3 border-t border-border/40">
-          <label className="text-xs font-bold text-muted uppercase">Checklist Subtasks</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-muted uppercase">Checklist Subtasks</label>
+            {onMagicBreakdown && (
+              <button
+                type="button"
+                onClick={onMagicBreakdown}
+                className="flex items-center gap-1.5 text-[10px] font-bold text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
+              >
+                <Sparkles size={12} />
+                <span>Magic Breakdown</span>
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <input

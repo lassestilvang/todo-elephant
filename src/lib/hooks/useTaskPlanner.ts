@@ -610,6 +610,41 @@ export function useTaskPlanner() {
     setSubtasksChecklist(prev => prev.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
   }, []);
 
+  const handleMagicBreakdown = useCallback(() => {
+    if (!taskTitle.trim()) {
+      toast.error("Please enter a task title first!");
+      return;
+    }
+
+    const title = taskTitle.toLowerCase();
+    let suggested: string[] = [];
+
+    if (title.includes("groceries") || title.includes("shopping")) {
+      suggested = ["Make a list", "Grab reusable bags", "Go to store", "Unpack groceries"];
+    } else if (title.includes("meeting") || title.includes("call")) {
+      suggested = ["Prepare agenda", "Send invites", "Take notes", "Send follow-up email"];
+    } else if (title.includes("code") || title.includes("dev") || title.includes("build") || title.includes("fix")) {
+      suggested = ["Research solution", "Write initial code", "Run tests", "Submit PR"];
+    } else if (title.includes("clean") || title.includes("house") || title.includes("room")) {
+      suggested = ["Tidy up clutter", "Dust surfaces", "Vacuum floors", "Take out trash"];
+    } else if (title.includes("workout") || title.includes("exercise") || title.includes("gym")) {
+      suggested = ["Pack gym bag", "Warm up", "Main workout", "Cool down & stretch"];
+    } else if (title.includes("trip") || title.includes("travel") || title.includes("vacation")) {
+      suggested = ["Book flights/train", "Arrange accommodation", "Pack bags", "Set out-of-office"];
+    } else {
+      suggested = ["Identify first step", "Gather necessary resources", "Execute core task", "Final review"];
+    }
+
+    const newSubtasks = suggested.map((s, index) => ({
+      id: Date.now() + index,
+      title: s,
+      completed: false
+    }));
+
+    setSubtasksChecklist(prev => [...prev, ...newSubtasks]);
+    toast.success("Magic! Subtasks generated based on your title.");
+  }, [taskTitle]);
+
   return {
     currentView,
     setView,
@@ -671,6 +706,7 @@ export function useTaskPlanner() {
     handleAddSubtask,
     handleRemoveSubtask,
     handleToggleSubtask,
+    handleMagicBreakdown,
     transitionView,
     soundEnabled,
     setSoundEnabled,

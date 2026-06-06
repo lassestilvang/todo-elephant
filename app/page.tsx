@@ -81,6 +81,7 @@ export default function Home() {
     handleAddSubtask,
     handleRemoveSubtask,
     handleToggleSubtask,
+    handleMagicBreakdown,
     transitionView,
     soundEnabled,
     setSoundEnabled,
@@ -315,6 +316,7 @@ export default function Home() {
         onAddSubtask={handleAddSubtask}
         onRemoveSubtask={handleRemoveSubtask}
         onToggleSubtask={handleToggleSubtask}
+        onMagicBreakdown={handleMagicBreakdown}
         lists={lists}
         labels={labels}
       />

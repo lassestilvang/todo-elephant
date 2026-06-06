@@ -1,0 +1,150 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "🐘 Welcome to Todo Elephant",
+      "description": "This is your premium task planner. Explore different layouts (Kanban, List, Dashboard), add tags, and track your history!",
+      "dueDate": "2026-06-10T18:00:00.000Z",
+      "priority": "high",
+      "status": "in-progress",
+      "subtasks": [
+        {
+          "id": 101,
+          "title": "Try toggling a subtask",
+          "completed": true
+        },
+        {
+          "id": 102,
+          "title": "Switch to Kanban board view",
+          "completed": false
+        },
+        {
+          "id": 103,
+          "title": "Open the Command Palette with Ctrl+K / Cmd+K",
+          "completed": false
+        }
+      ],
+      "listId": 1,
+      "labels": [
+        1,
+        3
+      ],
+      "createdAt": "2026-06-09T12:34:47.408Z",
+      "updatedAt": "2026-06-09T12:34:47.408Z"
+    },
+    {
+      "id": 2,
+      "title": "💅 Design custom dark mode theme",
+      "description": "Make the application aesthetics pop! Leverage Backdrop filters, frosted glass backgrounds, and smooth HSL scales.",
+      "dueDate": "2026-06-09T23:59:59.000Z",
+      "priority": "medium",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 201,
+          "title": "Define custom HSL color scheme",
+          "completed": true
+        },
+        {
+          "id": 202,
+          "title": "Implement backdrop-blur borders",
+          "completed": false
+        }
+      ],
+      "listId": 2,
+      "labels": [
+        4
+      ],
+      "createdAt": "2026-06-09T11:34:47.408Z",
+      "updatedAt": "2026-06-09T11:34:47.408Z"
+    },
+    {
+      "id": 3,
+      "title": "🏃‍♂️ Morning 5km run",
+      "description": "Keep the body healthy. Target pace: 5:15 min/km.",
+      "dueDate": "2026-06-08T07:00:00.000Z",
+      "priority": "low",
+      "status": "completed",
+      "subtasks": [],
+      "listId": 3,
+      "labels": [],
+      "createdAt": "2026-06-07T13:34:47.408Z",
+      "updatedAt": "2026-06-08T13:34:47.408Z",
+      "completedAt": "2026-06-08T13:34:47.408Z"
+    }
+  ],
+  "lists": [
+    {
+      "id": 1,
+      "name": "📥 Inbox",
+      "description": "Quick capture tasks and items",
+      "color": "#3b82f6",
+      "createdAt": "2026-06-09T13:34:47.408Z"
+    },
+    {
+      "id": 2,
+      "name": "💼 Work",
+      "description": "Professional projects and duties",
+      "color": "#ec4899",
+      "createdAt": "2026-06-09T13:34:47.408Z"
+    },
+    {
+      "id": 3,
+      "name": "🧘‍♂️ Personal",
+      "description": "Health, fitness, and lifestyle",
+      "color": "#10b981",
+      "createdAt": "2026-06-09T13:34:47.408Z"
+    }
+  ],
+  "labels": [
+    {
+      "id": 1,
+      "name": "Feature",
+      "color": "#3b82f6"
+    },
+    {
+      "id": 2,
+      "name": "Refactor",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": 3,
+      "name": "Urgent",
+      "color": "#ef4444"
+    },
+    {
+      "id": 4,
+      "name": "Design",
+      "color": "#ec4899"
+    },
+    {
+      "id": 5,
+      "name": "Documentation",
+      "color": "#10b981"
+    }
+  ],
+  "activityLogs": [
+    {
+      "id": 1,
+      "action": "Initialize Database",
+      "entityType": "system",
+      "entityId": 0,
+      "details": "Todo Elephant database setup complete with premium mock records.",
+      "createdAt": "2026-06-09T13:34:47.408Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Lasse Stilvang",
+      "email": "lasse.stilvang@gmail.com",
+      "createdAt": "2026-06-09T13:34:47.408Z"
+    }
+  ],
+  "currentUser": {
+    "id": 1,
+    "name": "Lasse Stilvang",
+    "email": "lasse.stilvang@gmail.com",
+    "createdAt": "2026-06-09T13:34:47.408Z"
+  }
+}
