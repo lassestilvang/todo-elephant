@@ -305,6 +305,19 @@ export function useTaskPlanner() {
       const originalTask = tasksRef.current.find(t => t.id === id);
 
       if (originalTask) {
+        // Achievement Checks
+        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
+          const completedCount = tasksRef.current.filter(t => t.status === "completed" || t.status === "done").length + 1;
+          
+          if (completedCount === 1) {
+            toast.success("Achievement Unlocked: The Journey Begins!", { description: "You completed your first task! 🚀" });
+          } else if (completedCount === 10) {
+            toast.success("Achievement Unlocked: Decade of Deeds!", { description: "10 tasks completed. You're on fire! 🔥" });
+          } else if (completedCount === 50) {
+            toast.success("Achievement Unlocked: Task Master!", { description: "50 tasks completed. Pure excellence! 🏆" });
+          }
+        }
+
         // Dependency Check
         if (updates.status && (updates.status === "completed" || updates.status === "done")) {
           const dependency = tasksRef.current.find(t => t.id === originalTask.dependsOnTaskId);
