@@ -32,6 +32,8 @@ interface SidebarProps {
   onOpenSettings: () => void;
   themeMode: "light" | "dark" | "system";
   updateTheme: (mode: "light" | "dark" | "system") => void;
+  isZenMode?: boolean;
+  setIsZenMode?: (v: boolean) => void;
 }
 
 function Sidebar({
@@ -48,7 +50,9 @@ function Sidebar({
   onCreateLabel,
   onOpenSettings,
   themeMode,
-  updateTheme
+  updateTheme,
+  isZenMode,
+  setIsZenMode
 }: SidebarProps) {
   const [showAddList, setShowAddList] = useState(false);
   const [showAddLabel, setShowAddLabel] = useState(false);
@@ -440,14 +444,26 @@ function Sidebar({
             ))}
           </div>
 
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
-          >
-            <Settings size={14} />
-            <span>App Settings</span>
-          </button>
+          {/* Settings & Zen Row */}
+          <div className="flex gap-2">
+            <button
+              onClick={onOpenSettings}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-foreground border border-border hover:bg-muted/10 transition-all duration-200"
+            >
+              <Settings size={14} />
+              <span>Settings</span>
+            </button>
+
+            {setIsZenMode && (
+              <button
+                onClick={() => setIsZenMode(true)}
+                title="Enter Zen Mode"
+                className="flex items-center justify-center px-3 py-2 rounded-xl border border-border text-muted hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all duration-200"
+              >
+                <Monitor size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </aside>

@@ -87,6 +87,7 @@ export function useTaskPlanner() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
+  const [isZenMode, setIsZenMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sound-enabled");
@@ -351,6 +352,17 @@ export function useTaskPlanner() {
           if (newlyCompleted) {
             toast.success(`Subtask completed: "${newlyCompleted.title}"!`);
             if (soundEnabled) playCompletionSound();
+
+            // All subtasks done confetti
+            if (updates.subtasks.every(s => s.completed)) {
+              if (typeof window !== "undefined") {
+                const win = window as Window & { triggerConfetti?: () => void };
+                if (win.triggerConfetti) {
+                  win.triggerConfetti();
+                }
+              }
+              toast.success("All subtasks finished! Excellent work.");
+            }
           }
         }
       }
@@ -755,6 +767,8 @@ export function useTaskPlanner() {
     isFocusModeOpen,
     setIsFocusModeOpen,
     focusTaskId,
+    isZenMode,
+    setIsZenMode,
     openFocusMode,
     closeFocusMode,
     openCreateModal,

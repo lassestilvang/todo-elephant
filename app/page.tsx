@@ -70,6 +70,8 @@ export default function Home() {
     isFocusModeOpen,
     setIsFocusModeOpen,
     focusTaskId,
+    isZenMode,
+    setIsZenMode,
     openFocusMode,
     closeFocusMode,
     openCreateModal,
@@ -162,7 +164,7 @@ export default function Home() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, isShortcutsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen]);
+  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, isShortcutsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen, currentView]);
 
   // Filter tasks in view by selected Sidebar options
   const filteredTasks = useMemo(() => {
@@ -174,7 +176,7 @@ export default function Home() {
   }, [tasks, selectedListId, selectedLabelId]);
 
   return (
-    <div className="flex bg-background text-foreground min-h-screen relative overflow-hidden font-sans antialiased">
+    <div className={`flex bg-background text-foreground min-h-screen relative overflow-hidden font-sans antialiased ${isZenMode ? "zen-mode" : ""}`}>
       
       {/* Toast Notification Container */}
       <Toaster position="bottom-right" richColors theme="system" />
@@ -188,7 +190,7 @@ export default function Home() {
       )}
 
       {/* Main Glassmorphic Sidebar */}
-      <div className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative z-40 transition-transform duration-300 ease-in-out`}>
+      <div className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 ${isZenMode ? "md:hidden" : "md:relative"} fixed z-40 transition-transform duration-300 ease-in-out`}>
         <Sidebar
           currentView={currentView}
           setView={(v) => { transitionView(v); setIsSidebarOpen(false); }}
@@ -204,6 +206,8 @@ export default function Home() {
           onOpenSettings={() => setIsSettingsOpen(true)}
           themeMode={themeMode}
           updateTheme={updateTheme}
+          isZenMode={isZenMode}
+          setIsZenMode={setIsZenMode}
         />
       </div>
 
@@ -213,14 +217,14 @@ export default function Home() {
         {/* Mobile Sidebar Toggle */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-card/80 backdrop-blur-md border border-border shadow-lg hover:bg-card transition-all"
+          className={`${isZenMode ? "hidden" : "md:hidden"} fixed top-4 left-4 z-50 p-2 rounded-xl bg-card/80 backdrop-blur-md border border-border shadow-lg hover:bg-card transition-all`}
           aria-label="Toggle sidebar"
         >
           <Menu size={20} className="text-foreground" />
         </button>
 
         {/* Floating Quick Keyboard Shortcuts Banner */}
-        <div className="absolute top-4 right-4 z-20 hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-md border border-border text-[10px] text-muted font-bold tracking-tight select-none">
+        <div className={`absolute top-4 right-4 z-20 ${isZenMode ? "hidden" : "hidden md:flex"} items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur-md border border-border text-[10px] text-muted font-bold tracking-tight select-none`}>
           <Keyboard size={12} />
           <span className="px-1 py-0.5 bg-muted/15 border border-border/40 rounded shadow-sm">n</span>
           <span>new</span>
@@ -294,6 +298,16 @@ export default function Home() {
           onClose={closeFocusMode}
           onTaskUpdate={handleTaskUpdateDirect}
         />
+      )}
+
+      {/* Zen Mode Exit Button */}
+      {isZenMode && (
+        <button
+          onClick={() => setIsZenMode(false)}
+          className="fixed bottom-8 right-8 z-[60] flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-white font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all animate-bounce"
+        >
+          <span>Exit Zen Mode</span>
+        </button>
       )}
 
       {/* Global Interactive Command Palette */}
