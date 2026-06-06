@@ -135,9 +135,9 @@ function Sidebar({
           <button
             onClick={() => { setView("dashboard"); setSelectedListId(null); setSelectedLabelId(null); }}
             aria-current={currentView === "dashboard" && !selectedListId && !selectedLabelId ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
               currentView === "dashboard" && !selectedListId && !selectedLabelId
-                ? "bg-accent/10 text-accent font-semibold"
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
                 : "text-muted hover:bg-muted/10 hover:text-foreground"
             }`}
           >
@@ -149,9 +149,9 @@ function Sidebar({
           <button
             onClick={() => { setView("kanban"); setSelectedListId(null); setSelectedLabelId(null); }}
             aria-current={currentView === "kanban" && !selectedListId && !selectedLabelId ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
               currentView === "kanban" && !selectedListId && !selectedLabelId
-                ? "bg-accent/10 text-accent font-semibold"
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
                 : "text-muted hover:bg-muted/10 hover:text-foreground"
             }`}
           >
@@ -163,9 +163,9 @@ function Sidebar({
           <button
             onClick={() => { setView("list"); setSelectedListId(null); setSelectedLabelId(null); }}
             aria-current={currentView === "list" && !selectedListId && !selectedLabelId ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
               currentView === "list" && !selectedListId && !selectedLabelId
-                ? "bg-accent/10 text-accent font-semibold"
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
                 : "text-muted hover:bg-muted/10 hover:text-foreground"
             }`}
           >
@@ -177,9 +177,9 @@ function Sidebar({
           <button
             onClick={() => { setView("eisenhower"); setSelectedListId(null); setSelectedLabelId(null); }}
             aria-current={currentView === "eisenhower" && !selectedListId && !selectedLabelId ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
               currentView === "eisenhower" && !selectedListId && !selectedLabelId
-                ? "bg-accent/10 text-accent font-semibold"
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
                 : "text-muted hover:bg-muted/10 hover:text-foreground"
             }`}
           >
