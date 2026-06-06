@@ -21,6 +21,7 @@ import FocusView from "@/src/components/FocusView";
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
 const KanbanView = dynamic(() => import("@/src/components/KanbanView"));
 const ListView = dynamic(() => import("@/src/components/ListView"));
+const EisenhowerView = dynamic(() => import("@/src/components/EisenhowerView"));
 
 export default function Home() {
   const {
@@ -55,6 +56,10 @@ export default function Home() {
     setTaskLabelsSelected,
     taskDependsOn,
     setTaskDependsOn,
+    taskIsImportant,
+    setTaskIsImportant,
+    taskIsUrgent,
+    setTaskIsUrgent,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,
@@ -286,6 +291,16 @@ export default function Home() {
                 onFocusTask={openFocusMode}
               />
             )}
+
+            {currentView === "eisenhower" && (
+              <EisenhowerView
+                tasks={filteredTasks}
+                onTaskUpdate={handleTaskUpdateDirect}
+                onTaskClick={handleTaskClick}
+                onFocusTask={openFocusMode}
+                onTaskDelete={requestDelete}
+              />
+            )}
           </>
         )}
 
@@ -345,6 +360,10 @@ export default function Home() {
         setTaskLabelsSelected={setTaskLabelsSelected}
         taskDependsOn={taskDependsOn}
         setTaskDependsOn={setTaskDependsOn}
+        taskIsImportant={taskIsImportant}
+        setTaskIsImportant={setTaskIsImportant}
+        taskIsUrgent={taskIsUrgent}
+        setTaskIsUrgent={setTaskIsUrgent}
         newSubtaskTitle={newSubtaskTitle}
         setNewSubtaskTitle={setNewSubtaskTitle}
         subtasksChecklist={subtasksChecklist}

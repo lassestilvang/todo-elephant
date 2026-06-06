@@ -17,6 +17,8 @@ export type Task = {
   listId?: number;
   labels?: number[];
   dependsOnTaskId?: number | null;
+  isImportant?: boolean;
+  isUrgent?: boolean;
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;

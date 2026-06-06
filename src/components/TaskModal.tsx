@@ -25,6 +25,10 @@ interface TaskModalProps {
   setTaskLabelsSelected: React.Dispatch<React.SetStateAction<number[]>>;
   taskDependsOn?: number | null;
   setTaskDependsOn?: (v: number | null) => void;
+  taskIsImportant?: boolean;
+  setTaskIsImportant?: (v: boolean) => void;
+  taskIsUrgent?: boolean;
+  setTaskIsUrgent?: (v: boolean) => void;
   newSubtaskTitle: string;
   setNewSubtaskTitle: (v: string) => void;
   subtasksChecklist: { id: number; title: string; completed: boolean }[];
@@ -59,6 +63,10 @@ function TaskModal({
   setTaskLabelsSelected,
   taskDependsOn,
   setTaskDependsOn,
+  taskIsImportant,
+  setTaskIsImportant,
+  taskIsUrgent,
+  setTaskIsUrgent,
   newSubtaskTitle,
   setNewSubtaskTitle,
   subtasksChecklist,
@@ -248,6 +256,42 @@ function TaskModal({
             </select>
           </div>
         </div>
+
+        {/* Eisenhower Strategy (Importance & Urgency) */}
+        {(setTaskIsImportant && setTaskIsUrgent) && (
+          <div className="space-y-3 p-4 rounded-2xl bg-accent/5 border border-accent/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={14} className="text-accent" />
+              <span className="text-xs font-bold text-accent uppercase tracking-wider">Eisenhower Strategy</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/60 cursor-pointer hover:border-accent transition-all group">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-foreground group-hover:text-accent transition-colors">Important</span>
+                  <p className="text-[9px] text-muted leading-tight uppercase font-black">Value driver</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={taskIsImportant}
+                  onChange={e => setTaskIsImportant(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-accent focus:ring-accent bg-background cursor-pointer"
+                />
+              </label>
+              <label className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/60 cursor-pointer hover:border-accent transition-all group">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-foreground group-hover:text-accent transition-colors">Urgent</span>
+                  <p className="text-[9px] text-muted leading-tight uppercase font-black">Time sensitive</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={taskIsUrgent}
+                  onChange={e => setTaskIsUrgent(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-accent focus:ring-accent bg-background cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+        )}
 
         {/* Labels Multi-Select Section */}
         <div className="space-y-2">

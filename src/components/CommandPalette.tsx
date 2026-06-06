@@ -99,7 +99,8 @@ function CommandPalette({
     const list = [
       { id: "v-dash", title: "Switch to Dashboard Overview", type: "navigation", action: () => { setView("dashboard"); } },
       { id: "v-kanb", title: "Switch to Kanban Board View", type: "navigation", action: () => { setView("kanban"); } },
-      { id: "v-list", title: "Switch to High-Density List View", type: "navigation", action: () => { setView("list"); } }
+      { id: "v-list", title: "Switch to High-Density List View", type: "navigation", action: () => { setView("list"); } },
+      { id: "v-eise", title: "Switch to Eisenhower Matrix View", type: "navigation", action: () => { setView("eisenhower"); } }
     ];
 
     if (setThemeMode) {

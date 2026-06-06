@@ -13,13 +13,14 @@ import {
   Plus,
   TrendingUp,
   Settings,
-  Search
+  Search,
+  LayoutGrid
 } from "lucide-react";
 import { List, Label, Task } from "@/types";
 
 interface SidebarProps {
-  currentView: "dashboard" | "kanban" | "list";
-  setView: (view: "dashboard" | "kanban" | "list") => void;
+  currentView: "dashboard" | "kanban" | "list" | "eisenhower";
+  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower") => void;
   lists: List[];
   labels: Label[];
   tasks: Task[];
@@ -170,6 +171,20 @@ function Sidebar({
           >
             <ListTodo size={18} className="shrink-0" />
             <span>High-Density List</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("eisenhower"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "eisenhower" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+              currentView === "eisenhower" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <LayoutGrid size={18} className="shrink-0" />
+            <span>Eisenhower Matrix</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
         </nav>

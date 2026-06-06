@@ -44,8 +44,8 @@ function playCompletionSound() {
 }
 
 export function useTaskPlanner() {
-  // App views: dashboard, kanban, list
-  const [currentView, setView] = useState<"dashboard" | "kanban" | "list">("dashboard");
+  // App views: dashboard, kanban, list, eisenhower
+  const [currentView, setView] = useState<"dashboard" | "kanban" | "list" | "eisenhower">("dashboard");
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [selectedLabelId, setSelectedLabelId] = useState<number | null>(null);
 
@@ -73,6 +73,8 @@ export function useTaskPlanner() {
   const [taskListId, setTaskListId] = useState(1);
   const [taskLabelsSelected, setTaskLabelsSelected] = useState<number[]>([]);
   const [taskDependsOn, setTaskDependsOn] = useState<number | null>(null);
+  const [taskIsImportant, setTaskIsImportant] = useState(false);
+  const [taskIsUrgent, setTaskIsUrgent] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -204,6 +206,8 @@ export function useTaskPlanner() {
     setTaskListId(1);
     setTaskLabelsSelected([]);
     setTaskDependsOn(null);
+    setTaskIsImportant(false);
+    setTaskIsUrgent(false);
     setSubtasksChecklist([]);
     setNewSubtaskTitle("");
     setCurrentEditingTask(null);
@@ -215,7 +219,7 @@ export function useTaskPlanner() {
     setIsModalOpen(true);
   }, [resetForm]);
 
-  const transitionView = useCallback((v: "dashboard" | "kanban" | "list") => {
+  const transitionView = useCallback((v: "dashboard" | "kanban" | "list" | "eisenhower") => {
     if (typeof document !== "undefined" && "startViewTransition" in document) {
       (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
         setView(v);
@@ -242,7 +246,9 @@ export function useTaskPlanner() {
           listId: Number(taskListId),
           labels: taskLabelsSelected,
           subtasks: subtasksChecklist,
-          dependsOnTaskId: taskDependsOn
+          dependsOnTaskId: taskDependsOn,
+          isImportant: taskIsImportant,
+          isUrgent: taskIsUrgent
         };
 
         const res = await fetch("/api/tasks", {
@@ -270,7 +276,9 @@ export function useTaskPlanner() {
           listId: Number(taskListId),
           labels: taskLabelsSelected,
           subtasks: subtasksChecklist,
-          dependsOnTaskId: taskDependsOn
+          dependsOnTaskId: taskDependsOn,
+          isImportant: taskIsImportant,
+          isUrgent: taskIsUrgent
         };
 
         const res = await fetch(`/api/tasks/${currentEditingTask.id}`, {
@@ -580,6 +588,8 @@ export function useTaskPlanner() {
     setTaskListId(task.listId || 1);
     setTaskLabelsSelected(task.labels || []);
     setTaskDependsOn(task.dependsOnTaskId || null);
+    setTaskIsImportant(task.isImportant || false);
+    setTaskIsUrgent(task.isUrgent || false);
     setSubtasksChecklist(task.subtasks || []);
     setIsModalOpen(true);
   }, []);
@@ -752,6 +762,10 @@ export function useTaskPlanner() {
     setTaskLabelsSelected,
     taskDependsOn,
     setTaskDependsOn,
+    taskIsImportant,
+    setTaskIsImportant,
+    taskIsUrgent,
+    setTaskIsUrgent,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,
