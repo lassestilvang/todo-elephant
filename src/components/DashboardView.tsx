@@ -10,7 +10,8 @@ import {
   ChevronRight,
   ClipboardList,
   Zap,
-  Star
+  Star,
+  Target
 } from "lucide-react";
 import { Task, List, ActivityLog } from "@/types";
 import EmptyState from "./EmptyState";
@@ -24,6 +25,7 @@ interface DashboardViewProps {
   onQuickAdd?: (title: string) => void;
   onClearLogs?: () => void;
   onTaskUpdate?: (id: number, updates: Partial<Task>) => void;
+  onFocusTask?: (id: number) => void;
 }
 
 function DashboardView({
@@ -34,7 +36,8 @@ function DashboardView({
   onTaskClick,
   onQuickAdd,
   onClearLogs,
-  onTaskUpdate
+  onTaskUpdate,
+  onFocusTask
 }: DashboardViewProps) {
   const [quickTitle, setQuickTitle] = useState("");
   
@@ -496,6 +499,18 @@ function DashboardView({
                       </div>
                       
                       <div className="flex items-center gap-3 shrink-0">
+                        {onFocusTask && !isDone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onFocusTask(task.id);
+                            }}
+                            className="p-1.5 rounded-lg bg-accent/10 text-accent opacity-0 group-hover:opacity-100 transition-all hover:bg-accent hover:text-white"
+                            title="Start Focus Session"
+                          >
+                            <Target size={14} />
+                          </button>
+                        )}
                         {list && (
                           <span className="text-[11px] font-bold bg-muted/20 px-2 py-0.5 rounded-full flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />

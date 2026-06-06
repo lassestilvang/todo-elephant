@@ -12,7 +12,8 @@ import {
   Tag,
   Archive,
   Copy,
-  X
+  X,
+  Target
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
@@ -29,6 +30,7 @@ interface ListViewProps {
   selectedLabelId?: number | null;
   onTaskDuplicate?: (task: Task) => void;
   onClearCompleted?: () => void;
+  onFocusTask?: (id: number) => void;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -92,7 +94,8 @@ function ListView({
   selectedListId = null,
   selectedLabelId = null,
   onTaskDuplicate,
-  onClearCompleted
+  onClearCompleted,
+  onFocusTask
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -456,6 +459,18 @@ function ListView({
 
                     {/* Metadata tags */}
                     <div className="flex items-center gap-2 shrink-0">
+                      {onFocusTask && !isDone && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFocusTask(task.id);
+                          }}
+                          className="p-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all group-hover:scale-110"
+                          title="Start Focus Session"
+                        >
+                          <Target size={14} />
+                        </button>
+                      )}
                       {list && (
                         <span className="text-[11px] font-bold bg-muted/25 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: list.color }} />

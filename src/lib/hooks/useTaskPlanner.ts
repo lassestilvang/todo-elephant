@@ -84,6 +84,8 @@ export function useTaskPlanner() {
     return "#3b82f6";
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+  const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sound-enabled");
@@ -645,6 +647,16 @@ export function useTaskPlanner() {
     toast.success("Magic! Subtasks generated based on your title.");
   }, [taskTitle]);
 
+  const openFocusMode = useCallback((id: number) => {
+    setFocusTaskId(id);
+    setIsFocusModeOpen(true);
+  }, []);
+
+  const closeFocusMode = useCallback(() => {
+    setIsFocusModeOpen(false);
+    setFocusTaskId(null);
+  }, []);
+
   return {
     currentView,
     setView,
@@ -689,6 +701,11 @@ export function useTaskPlanner() {
     setAccentColor,
     isSettingsOpen,
     setIsSettingsOpen,
+    isFocusModeOpen,
+    setIsFocusModeOpen,
+    focusTaskId,
+    openFocusMode,
+    closeFocusMode,
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,

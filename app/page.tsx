@@ -16,6 +16,7 @@ import { ShortcutsModal } from "@/src/components/ShortcutsModal";
 import { DashboardSkeleton, KanbanSkeleton, ListSkeleton } from "@/src/components/Skeleton";
 import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
 import ConfettiCanvas from "@/src/components/ConfettiCanvas";
+import FocusView from "@/src/components/FocusView";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
 const KanbanView = dynamic(() => import("@/src/components/KanbanView"));
@@ -64,6 +65,11 @@ export default function Home() {
     setAccentColor,
     isSettingsOpen,
     setIsSettingsOpen,
+    isFocusModeOpen,
+    setIsFocusModeOpen,
+    focusTaskId,
+    openFocusMode,
+    closeFocusMode,
     openCreateModal,
     handleTaskSubmit,
     handleTaskUpdateDirect,
@@ -239,6 +245,7 @@ export default function Home() {
                 onQuickAdd={handleQuickAdd}
                 onClearLogs={handleClearLogs}
                 onTaskUpdate={handleTaskUpdateDirect}
+                onFocusTask={openFocusMode}
               />
             )}
 
@@ -254,6 +261,7 @@ export default function Home() {
                 onTaskDuplicate={handleTaskDuplicate}
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
+                onFocusTask={openFocusMode}
               />
             )}
 
@@ -269,12 +277,22 @@ export default function Home() {
                 selectedLabelId={selectedLabelId}
                 onTaskDuplicate={handleTaskDuplicate}
                 onClearCompleted={handleClearCompleted}
+                onFocusTask={openFocusMode}
               />
             )}
           </>
         )}
 
       </main>
+
+      {/* Focus Mode Overlay */}
+      {isFocusModeOpen && focusTaskId && tasks.find(t => t.id === focusTaskId) && (
+        <FocusView
+          task={tasks.find(t => t.id === focusTaskId)!}
+          onClose={closeFocusMode}
+          onTaskUpdate={handleTaskUpdateDirect}
+        />
+      )}
 
       {/* Global Interactive Command Palette */}
       <CommandPalette
