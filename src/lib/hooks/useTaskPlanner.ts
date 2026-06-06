@@ -577,10 +577,32 @@ export function useTaskPlanner() {
 
     setIsSubmitting(true);
     try {
+      let parsedTitle = title.trim();
+      let dueDate = new Date();
+
+      const lowerTitle = parsedTitle.toLowerCase();
+      if (lowerTitle.includes("tomorrow")) {
+        dueDate.setDate(dueDate.getDate() + 1);
+        parsedTitle = parsedTitle.replace(/tomorrow/i, "").trim();
+      } else if (lowerTitle.includes("next week")) {
+        dueDate.setDate(dueDate.getDate() + 7);
+        parsedTitle = parsedTitle.replace(/next week/i, "").trim();
+      } else if (lowerTitle.includes("monday")) {
+        const day = dueDate.getDay();
+        const diff = (8 - day) % 7 || 7;
+        dueDate.setDate(dueDate.getDate() + diff);
+        parsedTitle = parsedTitle.replace(/monday/i, "").trim();
+      } else if (lowerTitle.includes("friday")) {
+        const day = dueDate.getDay();
+        const diff = (5 - day + 7) % 7 || 7;
+        dueDate.setDate(dueDate.getDate() + diff);
+        parsedTitle = parsedTitle.replace(/friday/i, "").trim();
+      }
+
       const taskData = {
-        title: title.trim(),
+        title: parsedTitle || title.trim(),
         description: "",
-        dueDate: new Date().toISOString(),
+        dueDate: dueDate.toISOString(),
         priority: "medium",
         status: "pending",
         listId: 1, // Default list
