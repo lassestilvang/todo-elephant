@@ -13,7 +13,8 @@ import {
   Archive,
   Copy,
   X,
-  Target
+  Target,
+  Link
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import EmptyState from "./EmptyState";
@@ -518,6 +519,18 @@ function ListView({
                         </span>
                       )}
 
+                      {task.dependsOnTaskId && (
+                        <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                          tasks.find(t => t.id === task.dependsOnTaskId)?.status === 'completed' || tasks.find(t => t.id === task.dependsOnTaskId)?.status === 'done'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-amber-500/10 text-amber-500'
+                        }`}>
+                          <Link size={10} />
+                          <span className="max-w-[80px] truncate">
+                            {tasks.find(t => t.id === task.dependsOnTaskId)?.title || 'Dependency'}
+                          </span>
+                        </span>
+                      )}
                       {/* Subtask checklist gauge */}
                       {subCount > 0 && (
                         <div className="text-[11px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1.5">

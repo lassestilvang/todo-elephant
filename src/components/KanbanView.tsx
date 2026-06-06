@@ -15,7 +15,9 @@ import {
   Search,
   SlidersHorizontal,
   Tag,
-  Copy
+  Copy,
+  Link,
+  Target
 } from "lucide-react";
 import { Task, List, Label } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
@@ -29,6 +31,7 @@ interface KanbanViewProps {
   onTaskClick: (task: Task) => void;
   onAddTask: (title: string, status: string) => void;
   onTaskDuplicate?: (task: Task) => void;
+  onFocusTask?: (id: number) => void;
   selectedListId?: number | null;
   selectedLabelId?: number | null;
 }
@@ -93,6 +96,7 @@ function KanbanView({
   onTaskClick,
   onAddTask,
   onTaskDuplicate,
+  onFocusTask,
   selectedListId = null,
   selectedLabelId = null
 }: KanbanViewProps) {
@@ -537,6 +541,37 @@ function KanbanView({
                               </span>
                             )}
                           </div>
+
+                          {/* Dependencies & Focus */}
+                          {(task.dependsOnTaskId || (onFocusTask && !isDone)) && (
+                            <div className="flex items-center gap-2 pt-1">
+                              {task.dependsOnTaskId && (
+                                <span className={`text-[9px] font-bold flex items-center gap-1 px-1.5 py-0.5 rounded-full ${
+                                  tasks.find(t => t.id === task.dependsOnTaskId)?.status === 'completed' || tasks.find(t => t.id === task.dependsOnTaskId)?.status === 'done'
+                                    ? 'bg-emerald-500/10 text-emerald-500'
+                                    : 'bg-amber-500/10 text-amber-500'
+                                }`}>
+                                  <Link size={10} />
+                                  <span className="max-w-[100px] truncate">
+                                    {tasks.find(t => t.id === task.dependsOnTaskId)?.title || 'Dependency'}
+                                  </span>
+                                </span>
+                              )}
+                              
+                              {onFocusTask && !isDone && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFocusTask(task.id);
+                                  }}
+                                  className="ml-auto p-1 rounded-lg bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all"
+                                  title="Focus Session"
+                                >
+                                  <Target size={12} />
+                                </button>
+                              )}
+                            </div>
+                          )}
 
                           {/* Quick Hover Controls to Shift Column */}
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/95 to-transparent h-10 rounded-b-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-between px-3 transition-opacity">

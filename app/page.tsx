@@ -53,6 +53,8 @@ export default function Home() {
     setTaskListId,
     taskLabelsSelected,
     setTaskLabelsSelected,
+    taskDependsOn,
+    setTaskDependsOn,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,
@@ -327,6 +329,8 @@ export default function Home() {
         setTaskListId={setTaskListId}
         taskLabelsSelected={taskLabelsSelected}
         setTaskLabelsSelected={setTaskLabelsSelected}
+        taskDependsOn={taskDependsOn}
+        setTaskDependsOn={setTaskDependsOn}
         newSubtaskTitle={newSubtaskTitle}
         setNewSubtaskTitle={setNewSubtaskTitle}
         subtasksChecklist={subtasksChecklist}
@@ -337,6 +341,7 @@ export default function Home() {
         onMagicBreakdown={handleMagicBreakdown}
         lists={lists}
         labels={labels}
+        tasks={tasks}
       />
 
       {/* App Settings Modal */}

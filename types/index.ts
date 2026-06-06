@@ -16,6 +16,7 @@ export type Task = {
   subtasks?: Subtask[];
   listId?: number;
   labels?: number[];
+  dependsOnTaskId?: number | null;
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;

@@ -72,6 +72,7 @@ export function useTaskPlanner() {
   const [taskStatus, setTaskStatus] = useState<Task["status"]>("pending");
   const [taskListId, setTaskListId] = useState(1);
   const [taskLabelsSelected, setTaskLabelsSelected] = useState<number[]>([]);
+  const [taskDependsOn, setTaskDependsOn] = useState<number | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,6 +202,7 @@ export function useTaskPlanner() {
     setTaskStatus("pending");
     setTaskListId(1);
     setTaskLabelsSelected([]);
+    setTaskDependsOn(null);
     setSubtasksChecklist([]);
     setNewSubtaskTitle("");
     setCurrentEditingTask(null);
@@ -238,7 +240,8 @@ export function useTaskPlanner() {
           status: taskStatus,
           listId: Number(taskListId),
           labels: taskLabelsSelected,
-          subtasks: subtasksChecklist
+          subtasks: subtasksChecklist,
+          dependsOnTaskId: taskDependsOn
         };
 
         const res = await fetch("/api/tasks", {
@@ -265,7 +268,8 @@ export function useTaskPlanner() {
           status: taskStatus,
           listId: Number(taskListId),
           labels: taskLabelsSelected,
-          subtasks: subtasksChecklist
+          subtasks: subtasksChecklist,
+          dependsOnTaskId: taskDependsOn
         };
 
         const res = await fetch(`/api/tasks/${currentEditingTask.id}`, {
@@ -301,6 +305,15 @@ export function useTaskPlanner() {
       const originalTask = tasksRef.current.find(t => t.id === id);
 
       if (originalTask) {
+        // Dependency Check
+        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
+          const dependency = tasksRef.current.find(t => t.id === originalTask.dependsOnTaskId);
+          if (dependency && dependency.status !== "completed" && dependency.status !== "done") {
+            toast.error(`Blocked! Please complete "${dependency.title}" first.`);
+            return;
+          }
+        }
+
         if (updates.status && (updates.status === "completed" || updates.status === "done")) {
           if (originalTask.status !== "completed" && originalTask.status !== "done") {
             toast.success(`Completed: "${originalTask.title}" 🎉`);
@@ -541,6 +554,7 @@ export function useTaskPlanner() {
     setTaskStatus(task.status || "pending");
     setTaskListId(task.listId || 1);
     setTaskLabelsSelected(task.labels || []);
+    setTaskDependsOn(task.dependsOnTaskId || null);
     setSubtasksChecklist(task.subtasks || []);
     setIsModalOpen(true);
   }, []);
@@ -689,6 +703,8 @@ export function useTaskPlanner() {
     setTaskListId,
     taskLabelsSelected,
     setTaskLabelsSelected,
+    taskDependsOn,
+    setTaskDependsOn,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,

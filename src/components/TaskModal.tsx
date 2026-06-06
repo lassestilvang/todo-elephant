@@ -23,6 +23,8 @@ interface TaskModalProps {
   setTaskListId: (v: number) => void;
   taskLabelsSelected: number[];
   setTaskLabelsSelected: React.Dispatch<React.SetStateAction<number[]>>;
+  taskDependsOn?: number | null;
+  setTaskDependsOn?: (v: number | null) => void;
   newSubtaskTitle: string;
   setNewSubtaskTitle: (v: string) => void;
   subtasksChecklist: { id: number; title: string; completed: boolean }[];
@@ -33,6 +35,7 @@ interface TaskModalProps {
   onMagicBreakdown?: () => void;
   lists: List[];
   labels: Label[];
+  tasks?: Task[];
 }
 
 function TaskModal({
@@ -54,6 +57,8 @@ function TaskModal({
   setTaskListId,
   taskLabelsSelected,
   setTaskLabelsSelected,
+  taskDependsOn,
+  setTaskDependsOn,
   newSubtaskTitle,
   setNewSubtaskTitle,
   subtasksChecklist,
@@ -64,6 +69,7 @@ function TaskModal({
   onMagicBreakdown,
   lists,
   labels,
+  tasks = [],
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -273,6 +279,26 @@ function TaskModal({
             })}
           </div>
         </div>
+
+        {/* Task Dependency Section */}
+        {setTaskDependsOn && (
+          <div className="space-y-1.5">
+            <label htmlFor="task-dependency" className="text-[10px] font-black text-muted uppercase tracking-widest">Blocks completion of? (Dependency)</label>
+            <select
+              id="task-dependency"
+              value={taskDependsOn || ""}
+              onChange={e => setTaskDependsOn(e.target.value ? Number(e.target.value) : null)}
+              className="w-full text-sm bg-muted/10 border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer transition-all"
+            >
+              <option value="" className="bg-background text-muted italic">No dependency</option>
+              {tasks.filter(t => t.id !== (mode === "edit" ? tasks.find(et => et.title === taskTitle)?.id : -1)).map(t => (
+                <option key={t.id} value={t.id} className="bg-background text-foreground">
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Nested Checklist / Subtasks Form */}
         <div className="space-y-3 pt-3 border-t border-border/40">
