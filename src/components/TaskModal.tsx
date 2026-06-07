@@ -29,6 +29,8 @@ interface TaskModalProps {
   setTaskIsImportant?: (v: boolean) => void;
   taskIsUrgent?: boolean;
   setTaskIsUrgent?: (v: boolean) => void;
+  taskRecurrence?: "none" | "daily" | "weekly" | "monthly";
+  setTaskRecurrence?: (v: "none" | "daily" | "weekly" | "monthly") => void;
   newSubtaskTitle: string;
   setNewSubtaskTitle: (v: string) => void;
   subtasksChecklist: { id: number; title: string; completed: boolean }[];
@@ -67,6 +69,8 @@ function TaskModal({
   setTaskIsImportant,
   taskIsUrgent,
   setTaskIsUrgent,
+  taskRecurrence,
+  setTaskRecurrence,
   newSubtaskTitle,
   setNewSubtaskTitle,
   subtasksChecklist,
@@ -290,6 +294,22 @@ function TaskModal({
                 />
               </label>
             </div>
+            {/* Recurrence */}
+            {setTaskRecurrence && (
+              <div className="space-y-1.5 pt-2 border-t border-accent/20">
+                <label className="text-[10px] font-black text-muted uppercase tracking-widest">Recurrence</label>
+                <select
+                  value={taskRecurrence || "none"}
+                  onChange={e => setTaskRecurrence(e.target.value as "none" | "daily" | "weekly" | "monthly")}
+                  className="w-full text-xs bg-card border border-border/60 rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer transition-all"
+                >
+                  <option value="none">No recurrence</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+            )}
           </div>
         )}
 

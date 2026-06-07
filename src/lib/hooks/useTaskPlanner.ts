@@ -77,6 +77,7 @@ export function useTaskPlanner() {
   const [taskDependsOn, setTaskDependsOn] = useState<number | null>(null);
   const [taskIsImportant, setTaskIsImportant] = useState(false);
   const [taskIsUrgent, setTaskIsUrgent] = useState(false);
+  const [taskRecurrence, setTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -210,6 +211,7 @@ export function useTaskPlanner() {
     setTaskDependsOn(null);
     setTaskIsImportant(false);
     setTaskIsUrgent(false);
+    setTaskRecurrence("none");
     setSubtasksChecklist([]);
     setNewSubtaskTitle("");
     setCurrentEditingTask(null);
@@ -250,7 +252,8 @@ export function useTaskPlanner() {
           subtasks: subtasksChecklist,
           dependsOnTaskId: taskDependsOn,
           isImportant: taskIsImportant,
-          isUrgent: taskIsUrgent
+          isUrgent: taskIsUrgent,
+          recurrence: taskRecurrence
         };
 
         const res = await fetch("/api/tasks", {
@@ -280,7 +283,8 @@ export function useTaskPlanner() {
           subtasks: subtasksChecklist,
           dependsOnTaskId: taskDependsOn,
           isImportant: taskIsImportant,
-          isUrgent: taskIsUrgent
+          isUrgent: taskIsUrgent,
+          recurrence: taskRecurrence
         };
 
         const res = await fetch(`/api/tasks/${currentEditingTask.id}`, {
@@ -592,6 +596,7 @@ export function useTaskPlanner() {
     setTaskDependsOn(task.dependsOnTaskId || null);
     setTaskIsImportant(task.isImportant || false);
     setTaskIsUrgent(task.isUrgent || false);
+    setTaskRecurrence(task.recurrence || "none");
     setSubtasksChecklist(task.subtasks || []);
     setIsModalOpen(true);
   }, []);
@@ -770,6 +775,8 @@ export function useTaskPlanner() {
     setTaskIsImportant,
     taskIsUrgent,
     setTaskIsUrgent,
+    taskRecurrence,
+    setTaskRecurrence,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,

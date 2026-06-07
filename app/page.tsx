@@ -60,6 +60,8 @@ export default function Home() {
     setTaskIsImportant,
     taskIsUrgent,
     setTaskIsUrgent,
+    taskRecurrence,
+    setTaskRecurrence,
     newSubtaskTitle,
     setNewSubtaskTitle,
     subtasksChecklist,
@@ -367,6 +369,8 @@ export default function Home() {
         setTaskIsImportant={setTaskIsImportant}
         taskIsUrgent={taskIsUrgent}
         setTaskIsUrgent={setTaskIsUrgent}
+        taskRecurrence={taskRecurrence}
+        setTaskRecurrence={setTaskRecurrence}
         newSubtaskTitle={newSubtaskTitle}
         setNewSubtaskTitle={setNewSubtaskTitle}
         subtasksChecklist={subtasksChecklist}

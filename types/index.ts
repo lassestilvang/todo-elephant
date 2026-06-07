@@ -19,6 +19,7 @@ export type Task = {
   dependsOnTaskId?: number | null;
   isImportant?: boolean;
   isUrgent?: boolean;
+  recurrence?: "none" | "daily" | "weekly" | "monthly";
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;
