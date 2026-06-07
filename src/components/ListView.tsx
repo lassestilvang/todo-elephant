@@ -16,7 +16,7 @@ import {
   Target,
   Link
 } from "lucide-react";
-import { Task, List, Label } from "@/types";
+import { Task, List, Label, SavedFilter } from "@/types";
 import EmptyState from "./EmptyState";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
 
@@ -32,6 +32,7 @@ interface ListViewProps {
   onTaskDuplicate?: (task: Task) => void;
   onClearCompleted?: () => void;
   onFocusTask?: (id: number) => void;
+  selectedFilter?: SavedFilter | null;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -96,7 +97,8 @@ function ListView({
   selectedLabelId = null,
   onTaskDuplicate,
   onClearCompleted,
-  onFocusTask
+  onFocusTask,
+  selectedFilter = null
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -146,27 +148,32 @@ function ListView({
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
+    // Override filters if a saved filter is selected
+    const activeSearch = selectedFilter ? selectedFilter.query : debouncedSearchQuery;
+    const activeStatus = selectedFilter ? selectedFilter.statusFilter : statusFilter;
+    const activePriority = selectedFilter ? selectedFilter.priorityFilter : priorityFilter;
+
     return tasks.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        (task.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      const matchesSearch = task.title.toLowerCase().includes(activeSearch.toLowerCase()) ||
+        (task.description || "").toLowerCase().includes(activeSearch.toLowerCase()) ||
         (task.labels || []).some(labelId => {
           const label = labels.find(l => l.id === labelId);
-          return label?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+          return label?.name.toLowerCase().includes(activeSearch.toLowerCase());
         });
       
-      const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      const matchesPriority = activePriority === "all" || task.priority === activePriority;
       if (!matchesPriority) return false;
       
       const isCompleted = task.status === "completed" || task.status === "done";
       const isActive = task.status === "pending" || task.status === "todo" || task.status === "in-progress" || task.status === "in_progress";
       const isArchived = task.status === "archived";
 
-      if (statusFilter === "active") return matchesSearch && isActive;
-      if (statusFilter === "completed") return matchesSearch && isCompleted;
-      if (statusFilter === "archived") return matchesSearch && isArchived;
+      if (activeStatus === "active") return matchesSearch && isActive;
+      if (activeStatus === "completed") return matchesSearch && isCompleted;
+      if (activeStatus === "archived") return matchesSearch && isArchived;
       return matchesSearch && !isArchived;
     });
-  }, [tasks, debouncedSearchQuery, statusFilter, priorityFilter, labels]);
+  }, [tasks, debouncedSearchQuery, statusFilter, priorityFilter, labels, selectedFilter]);
 
   const sortedTasks = useMemo(() => {
     return [...filteredTasks].sort((a, b) => {

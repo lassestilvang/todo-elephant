@@ -19,7 +19,7 @@ import {
   Link,
   Target
 } from "lucide-react";
-import { Task, List, Label } from "@/types";
+import { Task, List, Label, SavedFilter } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
 
 interface KanbanViewProps {
@@ -34,6 +34,7 @@ interface KanbanViewProps {
   onFocusTask?: (id: number) => void;
   selectedListId?: number | null;
   selectedLabelId?: number | null;
+  selectedFilter?: SavedFilter | null;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -98,7 +99,8 @@ function KanbanView({
   onTaskDuplicate,
   onFocusTask,
   selectedListId = null,
-  selectedLabelId = null
+  selectedLabelId = null,
+  selectedFilter = null
 }: KanbanViewProps) {
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
   const [draggedOverCol, setDraggedOverCol] = useState<string | null>(null);
