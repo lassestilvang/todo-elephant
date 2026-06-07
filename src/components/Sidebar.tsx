@@ -16,7 +16,7 @@ import {
   Search,
   LayoutGrid
 } from "lucide-react";
-import { List, Label, Task } from "@/types";
+import { List, Label, Task, SavedFilter } from "@/types";
 
 interface SidebarProps {
   currentView: "dashboard" | "kanban" | "list" | "eisenhower";
@@ -24,6 +24,7 @@ interface SidebarProps {
   lists: List[];
   labels: Label[];
   tasks: Task[];
+  savedFilters: SavedFilter[];
   selectedListId: number | null;
   setSelectedListId: (id: number | null) => void;
   selectedLabelId: number | null;
@@ -43,6 +44,7 @@ function Sidebar({
   lists,
   labels,
   tasks,
+  savedFilters,
   selectedListId,
   setSelectedListId,
   selectedLabelId,
@@ -188,6 +190,25 @@ function Sidebar({
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
         </nav>
+
+        {/* Saved Filters */}
+        {savedFilters.length > 0 && (
+          <div className="space-y-1">
+            <h3 className="text-xs font-semibold tracking-wider text-muted uppercase px-3 mb-2 flex items-center justify-between">
+              Saved Filters
+            </h3>
+            {savedFilters.map(filter => (
+              <button
+                key={filter.id}
+                onClick={() => { /* TODO: apply filter */ }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted hover:bg-muted/10 hover:text-foreground transition-all"
+              >
+                <Search size={16} />
+                <span className="truncate">{filter.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Categories / Lists */}
         <div className="space-y-1">

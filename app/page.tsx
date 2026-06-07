@@ -202,6 +202,7 @@ export default function Home() {
           lists={lists}
           labels={labels}
           tasks={tasks}
+          savedFilters={savedFilters}
           selectedListId={selectedListId}
           setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); transitionView("list"); setIsSidebarOpen(false); }}
           selectedLabelId={selectedLabelId}
