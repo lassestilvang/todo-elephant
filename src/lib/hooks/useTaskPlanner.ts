@@ -48,6 +48,7 @@ export function useTaskPlanner() {
   const [currentView, setView] = useState<"dashboard" | "kanban" | "list" | "eisenhower">("dashboard");
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [selectedLabelId, setSelectedLabelId] = useState<number | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<SavedFilter | null>(null);
 
   // States loaded from backend
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -736,6 +737,8 @@ export function useTaskPlanner() {
     setSelectedListId,
     selectedLabelId,
     setSelectedLabelId,
+    selectedFilter,
+    setSelectedFilter,
     tasks,
     lists,
     labels,

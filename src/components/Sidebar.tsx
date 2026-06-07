@@ -29,6 +29,8 @@ interface SidebarProps {
   setSelectedListId: (id: number | null) => void;
   selectedLabelId: number | null;
   setSelectedLabelId: (id: number | null) => void;
+  selectedFilter: SavedFilter | null;
+  setSelectedFilter: (filter: SavedFilter | null) => void;
   onCreateList: (name: string, color: string) => void;
   onCreateLabel: (name: string, color: string) => void;
   onOpenSettings: () => void;
@@ -200,8 +202,13 @@ function Sidebar({
             {savedFilters.map(filter => (
               <button
                 key={filter.id}
-                onClick={() => { /* TODO: apply filter */ }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted hover:bg-muted/10 hover:text-foreground transition-all"
+                onClick={() => setSelectedFilter(filter)}
+                aria-current={selectedFilter?.id === filter.id ? "page" : undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                  selectedFilter?.id === filter.id
+                    ? "bg-accent/10 text-accent font-semibold"
+                    : "text-muted hover:bg-muted/10 hover:text-foreground"
+                }`}
               >
                 <Search size={16} />
                 <span className="truncate">{filter.name}</span>

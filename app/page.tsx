@@ -204,9 +204,11 @@ export default function Home() {
           tasks={tasks}
           savedFilters={savedFilters}
           selectedListId={selectedListId}
-          setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); transitionView("list"); setIsSidebarOpen(false); }}
+          setSelectedListId={(id) => { setSelectedListId(id); setSelectedLabelId(null); setSelectedFilter(null); transitionView("list"); setIsSidebarOpen(false); }}
           selectedLabelId={selectedLabelId}
-          setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); transitionView("list"); setIsSidebarOpen(false); }}
+          setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); setSelectedFilter(null); transitionView("list"); setIsSidebarOpen(false); }}
+          selectedFilter={selectedFilter}
+          setSelectedFilter={(filter) => { setSelectedFilter(filter); setSelectedListId(null); setSelectedLabelId(null); transitionView("list"); setIsSidebarOpen(false); }}
           onCreateList={handleCreateList}
           onCreateLabel={handleCreateLabel}
           onOpenSettings={() => setIsSettingsOpen(true)}
