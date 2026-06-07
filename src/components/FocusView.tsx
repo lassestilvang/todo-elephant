@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Task } from "@/types";
 import { toast } from "sonner";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface FocusViewProps {
   task: Task;
@@ -141,9 +142,9 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
             {task.title}
           </h1>
           {task.description && (
-            <p className="text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
-              {task.description}
-            </p>
+            <div className="text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
+              <MarkdownRenderer content={task.description} />
+            </div>
           )}
         </div>
 
