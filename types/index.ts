@@ -57,3 +57,12 @@ export type User = {
   email: string;
   createdAt: string;
 };
+
+export type SavedFilter = {
+  id: number;
+  name: string;
+  query: string;
+  statusFilter: "all" | "active" | "completed" | "archived";
+  priorityFilter: "all" | "high" | "medium" | "low";
+  sortBy: "newest" | "dueDate" | "priority";
+};

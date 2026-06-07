@@ -11,6 +11,7 @@ export interface DBStructure {
   labels: Label[];
   activityLogs: ActivityLog[];
   users: User[];
+  savedFilters: SavedFilter[];
   currentUser: User | null;
 }
 
@@ -94,6 +95,7 @@ const defaultDBData: DBStructure = {
   users: [
     { id: 1, name: "Lasse Stilvang", email: "lasse.stilvang@gmail.com", createdAt: new Date().toISOString() }
   ],
+  savedFilters: [],
   currentUser: { id: 1, name: "Lasse Stilvang", email: "lasse.stilvang@gmail.com", createdAt: new Date().toISOString() }
 };
 
