@@ -19,6 +19,7 @@ import {
 import { Task, List, Label, SavedFilter } from "@/types";
 import EmptyState from "./EmptyState";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface ListViewProps {
   tasks: Task[];
@@ -570,9 +571,9 @@ function ListView({
                       {/* Description */}
                       <div className="space-y-1.5">
                         <span className="text-[11px] font-bold text-muted uppercase">Description</span>
-                        <p className="text-xs text-foreground leading-relaxed">
-                          {task.description ? highlightText(task.description, searchQuery) : "No description provided."}
-                        </p>
+                        <div className="text-xs text-foreground leading-relaxed">
+                          {task.description ? <MarkdownRenderer content={task.description} /> : "No description provided."}
+                        </div>
                       </div>
 
                       {/* Subtask check-off checklist */}
