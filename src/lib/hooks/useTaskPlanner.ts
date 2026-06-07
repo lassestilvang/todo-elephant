@@ -54,6 +54,7 @@ export function useTaskPlanner() {
   const [lists, setLists] = useState<List[]>([]);
   const [labels, setLabels] = useState<Label[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Command palette state
