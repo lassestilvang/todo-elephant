@@ -12,6 +12,7 @@ export interface DBStructure {
   activityLogs: ActivityLog[];
   users: User[];
   savedFilters: SavedFilter[];
+  shortcutConfigs: ShortcutConfig[];
   currentUser: User | null;
 }
 
@@ -96,6 +97,18 @@ const defaultDBData: DBStructure = {
     { id: 1, name: "Lasse Stilvang", email: "lasse.stilvang@gmail.com", createdAt: new Date().toISOString() }
   ],
   savedFilters: [],
+  shortcutConfigs: [
+    { id: "new-task", key: "n", description: "Create new task", action: "openCreateModal" },
+    { id: "view-dashboard", key: "1", description: "Switch to Dashboard", action: "transitionView:dashboard" },
+    { id: "view-kanban", key: "2", description: "Switch to Kanban", action: "transitionView:kanban" },
+    { id: "view-list", key: "3", description: "Switch to List", action: "transitionView:list" },
+    { id: "view-eisenhower", key: "4", description: "Switch to Eisenhower Matrix", action: "transitionView:eisenhower" },
+    { id: "focus-search", key: "/", description: "Focus search input", action: "focusSearch" },
+    { id: "command-palette", key: "k", metaKey: true, description: "Open Command Palette", action: "toggleCommandPalette" },
+    { id: "open-settings", key: ",", metaKey: true, description: "Open Settings", action: "openSettings" },
+    { id: "show-shortcuts", key: "?", description: "Show this help", action: "showShortcuts" },
+    { id: "close-modal", key: "Escape", description: "Close modals / palette", action: "closeActiveModal" },
+  ],
   currentUser: { id: 1, name: "Lasse Stilvang", email: "lasse.stilvang@gmail.com", createdAt: new Date().toISOString() }
 };
 

@@ -67,3 +67,14 @@ export type SavedFilter = {
   priorityFilter: "all" | "high" | "medium" | "low";
   sortBy: "newest" | "dueDate" | "priority";
 };
+
+export type ShortcutConfig = {
+  id: string; // e.g., "new-task", "toggle-command-palette"
+  key: string; // e.g., "n", "k"
+  altKey?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
+  description: string;
+  action: string; // Internal identifier for the action
+};
