@@ -94,6 +94,8 @@ export default function Home() {
     handleClearLogs,
     handleCreateList,
     handleCreateLabel,
+    handleSaveFilter,
+    handleDeleteFilter,
     handleTaskClick,
     handleKanbanAddTask,
     handleCreateTaskFromCommand,
@@ -214,6 +216,7 @@ export default function Home() {
           setSelectedLabelId={(id) => { setSelectedLabelId(id); setSelectedListId(null); setSelectedFilter(null); transitionView("list"); setIsSidebarOpen(false); }}
           selectedFilter={selectedFilter}
           setSelectedFilter={(filter) => { setSelectedFilter(filter); setSelectedListId(null); setSelectedLabelId(null); transitionView("list"); setIsSidebarOpen(false); }}
+          onDeleteFilter={handleDeleteFilter}
           onCreateList={handleCreateList}
           onCreateLabel={handleCreateLabel}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -281,6 +284,7 @@ export default function Home() {
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
                 selectedFilter={selectedFilter}
+                onSaveFilter={handleSaveFilter}
                 onFocusTask={openFocusMode}
               />
             )}
@@ -296,6 +300,7 @@ export default function Home() {
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
                 selectedFilter={selectedFilter}
+                onSaveFilter={handleSaveFilter}
                 onTaskDuplicate={handleTaskDuplicate}
                 onClearCompleted={handleClearCompleted}
                 onFocusTask={openFocusMode}

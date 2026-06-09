@@ -590,6 +590,45 @@ export function useTaskPlanner() {
     }
   }, [refreshLogs]);
 
+  const handleSaveFilter = useCallback(async (name: string, filterConfig: Omit<SavedFilter, "id">) => {
+    try {
+      const res = await fetch("/api/filters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(filterConfig)
+      });
+      if (res.ok) {
+        const newFilter = await res.json();
+        setSavedFilters(prev => [...prev, newFilter]);
+        toast.success(`Filter "${newFilter.name}" saved!`);
+        refreshLogs();
+        return newFilter;
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save filter");
+    }
+  }, [refreshLogs]);
+
+  const handleDeleteFilter = useCallback(async (id: number) => {
+    try {
+      const res = await fetch(`/api/filters/${id}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setSavedFilters(prev => prev.filter(f => f.id !== id));
+        if (selectedFilter?.id === id) {
+          setSelectedFilter(null);
+        }
+        toast.success("Filter deleted");
+        refreshLogs();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete filter");
+    }
+  }, [refreshLogs, selectedFilter]);
+
   const handleTaskClick = useCallback((task: Task) => {
     setCurrentEditingTask(task);
     setModalMode("edit");
@@ -815,6 +854,8 @@ export function useTaskPlanner() {
     handleClearLogs,
     handleCreateList,
     handleCreateLabel,
+    handleSaveFilter,
+    handleDeleteFilter,
     handleTaskClick,
     handleKanbanAddTask,
     handleCreateTaskFromCommand,

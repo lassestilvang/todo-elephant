@@ -34,6 +34,7 @@ interface ListViewProps {
   onClearCompleted?: () => void;
   onFocusTask?: (id: number) => void;
   selectedFilter?: SavedFilter | null;
+  onSaveFilter?: (name: string, config: Omit<SavedFilter, "id">) => void;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -99,7 +100,8 @@ function ListView({
   onTaskDuplicate,
   onClearCompleted,
   onFocusTask,
-  selectedFilter = null
+  selectedFilter = null,
+  onSaveFilter
 }: ListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
@@ -321,6 +323,28 @@ function ListView({
               </button>
             )}
             
+            {/* Save Filter action */}
+            {onSaveFilter && (debouncedSearchQuery || statusFilter !== "all" || priorityFilter !== "all") && !selectedFilter && (
+              <button
+                onClick={() => {
+                  const name = window.prompt("Enter a name for this filter:");
+                  if (name) {
+                    onSaveFilter(name, {
+                      name,
+                      query: debouncedSearchQuery,
+                      statusFilter,
+                      priorityFilter,
+                      sortBy
+                    });
+                  }
+                }}
+                className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl border border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all duration-150 cursor-pointer animate-fade-in flex items-center gap-1.5"
+              >
+                <Link size={12} />
+                Save as Filter
+              </button>
+            )}
+
             {/* Status Filter Toggles */}
             <div className="flex border border-border rounded-xl p-1 bg-muted/10 shrink-0">
               {(["all", "active", "completed", "archived"] as const).map((filter) => (

@@ -35,6 +35,7 @@ interface KanbanViewProps {
   selectedListId?: number | null;
   selectedLabelId?: number | null;
   selectedFilter?: SavedFilter | null;
+  onSaveFilter?: (name: string, config: Omit<SavedFilter, "id">) => void;
 }
 
 const highlightText = (text: string, highlight: string) => {
@@ -100,7 +101,8 @@ function KanbanView({
   onFocusTask,
   selectedListId = null,
   selectedLabelId = null,
-  selectedFilter = null
+  selectedFilter = null,
+  onSaveFilter
 }: KanbanViewProps) {
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
   const [draggedOverCol, setDraggedOverCol] = useState<string | null>(null);
@@ -308,7 +310,29 @@ function KanbanView({
             />
           </div>
 
-          {/* Sorting Selection */}
+          {/* Save Filter action */}
+          {onSaveFilter && (debouncedSearchQuery || priorityFilter !== "all") && !selectedFilter && (
+            <button
+              onClick={() => {
+                const name = window.prompt("Enter a name for this filter:");
+                if (name) {
+                  onSaveFilter(name, {
+                    name,
+                    query: debouncedSearchQuery,
+                    statusFilter: "all",
+                    priorityFilter,
+                    sortBy
+                  });
+                }
+              }}
+              className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl border border-accent/20 text-accent bg-accent/5 hover:bg-accent/10 transition-all duration-150 cursor-pointer animate-fade-in flex items-center gap-1.5"
+            >
+              <Link size={12} />
+              Save as Filter
+            </button>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 border border-border rounded-xl px-2.5 py-1.5 bg-muted/10 shrink-0">
             <SlidersHorizontal size={12} className="text-muted" />
             <select
@@ -344,8 +368,9 @@ function KanbanView({
           </div>
         </div>
       </div>
+    </div>
 
-      {/* Columns Workspace Container */}
+    {/* Columns Workspace Container */}
       <div className="flex-1 overflow-x-auto px-8 pb-8 flex items-start gap-6 select-none">
         {columns.map((col, colIdx) => {
           const colTasks = getTasksByStatus(col.id);

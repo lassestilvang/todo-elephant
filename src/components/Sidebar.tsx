@@ -15,7 +15,8 @@ import {
   Settings,
   Search,
   LayoutGrid,
-  Monitor
+  Monitor,
+  X
 } from "lucide-react";
 import { List, Label, Task, SavedFilter } from "@/types";
 
@@ -32,6 +33,7 @@ interface SidebarProps {
   setSelectedLabelId: (id: number | null) => void;
   selectedFilter: SavedFilter | null;
   setSelectedFilter: (filter: SavedFilter | null) => void;
+  onDeleteFilter: (id: number) => void;
   onCreateList: (name: string, color: string) => void;
   onCreateLabel: (name: string, color: string) => void;
   onOpenSettings: () => void;
@@ -54,6 +56,7 @@ function Sidebar({
   setSelectedLabelId,
   selectedFilter,
   setSelectedFilter,
+  onDeleteFilter,
   onCreateList,
   onCreateLabel,
   onOpenSettings,
@@ -203,19 +206,27 @@ function Sidebar({
               Saved Filters
             </h3>
             {savedFilters.map(filter => (
-              <button
-                key={filter.id}
-                onClick={() => setSelectedFilter(filter)}
-                aria-current={selectedFilter?.id === filter.id ? "page" : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                  selectedFilter?.id === filter.id
-                    ? "bg-accent/10 text-accent font-semibold"
-                    : "text-muted hover:bg-muted/10 hover:text-foreground"
-                }`}
-              >
-                <Search size={16} />
-                <span className="truncate">{filter.name}</span>
-              </button>
+              <div key={filter.id} className="group relative">
+                <button
+                  onClick={() => setSelectedFilter(filter)}
+                  aria-current={selectedFilter?.id === filter.id ? "page" : undefined}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                    selectedFilter?.id === filter.id
+                      ? "bg-accent/10 text-accent font-semibold"
+                      : "text-muted hover:bg-muted/10 hover:text-foreground"
+                  }`}
+                >
+                  <Search size={16} />
+                  <span className="truncate pr-6">{filter.name}</span>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDeleteFilter(filter.id); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                  aria-label="Delete filter"
+                >
+                  <X size={12} />
+                </button>
+              </div>
             ))}
           </div>
         )}
