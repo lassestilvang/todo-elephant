@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { Task, List, Label, ActivityLog } from "@/types";
+import { Task, List, Label, ActivityLog, SavedFilter, ShortcutConfig } from "@/types";
 
 function playCompletionSound() {
   if (typeof window === "undefined") return;
@@ -151,24 +151,30 @@ export function useTaskPlanner() {
 
   const refreshData = useCallback(async () => {
     try {
-      const [tRes, lRes, tagRes, logRes] = await Promise.all([
+      const [tRes, lRes, tagRes, logRes, filterRes, shortcutRes] = await Promise.all([
         fetch("/api/tasks"),
         fetch("/api/lists"),
         fetch("/api/labels"),
         fetch("/api/activity-logs"),
+        fetch("/api/filters"),
+        fetch("/api/shortcuts")
       ]);
 
-      const [tData, lData, tagData, logData] = await Promise.all([
+      const [tData, lData, tagData, logData, filterData, shortcutData] = await Promise.all([
         tRes.ok ? tRes.json() : [],
         lRes.ok ? lRes.json() : [],
         tagRes.ok ? tagRes.json() : [],
         logRes.ok ? logRes.json() : [],
+        filterRes.ok ? filterRes.json() : [],
+        shortcutRes.ok ? shortcutRes.json() : []
       ]);
 
       setTasks(tData);
       setLists(lData);
       setLabels(tagData);
       setActivityLogs(logData);
+      setSavedFilters(filterData);
+      setShortcutConfigs(shortcutData);
     } catch (err) {
       console.error("Data refresh error:", err);
       toast.error("Failed to refresh planner data");
@@ -749,6 +755,8 @@ export function useTaskPlanner() {
     lists,
     labels,
     activityLogs,
+    savedFilters,
+    shortcutConfigs,
     loading,
     isCommandPaletteOpen,
     setIsCommandPaletteOpen,

@@ -79,6 +79,9 @@ export default function Home() {
     focusTaskId,
     isZenMode,
     setIsZenMode,
+    selectedFilter,
+    setSelectedFilter,
+    savedFilters,
     openFocusMode,
     closeFocusMode,
     openCreateModal,
@@ -277,6 +280,7 @@ export default function Home() {
                 onTaskDuplicate={handleTaskDuplicate}
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
+                selectedFilter={selectedFilter}
                 onFocusTask={openFocusMode}
               />
             )}
@@ -291,6 +295,7 @@ export default function Home() {
                 onTaskClick={handleTaskClick}
                 selectedListId={selectedListId}
                 selectedLabelId={selectedLabelId}
+                selectedFilter={selectedFilter}
                 onTaskDuplicate={handleTaskDuplicate}
                 onClearCompleted={handleClearCompleted}
                 onFocusTask={openFocusMode}

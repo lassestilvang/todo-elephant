@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Settings,
   Search,
-  LayoutGrid
+  LayoutGrid,
+  Monitor
 } from "lucide-react";
 import { List, Label, Task, SavedFilter } from "@/types";
 
@@ -51,6 +52,8 @@ function Sidebar({
   setSelectedListId,
   selectedLabelId,
   setSelectedLabelId,
+  selectedFilter,
+  setSelectedFilter,
   onCreateList,
   onCreateLabel,
   onOpenSettings,

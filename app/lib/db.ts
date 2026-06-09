@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Task, List, Label, ActivityLog, User } from '@/types';
+import { Task, List, Label, ActivityLog, User, SavedFilter, ShortcutConfig } from '@/types';
 
 const DB_FILE = path.join(process.cwd(), 'db.json');
 

@@ -8,7 +8,7 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   tasks: Task[];
-  setView: (view: "dashboard" | "kanban" | "list") => void;
+  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower") => void;
   onCreateTask: (title: string) => void;
   onSelectTask: (task: Task) => void;
   setThemeMode?: (mode: "light" | "dark" | "system") => void;
