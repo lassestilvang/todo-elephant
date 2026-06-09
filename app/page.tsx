@@ -82,6 +82,7 @@ export default function Home() {
     selectedFilter,
     setSelectedFilter,
     savedFilters,
+    shortcutConfigs,
     openFocusMode,
     closeFocusMode,
     openCreateModal,
@@ -128,55 +129,60 @@ export default function Home() {
       const target = e.target as HTMLElement;
       const isInputFocused = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
 
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if (isInputFocused) return;
+
+      // Find matching shortcut config
+      const config = shortcutConfigs.find(s => {
+        const keyMatch = s.key.toLowerCase() === e.key.toLowerCase();
+        const metaMatch = !!s.metaKey === (e.metaKey || e.ctrlKey);
+        const shiftMatch = !!s.shiftKey === e.shiftKey;
+        const altMatch = !!s.altKey === e.altKey;
+        return keyMatch && metaMatch && shiftMatch && altMatch;
+      });
+
+      if (config) {
         e.preventDefault();
-        setIsCommandPaletteOpen(prev => !prev);
-        return;
-      }
-
-      if (isInputFocused || isModalOpen || isCommandPaletteOpen || isSettingsOpen || isShortcutsOpen) return;
-
-      switch (e.key) {
-        case "n":
-          e.preventDefault();
-          openCreateModal();
-          break;
-        case "1":
-          e.preventDefault();
-          transitionView("dashboard");
-          break;
-        case "2":
-          e.preventDefault();
-          transitionView("kanban");
-          break;
-        case "3":
-          e.preventDefault();
-          transitionView("list");
-          break;
-        case "?":
-          e.preventDefault();
-          setIsShortcutsOpen(true);
-          break;
-        case "/":
-          e.preventDefault();
+        
+        // Action Mapping
+        if (config.action === "openCreateModal") openCreateModal();
+        else if (config.action === "transitionView:dashboard") transitionView("dashboard");
+        else if (config.action === "transitionView:kanban") transitionView("kanban");
+        else if (config.action === "transitionView:list") transitionView("list");
+        else if (config.action === "transitionView:eisenhower") transitionView("eisenhower");
+        else if (config.action === "toggleCommandPalette") setIsCommandPaletteOpen(prev => !prev);
+        else if (config.action === "openSettings") setIsSettingsOpen(true);
+        else if (config.action === "showShortcuts") setIsShortcutsOpen(true);
+        else if (config.action === "focusSearch") {
           const searchInput = document.getElementById(
             currentView === "kanban" ? "kanban-search" : "list-search"
           );
-          if (searchInput) {
-            searchInput.focus();
-          }
-          break;
-        case ",":
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            setIsSettingsOpen(true);
-          }
-          break;
+          if (searchInput) searchInput.focus();
+        }
+        else if (config.action === "closeActiveModal") {
+          setIsModalOpen(false);
+          setIsCommandPaletteOpen(false);
+          setIsSettingsOpen(false);
+          setIsShortcutsOpen(false);
+        }
+        return;
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, isCommandPaletteOpen, isSettingsOpen, isShortcutsOpen, openCreateModal, transitionView, setIsCommandPaletteOpen, setIsSettingsOpen, currentView]);
+  }, [
+    shortcutConfigs, 
+    isModalOpen, 
+    isCommandPaletteOpen, 
+    isSettingsOpen, 
+    isShortcutsOpen, 
+    openCreateModal, 
+    transitionView, 
+    setIsCommandPaletteOpen, 
+    setIsSettingsOpen, 
+    currentView,
+    setIsModalOpen,
+    setIsShortcutsOpen
+  ]);
 
   // Filter tasks in view by selected Sidebar options
   const filteredTasks = useMemo(() => {
@@ -411,6 +417,7 @@ export default function Home() {
       <ShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+        shortcutConfigs={shortcutConfigs}
       />
 
       {/* Delete Confirmation Dialog */}

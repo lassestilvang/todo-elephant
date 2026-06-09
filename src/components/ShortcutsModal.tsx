@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import { Keyboard, X } from "lucide-react";
 
+import { ShortcutConfig } from "@/types";
+
 interface ShortcutsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  shortcutConfigs: ShortcutConfig[];
 }
 
-export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
+export const ShortcutsModal = ({ isOpen, onClose, shortcutConfigs }: ShortcutsModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -48,18 +51,6 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
     }
   };
 
-  const shortcuts = [
-    { key: "n", description: "Create new task" },
-    { key: "1", description: "Switch to Dashboard" },
-    { key: "2", description: "Switch to Kanban" },
-    { key: "3", description: "Switch to List" },
-    { key: "/", description: "Focus search input" },
-    { key: "⌘ K", description: "Open Command Palette" },
-    { key: "⌘ ,", description: "Open Settings" },
-    { key: "?", description: "Show this help" },
-    { key: "Esc", description: "Close modals / palette" },
-  ];
-
   return (
     <dialog
       ref={dialogRef}
@@ -81,11 +72,15 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
 
       <div className="p-6 space-y-4">
         <div className="grid grid-cols-1 gap-3">
-          {shortcuts.map((s, idx) => (
+          {shortcutConfigs.map((s, idx) => (
             <div key={idx} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
               <span className="text-sm font-medium text-foreground">{s.description}</span>
               <kbd className="px-2 py-1 text-xs font-bold text-accent bg-accent/10 border border-accent/20 rounded-lg min-w-[32px] text-center shadow-sm">
-                {s.key}
+                {s.metaKey && <span className="mr-0.5">⌘</span>}
+                {s.ctrlKey && <span className="mr-0.5">⌃</span>}
+                {s.altKey && <span className="mr-0.5">⌥</span>}
+                {s.shiftKey && <span className="mr-0.5">⇧</span>}
+                <span className="uppercase">{s.key}</span>
               </kbd>
             </div>
           ))}
