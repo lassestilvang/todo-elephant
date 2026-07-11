@@ -321,3 +321,39 @@ textarea:focus-visible {
     animation: none;
   }
 }
+
+/* Print Mode: render only the task list — no chrome, no sidebar, no modals. */
+@media print {
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+    --border: #cccccc;
+    --accent: #333333;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000 !important;
+  }
+  /* Hide app chrome */
+  aside,
+  button[aria-label="Toggle sidebar"],
+  header,
+  footer,
+  [role="dialog"],
+  nav,
+  .scroll-indicator-top,
+  .scroll-indicator-bottom {
+    display: none !important;
+  }
+  /* Show only tasks */
+  main > * {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: #ffffff !important;
+    border: none !important;
+  }
+  body,
+  main {
+    overflow: visible !important;
+  }
+}
