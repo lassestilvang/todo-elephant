@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Keyboard, Sparkles, Folder, Plus, Sun, Moon, Palette } from "lucide-react";
+import { Search, Keyboard, Sparkles, Folder, Plus, Sun, Moon, Palette, BookOpenCheck } from "lucide-react";
 import { Task } from "@/types";
 
 interface CommandPaletteProps {
@@ -14,6 +14,8 @@ interface CommandPaletteProps {
   setThemeMode?: (mode: "light" | "dark" | "system") => void;
   setAccentColor?: (color: string) => void;
   onOpenShortcuts?: () => void;
+  templates?: Task[];
+  onCreateFromTemplate?: (templateId: number) => void;
 }
 
 function CommandPalette({
@@ -25,7 +27,9 @@ function CommandPalette({
   onSelectTask,
   setThemeMode,
   setAccentColor,
-  onOpenShortcuts
+  onOpenShortcuts,
+  templates,
+  onCreateFromTemplate
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -179,13 +183,27 @@ function CommandPalette({
     if (matchedTasks.length > 0) {
       groups.push({
         title: query ? "Matching Tasks" : "Recent Tasks",
-        items: matchedTasks.map(t => ({ 
-          id: `t-${t.id}`, 
-          title: t.title, 
-          type: "task", 
+        items: matchedTasks.map(t => ({
+          id: `t-${t.id}`,
+          title: t.title,
+          type: "task",
           subtitle: t.description,
           priority: t.priority,
-          action: () => onSelectTask(t) 
+          action: () => onSelectTask(t)
+        }))
+      });
+    }
+
+    if (templates && templates.length > 0 && onCreateFromTemplate && !query) {
+      groups.push({
+        title: "Task Templates",
+        items: templates.slice(0, 6).map(t => ({
+          id: `tmpl-${t.id}`,
+          title: t.title,
+          type: "template",
+          subtitle: t.description || "Reusable template",
+          priority: t.priority,
+          action: () => onCreateFromTemplate(t.id)
         }))
       });
     }
@@ -207,7 +225,7 @@ function CommandPalette({
     }
 
     return groups;
-  }, [query, tasks, viewCommands, onSelectTask, onCreateTask, onClose]);
+  }, [query, tasks, viewCommands, onSelectTask, onCreateTask, onClose, templates, onCreateFromTemplate]);
 
   // Flattened items for keyboard navigation
   const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
@@ -307,6 +325,7 @@ function CommandPalette({
                         }`}>
                           {item.type === "navigation" && <Sparkles size={16} className={isSelected ? "text-white" : "text-accent"} />}
                           {item.type === "task" && <Folder size={16} className={isSelected ? "text-white" : "text-emerald-500"} />}
+                          {item.type === "template" && <BookOpenCheck size={16} className={isSelected ? "text-white" : "text-pink-500"} />}
                           {item.type === "create" && <Plus size={16} className={isSelected ? "text-white" : "text-accent"} />}
                           {item.type === "theme" && <Moon size={16} className={isSelected ? "text-white" : "text-indigo-400"} />}
                           {item.type === "accent" && <Palette size={16} className={isSelected ? "text-white" : "text-amber-500"} />}
