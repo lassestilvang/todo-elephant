@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDB, writeDB, logActivity } from "@/app/lib/db";
+import {
+  readDB,
+  writeDB,
+  logActivity,
+  mutateDB,
+  nextTaskId,
+} from "@/app/lib/db";
 import { Task } from "@/types";
+import {
+  buildNextOccurrence,
+  isRecurrenceKind,
+  shouldSpawnOnComplete,
+} from "@/src/lib/recurrence";
+import { normalizeStatus, TASK_STATUS } from "@/src/lib/status";
 
 export async function GET() {
   try {
-    const db = readDB();
-    // Return newest tasks first
-    const sortedTasks = [...db.tasks].sort((a, b) => b.id - a.id);
-    return NextResponse.json(sortedTasks);
+    const db = await readDB();
+    const sorted = [...db.tasks].sort((a, b) => b.id - a.id);
+    return NextResponse.json(sorted);
   } catch (error) {
     console.error("GET /api/tasks error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -17,37 +28,41 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Support parsing strings (in case request body was double serialized in older clients)
-    const taskData = typeof body === "string" ? JSON.parse(body) : body;
-
-    if (!taskData || !taskData.title) {
+    if (!body?.title) {
       return NextResponse.json({ error: "Task title is required" }, { status: 400 });
     }
 
-    const db = readDB();
-    const newId = db.tasks.length > 0 ? Math.max(...db.tasks.map(t => t.id)) + 1 : 1;
-
+    const recurrence = isRecurrenceKind(body.recurrence) ? body.recurrence : "none";
     const newTask: Task = {
-      id: newId,
-      title: taskData.title.trim(),
-      description: (taskData.description || "").trim(),
-      dueDate: taskData.dueDate || new Date().toISOString(),
-      priority: taskData.priority || "medium",
-      status: taskData.status || "pending",
-      subtasks: taskData.subtasks || [],
-      listId: taskData.listId ? Number(taskData.listId) : 1, // Default to Inbox (listId: 1)
-      labels: taskData.labels || [],
+      id: 0, // filled in by mutateDB
+      title: String(body.title).trim(),
+      description: (body.description ?? "").toString().trim(),
+      dueDate: body.dueDate || new Date().toISOString(),
+      priority: body.priority || "medium",
+      status: normalizeStatus(body.status),
+      subtasks: Array.isArray(body.subtasks) ? body.subtasks : [],
+      listId: body.listId ? Number(body.listId) : undefined,
+      labels: Array.isArray(body.labels) ? body.labels.map(Number) : [],
+      dependsOnTaskId: body.dependsOnTaskId ? Number(body.dependsOnTaskId) : null,
+      isImportant: !!body.isImportant,
+      isUrgent: !!body.isUrgent,
+      recurrence,
+      completedPomodoros: 0,
+      parentRecurrenceId: null,
+      order: undefined,
+      archivedAt: null,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
-    db.tasks.push(newTask);
-    writeDB(db);
+    const created = await mutateDB<{ task: Task; nextOccurrence?: Task }>((db) => {
+      newTask.id = nextTaskId(db);
+      db.tasks.push(newTask);
+      return { task: newTask };
+    });
 
-    logActivity(`Created task "${newTask.title}"`, "task", newTask.id, `Priority: ${newTask.priority}, List: ${newTask.listId}`);
-
-    return NextResponse.json(newTask, { status: 201 });
+    await logActivity(`Created task "${created.task.title}"`, "task", created.task.id, `Priority: ${newTask.priority}, List: ${newTask.listId}, Recurrence: ${recurrence}`);
+    return NextResponse.json(created.task, { status: 201 });
   } catch (error) {
     console.error("POST /api/tasks error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
