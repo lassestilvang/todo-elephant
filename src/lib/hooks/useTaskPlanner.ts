@@ -1,874 +1,163 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
-import { Task, List, Label, ActivityLog, SavedFilter, ShortcutConfig } from "@/types";
+import { Task, SavedFilter, List, Label } from "@/types";
+import { isCompletedStatus } from "@/src/lib/status";
+import { useTaskForm } from "@/src/lib/hooks/useTaskForm";
+import { useTaskActions } from "@/src/lib/hooks/useTaskActions";
+import { usePlannerView, ViewName } from "@/src/lib/hooks/usePlannerView";
+import { usePlannerSettings } from "@/src/lib/hooks/usePlannerSettings";
+import { usePlannerData } from "@/src/lib/hooks/usePlannerData";
 
-function playCompletionSound() {
-  if (typeof window === "undefined") return;
-  try {
-    const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    
-    const osc1 = audioCtx.createOscillator();
-    const gain1 = audioCtx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-    osc1.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.15); // G5
-    
-    gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-    
-    osc1.connect(gain1);
-    gain1.connect(audioCtx.destination);
-    
-    const osc2 = audioCtx.createOscillator();
-    const gain2 = audioCtx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.05); // E5
-    osc2.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.2); // C6
-    
-    gain2.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain2.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.05);
-    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
-    
-    osc2.connect(gain2);
-    gain2.connect(audioCtx.destination);
-    
-    osc1.start(audioCtx.currentTime);
-    osc1.stop(audioCtx.currentTime + 0.3);
-    osc2.start(audioCtx.currentTime + 0.05);
-    osc2.stop(audioCtx.currentTime + 0.45);
-  } catch (e) {
-    console.error("Audio playback error", e);
-  }
-}
-
+/**
+ * Composition hook: assembles the focused sub-hooks into a single object so
+ * the existing call sites in app/page.tsx and any other consumer don't have
+ * to change. Internal logic is now distributed across:
+ *
+ *   - useTaskForm        – modal + form state + subtasks + magic breakdown
+ *   - useTaskActions     – CRUD with optimistic updates + dependency check + achievements
+ *   - usePlannerView     – current view + sidebar selection + date scope + transitionView
+ *   - usePlannerSettings – theme, accent, sound, sidebar, focus mode, zen, settings
+ *   - usePlannerData     – tasks, lists, labels, logs, filters, shortcuts fetching
+ *
+ * Each sub-hook is independently testable; this file is just the wiring.
+ */
 export function useTaskPlanner() {
-  // App views: dashboard, kanban, list, eisenhower
-  const [currentView, setView] = useState<"dashboard" | "kanban" | "list" | "eisenhower">("dashboard");
-  const [selectedListId, setSelectedListId] = useState<number | null>(null);
-  const [selectedLabelId, setSelectedLabelId] = useState<number | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<SavedFilter | null>(null);
+  const data = usePlannerData();
+  const view = usePlannerView();
+  const settings = usePlannerSettings();
+  const form = useTaskForm();
 
-  // States loaded from backend
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [lists, setLists] = useState<List[]>([]);
-  const [labels, setLabels] = useState<Label[]>([]);
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
-  const [shortcutConfigs, setShortcutConfigs] = useState<ShortcutConfig[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-
-  // Task Creation & Edit Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [currentEditingTask, setCurrentEditingTask] = useState<Task | null>(null);
-
-  // Form Fields
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskDesc, setTaskDesc] = useState("");
-  const [taskDueDate, setTaskDueDate] = useState("");
-  const [taskPriority, setTaskPriority] = useState<"low" | "medium" | "high">("medium");
-  const [taskStatus, setTaskStatus] = useState<Task["status"]>("pending");
-  const [taskListId, setTaskListId] = useState(1);
-  const [taskLabelsSelected, setTaskLabelsSelected] = useState<number[]>([]);
-  const [taskDependsOn, setTaskDependsOn] = useState<number | null>(null);
-  const [taskIsImportant, setTaskIsImportant] = useState(false);
-  const [taskIsUrgent, setTaskIsUrgent] = useState(false);
-  const [taskRecurrence, setTaskRecurrence] = useState<"none" | "daily" | "weekly" | "monthly">("none");
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
-  const [subtasksChecklist, setSubtasksChecklist] = useState<{ id: number; title: string; completed: boolean }[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [accentColor, setAccentColor] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("accent-color") || "#3b82f6";
-    }
-    return "#3b82f6";
-  });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
-  const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
-  const [isZenMode, setIsZenMode] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("sound-enabled");
-      return saved !== "false";
-    }
-    return true;
-  });
-  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">("system");
-
-  const updateTheme = useCallback((mode: "light" | "dark" | "system") => {
-    setThemeMode(mode);
-    if (mode === "system") {
-      localStorage.removeItem("color-scheme");
-      if (typeof window !== "undefined") {
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-      }
-    } else {
-      localStorage.setItem("color-scheme", mode);
-      document.documentElement.setAttribute("data-theme", mode);
-    }
-  }, []);
-
-  // Sync state and attribute on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const saved = localStorage.getItem("color-scheme") as "light" | "dark" | "system" | null;
-    const mode = saved || "system";
-    setThemeMode(mode);
-    if (mode === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-    } else {
-      document.documentElement.setAttribute("data-theme", mode);
-    }
-  }, []);
-
-  // Listen for system theme changes if in system mode
-  useEffect(() => {
-    if (themeMode !== "system") return;
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      document.documentElement.setAttribute("data-theme", mediaQuery.matches ? "dark" : "light");
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [themeMode]);
-
-  // Ref for tasks lookup to avoid stale closures
-  const tasksRef = useRef(tasks);
-  tasksRef.current = tasks;
-
-  const refreshData = useCallback(async () => {
-    try {
-      const [tRes, lRes, tagRes, logRes, filterRes, shortcutRes] = await Promise.all([
-        fetch("/api/tasks"),
-        fetch("/api/lists"),
-        fetch("/api/labels"),
-        fetch("/api/activity-logs"),
-        fetch("/api/filters"),
-        fetch("/api/shortcuts")
-      ]);
-
-      const [tData, lData, tagData, logData, filterData, shortcutData] = await Promise.all([
-        tRes.ok ? tRes.json() : [],
-        lRes.ok ? lRes.json() : [],
-        tagRes.ok ? tagRes.json() : [],
-        logRes.ok ? logRes.json() : [],
-        filterRes.ok ? filterRes.json() : [],
-        shortcutRes.ok ? shortcutRes.json() : []
-      ]);
-
-      setTasks(tData);
-      setLists(lData);
-      setLabels(tagData);
-      setActivityLogs(logData);
-      setSavedFilters(filterData);
-      setShortcutConfigs(shortcutData);
-    } catch (err) {
-      console.error("Data refresh error:", err);
-      toast.error("Failed to refresh planner data");
-    }
-  }, []);
-
-  // Fetch initial data in parallel
-  useEffect(() => {
-    async function initApp() {
-      try {
-        setLoading(true);
-        await refreshData();
-      } finally {
-        setLoading(false);
-      }
-    }
-    initApp();
-  }, [refreshData]);
-
-  // Refresh logs helper
-  const refreshLogs = useCallback(async () => {
-    try {
-      const logRes = await fetch("/api/activity-logs");
-      if (logRes.ok) {
-        const logData = await logRes.json();
-        setActivityLogs(logData);
-      }
-    } catch (err) {
-      console.error("Log refresh error:", err);
-    }
-  }, []);
-
-  const resetForm = useCallback(() => {
-    setTaskTitle("");
-    setTaskDesc("");
-    setTaskDueDate("");
-    setTaskPriority("medium");
-    setTaskStatus("pending");
-    setTaskListId(1);
-    setTaskLabelsSelected([]);
-    setTaskDependsOn(null);
-    setTaskIsImportant(false);
-    setTaskIsUrgent(false);
-    setTaskRecurrence("none");
-    setSubtasksChecklist([]);
-    setNewSubtaskTitle("");
-    setCurrentEditingTask(null);
-  }, []);
-
-  const openCreateModal = useCallback(() => {
-    resetForm();
-    setModalMode("create");
-    setIsModalOpen(true);
-  }, [resetForm]);
-
-  const transitionView = useCallback((v: "dashboard" | "kanban" | "list" | "eisenhower") => {
-    if (typeof document !== "undefined" && "startViewTransition" in document) {
-      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
-        setView(v);
-      });
-    } else {
-      setView(v);
-    }
-  }, []);
-
-  // Create or Update task handler
-  const handleTaskSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskTitle.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      if (modalMode === "create") {
-        const taskData = {
-          title: taskTitle.trim(),
-          description: taskDesc.trim(),
-          dueDate: taskDueDate || new Date().toISOString(),
-          priority: taskPriority,
-          status: taskStatus,
-          listId: Number(taskListId),
-          labels: taskLabelsSelected,
-          subtasks: subtasksChecklist,
-          dependsOnTaskId: taskDependsOn,
-          isImportant: taskIsImportant,
-          isUrgent: taskIsUrgent,
-          recurrence: taskRecurrence
-        };
-
-        const res = await fetch("/api/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(taskData)
-        });
-
-        if (res.ok) {
-          const newTask = await res.json();
-          setTasks(prev => [newTask, ...prev]);
-          toast.success(`Task "${newTask.title}" created successfully!`);
-          refreshLogs();
-        } else {
-          throw new Error("API error creating task");
-        }
-
-      } else if (modalMode === "edit" && currentEditingTask) {
-        const taskData = {
-          title: taskTitle.trim(),
-          description: taskDesc.trim(),
-          dueDate: taskDueDate,
-          priority: taskPriority,
-          status: taskStatus,
-          listId: Number(taskListId),
-          labels: taskLabelsSelected,
-          subtasks: subtasksChecklist,
-          dependsOnTaskId: taskDependsOn,
-          isImportant: taskIsImportant,
-          isUrgent: taskIsUrgent,
-          recurrence: taskRecurrence
-        };
-
-        const res = await fetch(`/api/tasks/${currentEditingTask.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(taskData)
-        });
-
-        if (res.ok) {
-          const updatedTask = await res.json();
-          setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
-          toast.success(`Task "${updatedTask.title}" updated successfully!`);
-          refreshLogs();
-        } else {
-          throw new Error("API error updating task");
-        }
-      }
-
-      setIsModalOpen(false);
-      resetForm();
-
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to persist task details");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [taskTitle, taskDesc, taskDueDate, taskPriority, taskStatus, taskListId, taskLabelsSelected, subtasksChecklist, modalMode, currentEditingTask, refreshLogs, resetForm, isSubmitting]);
-
-  // Direct fast inline updates (e.g. checkbox status, subtask checked state)
-  const handleTaskUpdateDirect = useCallback(async (id: number, updates: Partial<Task>) => {
-    try {
-      const originalTask = tasksRef.current.find(t => t.id === id);
-
-      if (originalTask) {
-        // Achievement Checks
-        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
-          const completedCount = tasksRef.current.filter(t => t.status === "completed" || t.status === "done").length + 1;
-          
-          if (completedCount === 1) {
-            toast.success("Achievement Unlocked: The Journey Begins!", { description: "You completed your first task! 🚀" });
-          } else if (completedCount === 10) {
-            toast.success("Achievement Unlocked: Decade of Deeds!", { description: "10 tasks completed. You're on fire! 🔥" });
-          } else if (completedCount === 50) {
-            toast.success("Achievement Unlocked: Task Master!", { description: "50 tasks completed. Pure excellence! 🏆" });
-          }
-        }
-
-        // Dependency Check
-        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
-          const dependency = tasksRef.current.find(t => t.id === originalTask.dependsOnTaskId);
-          if (dependency && dependency.status !== "completed" && dependency.status !== "done") {
-            toast.error(`Blocked! Please complete "${dependency.title}" first.`);
-            return;
-          }
-        }
-
-        if (updates.status && (updates.status === "completed" || updates.status === "done")) {
-          if (originalTask.status !== "completed" && originalTask.status !== "done") {
-            toast.success(`Completed: "${originalTask.title}" 🎉`);
-            if (soundEnabled) playCompletionSound();
-            if (typeof window !== "undefined") {
-              const win = window as Window & { triggerConfetti?: () => void };
-              if (win.triggerConfetti) {
-                win.triggerConfetti();
-              }
-            }
-          }
-        } else if (updates.status) {
-          if (originalTask.status === "completed" || originalTask.status === "done") {
-            toast("Reopened task", { description: `"${originalTask.title}" is now active again.` });
-          }
-        }
-
-        if (updates.subtasks && originalTask.subtasks) {
-          const newlyCompleted = updates.subtasks.find(
-            s => s.completed && !originalTask.subtasks!.find(ps => ps.id === s.id)?.completed
-          );
-          if (newlyCompleted) {
-            toast.success(`Subtask completed: "${newlyCompleted.title}"!`);
-            if (soundEnabled) playCompletionSound();
-
-            // All subtasks done confetti
-            if (updates.subtasks.every(s => s.completed)) {
-              if (typeof window !== "undefined") {
-                const win = window as Window & { triggerConfetti?: () => void };
-                if (win.triggerConfetti) {
-                  win.triggerConfetti();
-                }
-              }
-              toast.success("All subtasks finished! Excellent work.");
-            }
-          }
-        }
-      }
-
-      setTasks(prev => prev.map(t => {
-        if (t.id === id) {
-          const updated = { ...t, ...updates };
-          if (updates.status && (updates.status === "completed" || updates.status === "done")) {
-            updated.completedAt = new Date().toISOString();
-          } else if (updates.status) {
-            updated.completedAt = null;
-          }
-          return updated;
-        }
-        return t;
-      }));
-
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
-      });
-
-      if (!res.ok) {
-        throw new Error("Inline update failed");
-      }
-      refreshLogs();
-    } catch (err) {
-      console.error(err);
-      toast.error("Network synchronization failed");
-    }
-  }, [refreshLogs, soundEnabled]);
-
-  const handleTaskDuplicate = useCallback(async (task: Task) => {
-    try {
-      const taskData = {
-        title: `${task.title} (Copy)`,
-        description: task.description || "",
-        dueDate: task.dueDate || new Date().toISOString(),
-        priority: task.priority,
-        status: "pending", // Reset to pending for the duplicated task
-        listId: task.listId || 1,
-        labels: task.labels || [],
-        subtasks: task.subtasks?.map(s => ({ ...s, id: Math.floor(Math.random() * 10000) + 10000, completed: false })) || []
-      };
-
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskData)
-      });
-
-      if (res.ok) {
-        const newTask = await res.json();
-        setTasks(prev => [newTask, ...prev]);
-        toast.success(`Task duplicated successfully!`);
-        refreshLogs();
-      } else {
-        throw new Error("API error duplicating task");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to duplicate task");
-    }
-  }, [refreshLogs]);
-
-  // Task deletion handler
-  const handleTaskDelete = useCallback(async (id: number) => {
-    const taskToDelete = tasksRef.current.find(t => t.id === id);
-    if (!taskToDelete) return;
-
-    // Optimistic Update
-    const previousTasks = tasksRef.current;
-    setTasks(prev => prev.filter(t => t.id !== id));
-
-    try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: "DELETE"
-      });
-
-      if (res.ok || res.status === 204) {
-        toast.success(`Deleted task "${taskToDelete.title}"`, {
-          action: {
-            label: "Undo",
-            onClick: async () => {
-              // Simple undo: re-create the task
-              try {
-                const recoverRes = await fetch("/api/tasks", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(taskToDelete)
-                });
-                if (recoverRes.ok) {
-                  const restoredTask = await recoverRes.json();
-                  setTasks(prev => [restoredTask, ...prev]);
-                  toast.success("Task restored");
-                  refreshLogs();
-                }
-              } catch {
-                toast.error("Failed to restore task");
-              }
-            }
-          }
-        });
-        refreshLogs();
-      } else {
-        throw new Error("API error deleting task");
-      }
-    } catch (err) {
-      console.error(err);
-      setTasks(previousTasks); // Rollback
-      toast.error("Failed to delete task. Please try again.");
-    }
-  }, [refreshLogs]);
-
-  const requestDelete = useCallback((id: number) => {
-    setPendingDeleteId(id);
-  }, []);
-
-  const confirmDelete = useCallback(() => {
-    if (pendingDeleteId !== null) {
-      handleTaskDelete(pendingDeleteId);
-      setPendingDeleteId(null);
-    }
-  }, [pendingDeleteId, handleTaskDelete]);
-
-  const handleClearCompleted = useCallback(async () => {
-    const completedTasks = tasksRef.current.filter(t => t.status === "completed" || t.status === "done");
-    if (completedTasks.length === 0) return;
-
-    if (!window.confirm(`Are you sure you want to delete all ${completedTasks.length} completed tasks?`)) {
-      return;
-    }
-
-    const previousTasks = tasksRef.current;
-    setTasks(prev => prev.filter(t => t.status !== "completed" && t.status !== "done"));
-
-    try {
-      const promises = completedTasks.map(t => 
-        fetch(`/api/tasks/${t.id}`, { method: "DELETE" })
+  const actions = useTaskActions({
+    setTasks: data.setTasks,
+    setActivityLogs: data.setActivityLogs,
+    refreshLogs: data.refreshLogs,
+    soundEnabled: settings.soundEnabled,
+    pendingDeleteId: form.pendingDeleteId,
+    setPendingDeleteId: form.setPendingDeleteId,
+    onLocalPomodoroBump: (taskId) => {
+      data.setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId ? { ...t, completedPomodoros: (t.completedPomodoros ?? 0) + 1 } : t,
+        ),
       );
-      await Promise.all(promises);
-      toast.success(`Cleared ${completedTasks.length} completed tasks!`);
-      refreshLogs();
-    } catch (err) {
-      console.error(err);
-      setTasks(previousTasks);
-      toast.error("Failed to clear completed tasks");
-    }
-  }, [refreshLogs]);
+    },
+  });
 
-  const handleClearLogs = useCallback(async () => {
-    if (!window.confirm("Are you sure you want to clear the activity trail?")) return;
-    try {
-      const res = await fetch("/api/activity-logs", { method: "DELETE" });
-      if (res.ok) {
-        const data = await res.json();
-        setActivityLogs(data.activityLogs || []);
-        toast.success("Activity trail cleared!");
+  // Adapters that combine form + actions so the consumer gets the same
+  // single-call submit/click ergonomics as before.
+  const handleTaskSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!form.taskTitle.trim() || form.isSubmitting) return;
+      form.setIsSubmitting(true);
+      try {
+        await actions.submitTask(
+          {
+            mode: form.modalMode,
+            editingTask: form.currentEditingTask,
+            data: {
+              title: form.taskTitle.trim(),
+              description: form.taskDesc.trim(),
+              dueDate: form.taskDueDate,
+              priority: form.taskPriority,
+              status: form.taskStatus,
+              listId: Number(form.taskListId),
+              labels: form.taskLabelsSelected,
+              subtasks: form.subtasksChecklist,
+              dependsOnTaskId: form.taskDependsOn,
+              isImportant: form.taskIsImportant,
+              isUrgent: form.taskIsUrgent,
+              recurrence: form.taskRecurrence,
+            },
+            onSuccess: () => {
+              form.setIsModalOpen(false);
+              form.resetForm();
+            },
+          },
+        );
+      } finally {
+        form.setIsSubmitting(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to clear activity trail");
-    }
-  }, []);
+    },
+    [actions, form],
+  );
 
-  // Add folder helper
-  const handleCreateList = useCallback(async (name: string, color: string) => {
-    try {
-      const res = await fetch("/api/lists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color })
-      });
-      if (res.ok) {
-        const newList = await res.json();
-        setLists(prev => [...prev, newList]);
-        toast.success(`Created Folder "${newList.name}"`);
-        refreshLogs();
+  const handleTaskClick = useCallback(
+    (task: Task) => {
+      form.loadTaskIntoForm(task);
+    },
+    [form],
+  );
+
+  const handleKanbanAddTask = useCallback(
+    (title: string, status: string) => {
+      form.openModalWithTitle(title, status);
+    },
+    [form],
+  );
+
+  const handleCreateTaskFromCommand = useCallback(
+    (title: string) => {
+      form.openModalWithTitleOnly(title);
+    },
+    [form],
+  );
+
+  const handleQuickAdd = useCallback(
+    async (title: string) => {
+      if (!title.trim() || form.isSubmitting) return;
+      form.setIsSubmitting(true);
+      try {
+        await actions.quickAdd(title);
+      } finally {
+        form.setIsSubmitting(false);
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create folder category");
-    }
-  }, [refreshLogs]);
+    },
+    [actions, form],
+  );
 
-  // Add Label helper
-  const handleCreateLabel = useCallback(async (name: string, color: string) => {
-    try {
-      const res = await fetch("/api/labels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color })
-      });
-      if (res.ok) {
-        const newLabel = await res.json();
-        setLabels(prev => [...prev, newLabel]);
-        toast.success(`Added Label "${newLabel.name}"`);
-        refreshLogs();
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create label");
-    }
-  }, [refreshLogs]);
+  // requestDelete + confirmDelete come from useTaskActions now (gated by
+  // pendingDeleteId, which is part of useTaskForm). They forward into
+  // actions.deleteTask which already implements optimistic update + undo.
 
-  const handleSaveFilter = useCallback(async (name: string, filterConfig: Omit<SavedFilter, "id">) => {
-    try {
-      const res = await fetch("/api/filters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(filterConfig)
-      });
-      if (res.ok) {
-        const newFilter = await res.json();
-        setSavedFilters(prev => [...prev, newFilter]);
-        toast.success(`Filter "${newFilter.name}" saved!`);
-        refreshLogs();
-        return newFilter;
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save filter");
-    }
-  }, [refreshLogs]);
-
-  const handleDeleteFilter = useCallback(async (id: number) => {
-    try {
-      const res = await fetch(`/api/filters/${id}`, {
-        method: "DELETE"
-      });
-      if (res.ok) {
-        setSavedFilters(prev => prev.filter(f => f.id !== id));
-        if (selectedFilter?.id === id) {
-          setSelectedFilter(null);
-        }
-        toast.success("Filter deleted");
-        refreshLogs();
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to delete filter");
-    }
-  }, [refreshLogs, selectedFilter]);
-
-  const handleTaskClick = useCallback((task: Task) => {
-    setCurrentEditingTask(task);
-    setModalMode("edit");
-    setTaskTitle(task.title);
-    setTaskDesc(task.description || "");
-    setTaskDueDate(task.dueDate ? task.dueDate.split('T')[0] : "");
-    setTaskPriority(task.priority || "medium");
-    setTaskStatus(task.status || "pending");
-    setTaskListId(task.listId || 1);
-    setTaskLabelsSelected(task.labels || []);
-    setTaskDependsOn(task.dependsOnTaskId || null);
-    setTaskIsImportant(task.isImportant || false);
-    setTaskIsUrgent(task.isUrgent || false);
-    setTaskRecurrence(task.recurrence || "none");
-    setSubtasksChecklist(task.subtasks || []);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleKanbanAddTask = useCallback((title: string, status: string) => {
-    setTaskTitle(title);
-    setTaskStatus(status as Task["status"]);
-    setModalMode("create");
-    setIsModalOpen(true);
-  }, []);
-
-  const handleCreateTaskFromCommand = useCallback((title: string) => {
-    setTaskTitle(title);
-    setModalMode("create");
-    setIsModalOpen(true);
-  }, []);
-
-  const handleQuickAdd = useCallback(async (title: string) => {
-    if (!title.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      let parsedTitle = title.trim();
-      let dueDate = new Date();
-
-      const lowerTitle = parsedTitle.toLowerCase();
-      if (lowerTitle.includes("tomorrow")) {
-        dueDate.setDate(dueDate.getDate() + 1);
-        parsedTitle = parsedTitle.replace(/tomorrow/i, "").trim();
-      } else if (lowerTitle.includes("next week")) {
-        dueDate.setDate(dueDate.getDate() + 7);
-        parsedTitle = parsedTitle.replace(/next week/i, "").trim();
-      } else if (lowerTitle.includes("monday")) {
-        const day = dueDate.getDay();
-        const diff = (8 - day) % 7 || 7;
-        dueDate.setDate(dueDate.getDate() + diff);
-        parsedTitle = parsedTitle.replace(/monday/i, "").trim();
-      } else if (lowerTitle.includes("friday")) {
-        const day = dueDate.getDay();
-        const diff = (5 - day + 7) % 7 || 7;
-        dueDate.setDate(dueDate.getDate() + diff);
-        parsedTitle = parsedTitle.replace(/friday/i, "").trim();
-      }
-
-      const taskData = {
-        title: parsedTitle || title.trim(),
-        description: "",
-        dueDate: dueDate.toISOString(),
-        priority: "medium",
-        status: "pending",
-        listId: 1, // Default list
-        labels: [],
-        subtasks: []
-      };
-
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskData)
-      });
-
-      if (res.ok) {
-        const newTask = await res.json();
-        setTasks(prev => [newTask, ...prev]);
-        toast.success(`Task "${newTask.title}" created successfully!`);
-        refreshLogs();
-      } else {
-        throw new Error("API error creating task");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to quick-add task");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, refreshLogs]);
-
-  // Add subtask inline helper
-  const handleAddSubtask = useCallback(() => {
-    if (!newSubtaskTitle.trim()) return;
-    const newId = subtasksChecklist.length > 0 ? Math.max(...subtasksChecklist.map(s => s.id)) + 1 : 101;
-    setSubtasksChecklist(prev => [...prev, { id: newId, title: newSubtaskTitle.trim(), completed: false }]);
-    setNewSubtaskTitle("");
-  }, [newSubtaskTitle, subtasksChecklist]);
-
-  const handleRemoveSubtask = useCallback((id: number) => {
-    setSubtasksChecklist(prev => prev.filter(s => s.id !== id));
-  }, []);
-
-  const handleToggleSubtask = useCallback((id: number) => {
-    setSubtasksChecklist(prev => prev.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
-  }, []);
-
-  const handleMagicBreakdown = useCallback(() => {
-    if (!taskTitle.trim()) {
-      toast.error("Please enter a task title first!");
-      return;
-    }
-
-    const title = taskTitle.toLowerCase();
-    let suggested: string[] = [];
-
-    if (title.includes("groceries") || title.includes("shopping")) {
-      suggested = ["Make a list", "Grab reusable bags", "Go to store", "Unpack groceries"];
-    } else if (title.includes("meeting") || title.includes("call")) {
-      suggested = ["Prepare agenda", "Send invites", "Take notes", "Send follow-up email"];
-    } else if (title.includes("code") || title.includes("dev") || title.includes("build") || title.includes("fix")) {
-      suggested = ["Research solution", "Write initial code", "Run tests", "Submit PR"];
-    } else if (title.includes("clean") || title.includes("house") || title.includes("room")) {
-      suggested = ["Tidy up clutter", "Dust surfaces", "Vacuum floors", "Take out trash"];
-    } else if (title.includes("workout") || title.includes("exercise") || title.includes("gym")) {
-      suggested = ["Pack gym bag", "Warm up", "Main workout", "Cool down & stretch"];
-    } else if (title.includes("trip") || title.includes("travel") || title.includes("vacation")) {
-      suggested = ["Book flights/train", "Arrange accommodation", "Pack bags", "Set out-of-office"];
-    } else {
-      suggested = ["Identify first step", "Gather necessary resources", "Execute core task", "Final review"];
-    }
-
-    const newSubtasks = suggested.map((s, index) => ({
-      id: Date.now() + index,
-      title: s,
-      completed: false
-    }));
-
-    setSubtasksChecklist(prev => [...prev, ...newSubtasks]);
-    toast.success("Magic! Subtasks generated based on your title.");
-  }, [taskTitle]);
-
-  const openFocusMode = useCallback((id: number) => {
-    setFocusTaskId(id);
-    setIsFocusModeOpen(true);
-  }, []);
-
-  const closeFocusMode = useCallback(() => {
-    setIsFocusModeOpen(false);
-    setFocusTaskId(null);
-  }, []);
+  const handleFocusSessionComplete = useCallback(
+    async (taskId: number, durationSeconds: number, completedEarly: boolean) => {
+      await actions.completeFocusSession(taskId, durationSeconds, completedEarly);
+    },
+    [actions],
+  );
 
   return {
-    currentView,
-    setView,
-    selectedListId,
-    setSelectedListId,
-    selectedLabelId,
-    setSelectedLabelId,
-    selectedFilter,
-    setSelectedFilter,
-    tasks,
-    lists,
-    labels,
-    activityLogs,
-    savedFilters,
-    shortcutConfigs,
-    loading,
-    isCommandPaletteOpen,
-    setIsCommandPaletteOpen,
-    isModalOpen,
-    setIsModalOpen,
-    modalMode,
-    currentEditingTask,
-    taskTitle,
-    setTaskTitle,
-    taskDesc,
-    setTaskDesc,
-    taskDueDate,
-    setTaskDueDate,
-    taskPriority,
-    setTaskPriority,
-    taskStatus,
-    setTaskStatus,
-    taskListId,
-    setTaskListId,
-    taskLabelsSelected,
-    setTaskLabelsSelected,
-    taskDependsOn,
-    setTaskDependsOn,
-    taskIsImportant,
-    setTaskIsImportant,
-    taskIsUrgent,
-    setTaskIsUrgent,
-    taskRecurrence,
-    setTaskRecurrence,
-    newSubtaskTitle,
-    setNewSubtaskTitle,
-    subtasksChecklist,
-    isSubmitting,
-    pendingDeleteId,
-    setPendingDeleteId,
-    isSidebarOpen,
-    setIsSidebarOpen,
-    accentColor,
-    setAccentColor,
-    isSettingsOpen,
-    setIsSettingsOpen,
-    isFocusModeOpen,
-    setIsFocusModeOpen,
-    focusTaskId,
-    isZenMode,
-    setIsZenMode,
-    openFocusMode,
-    closeFocusMode,
-    openCreateModal,
+    // View
+    ...view,
+    // Settings
+    ...settings,
+    // Form
+    ...form,
+    // Data
+    ...data,
+    // Actions
     handleTaskSubmit,
-    handleTaskUpdateDirect,
-    handleTaskDuplicate,
-    requestDelete,
-    confirmDelete,
-    handleClearCompleted,
-    handleClearLogs,
-    handleCreateList,
-    handleCreateLabel,
-    handleSaveFilter,
-    handleDeleteFilter,
+    handleTaskUpdateDirect: actions.updateTaskDirect,
+    handleTaskDuplicate: actions.duplicateTask,
+    reorderTasks: actions.reorderTasks,
+    requestDelete: actions.requestDelete,
+    confirmDelete: actions.confirmDelete,
+    handleClearCompleted: actions.clearCompleted,
+    handleClearLogs: data.clearLogs,
+    handleCreateList: data.createList,
+    handleCreateLabel: data.createLabel,
+    handleSaveFilter: data.saveFilter,
+    handleDeleteFilter: data.deleteFilter,
     handleTaskClick,
     handleKanbanAddTask,
     handleCreateTaskFromCommand,
     handleQuickAdd,
-    handleAddSubtask,
-    handleRemoveSubtask,
-    handleToggleSubtask,
-    handleMagicBreakdown,
-    transitionView,
-    soundEnabled,
-    setSoundEnabled,
-    refreshData,
-    themeMode,
-    updateTheme
+    handleFocusSessionComplete,
   };
 }
+
+// Re-export for callers that need the type
+export type { ViewName };
