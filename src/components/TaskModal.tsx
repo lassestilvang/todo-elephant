@@ -1,8 +1,9 @@
 "use client";
 
-import React, { memo, useEffect, useRef } from "react";
-import { Tag, X, ListTodo, Sparkles } from "lucide-react";
+import React, { memo, useEffect, useRef, useState } from "react";
+import { Tag, X, ListTodo, Sparkles, BookOpenCheck } from "lucide-react";
 import { Task, List, Label } from "@/types";
+import { MarkdownEditor } from "@/src/components/MarkdownEditor";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -39,6 +40,10 @@ interface TaskModalProps {
   onRemoveSubtask: (id: number) => void;
   onToggleSubtask?: (id: number) => void;
   onMagicBreakdown?: () => void;
+  /** Optional handler for "Save as template" button (edit mode only). */
+  onSaveAsTemplate?: (task: Task) => void;
+  /** Optional flag indicating the active task is a template (hides Save-as-Template button). */
+  isTemplate?: boolean;
   lists: List[];
   labels: Label[];
   tasks?: Task[];
@@ -79,6 +84,8 @@ function TaskModal({
   onRemoveSubtask,
   onToggleSubtask,
   onMagicBreakdown,
+  onSaveAsTemplate,
+  isTemplate,
   lists,
   labels,
   tasks = [],
@@ -180,16 +187,49 @@ function TaskModal({
           />
         </div>
 
-        {/* Description */}
+        {/* Description — Markdown editor with formatting toolbar */}
         <div className="space-y-1.5">
-          <label htmlFor="task-desc" className="text-xs font-bold text-muted uppercase">Description</label>
-          <textarea
+          <div className="flex items-center justify-between">
+            <label htmlFor="task-desc" className="text-xs font-bold text-muted uppercase flex items-center gap-1.5">
+              Description
+              <span className="text-[9px] font-normal normal-case opacity-70">(Markdown supported)</span>
+            </label>
+            {mode === "edit" && onSaveAsTemplate && !isTemplate && (
+              <button
+                type="button"
+                onClick={() => {
+                  const t: Task = {
+                    id: 0,
+                    title: taskTitle,
+                    description: taskDesc,
+                    dueDate: taskDueDate,
+                    priority: taskPriority,
+                    status: taskStatus,
+                    listId: taskListId,
+                    labels: taskLabelsSelected,
+                    subtasks: subtasksChecklist,
+                    dependsOnTaskId: taskDependsOn,
+                    isImportant: taskIsImportant,
+                    isUrgent: taskIsUrgent,
+                    recurrence: taskRecurrence,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  };
+                  onSaveAsTemplate(t);
+                }}
+                className="flex items-center gap-1 text-[10px] font-bold text-accent hover:text-accent/80 transition-colors uppercase tracking-wider"
+                title="Save this task's title + description + subtasks as a reusable template"
+              >
+                <BookOpenCheck size={12} />
+                <span>Save as Template</span>
+              </button>
+            )}
+          </div>
+          <MarkdownEditor
             id="task-desc"
             value={taskDesc}
-            onChange={e => setTaskDesc(e.target.value)}
-            placeholder="Task details and instructions..."
-            rows={2}
-            className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent resize-none"
+            onChange={setTaskDesc}
+            rows={3}
           />
         </div>
 
