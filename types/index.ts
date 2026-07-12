@@ -14,6 +14,16 @@ export type Subtask = {
 
 export type RecurrenceKind = "none" | "daily" | "weekly" | "monthly";
 
+export type RelationshipType = "blocks" | "related" | "duplicate" | "pre-requisite";
+
+export type TaskRelationship = {
+  id: number;
+  sourceTaskId: number;
+  targetTaskId: number;
+  type: RelationshipType;
+  createdAt: string;
+};
+
 export type Task = {
   id: number;
   title: string;
@@ -25,6 +35,8 @@ export type Task = {
   listId?: number;
   labels?: number[];
   dependsOnTaskId?: number | null;
+  /** Array of task relationship IDs this task is related to */
+  relatedTaskIds?: number[];
   isImportant?: boolean;
   isUrgent?: boolean;
   recurrence?: RecurrenceKind;
