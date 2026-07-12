@@ -1,4 +1,10 @@
-// types/index.ts
+// types/index.ts — Canonical model definitions.
+//
+// NOTE on status typing:
+// We deliberately keep `status: string` (not the strict CanonicalStatus union) so legacy
+// literals ("pending", "in-progress", "done") continue to compile everywhere without
+// having to touch every consumer. The API boundary and `migrateLegacy()` always
+// normalize via `normalizeStatus()` from `@/src/lib/status` before persisting.
 
 export type Subtask = {
   id: number;
@@ -6,26 +12,34 @@ export type Subtask = {
   completed: boolean;
 };
 
+export type RecurrenceKind = "none" | "daily" | "weekly" | "monthly";
+
 export type Task = {
   id: number;
   title: string;
   description: string;
   dueDate: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in-progress' | 'completed' | 'todo' | 'in_progress' | 'done' | 'archived';
+  priority: "low" | "medium" | "high";
+  status: string;
   subtasks?: Subtask[];
   listId?: number;
   labels?: number[];
   dependsOnTaskId?: number | null;
   isImportant?: boolean;
   isUrgent?: boolean;
-  recurrence?: "none" | "daily" | "weekly" | "monthly";
+  recurrence?: RecurrenceKind;
+  completedPomodoros?: number;
+  parentRecurrenceId?: number | null;
+  order?: number;
+  archivedAt?: string | null;
+  /** When true, this task is a reusable template and should be hidden from the active task list. */
+  isTemplate?: boolean;
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;
 };
 
-export type NewTask = Omit<Task, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewTask = Omit<Task, "id" | "createdAt" | "updatedAt">;
 
 export type List = {
   id: number;
@@ -44,7 +58,7 @@ export type Label = {
 export type ActivityLog = {
   id: number;
   action: string;
-  entityType: 'task' | 'list' | 'label' | 'system' | 'user';
+  entityType: "task" | "list" | "label" | "system" | "user";
   entityId: number;
   details?: string;
   previousValue?: string;
@@ -69,12 +83,22 @@ export type SavedFilter = {
 };
 
 export type ShortcutConfig = {
-  id: string; // e.g., "new-task", "toggle-command-palette"
-  key: string; // e.g., "n", "k"
+  id: string;
+  key: string;
   altKey?: boolean;
   ctrlKey?: boolean;
   metaKey?: boolean;
   shiftKey?: boolean;
   description: string;
-  action: string; // Internal identifier for the action
+  action: string;
+};
+
+/** Pomodoro / focus session log entry. */
+export type FocusSession = {
+  id: number;
+  taskId: number;
+  startedAt: string;
+  endedAt?: string | null;
+  durationSeconds: number;
+  completedEarly: boolean;
 };
