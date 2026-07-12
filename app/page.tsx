@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Toaster } from "sonner";
 import { 
   Keyboard,
@@ -19,16 +19,21 @@ import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
 import { useTaskTemplates } from "@/src/lib/hooks/useTemplates";
 import ConfettiCanvas from "@/src/components/ConfettiCanvas";
 import FocusView from "@/src/components/FocusView";
-import CalendarView from "@/src/components/CalendarView";
-import StatsView from "@/src/components/StatsView";
-import { writeUrlState, readUrlParam } from "@/src/lib/hooks/useUrlState";
+// useUrlState hooks available for future enhancements
+import { useBulkSelection } from "@/src/lib/hooks/useBulkSelection";
 
 const DashboardView = dynamic(() => import("@/src/components/DashboardView"));
 const KanbanView = dynamic(() => import("@/src/components/KanbanView"));
 const ListView = dynamic(() => import("@/src/components/ListView"));
 const EisenhowerView = dynamic(() => import("@/src/components/EisenhowerView"));
+const CalendarView = dynamic(() => import("@/src/components/CalendarView"));
+const StatsView = dynamic(() => import("@/src/components/StatsView"));
+const DependencyGraphView = dynamic(() => import("@/src/components/DependencyGraphView"));
+const GamificationView = dynamic(() => import("@/src/components/GamificationView"));
+const TimeMachineView = dynamic(() => import("@/src/components/TimeMachineView"));
+const HabitView = dynamic(() => import("@/src/components/HabitView"));
 
-type ViewName = "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats";
+type ViewName = "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits";
 
 export default function Home() {
   const {
@@ -105,6 +110,7 @@ export default function Home() {
     requestDelete,
     confirmDelete,
     handleClearCompleted,
+    handleBulkDelete,
     handleClearLogs,
     handleCreateList,
     handleCreateLabel,
@@ -123,11 +129,15 @@ export default function Home() {
     setSoundEnabled,
     refreshData,
     themeMode,
-    updateTheme
+    updateTheme,
+    focusSessions,
   } = useTaskPlanner();
 
   // Templates: list, save current task as template, spawn from template.
   const templatesApi = useTaskTemplates();
+
+  // Bulk selection for batch operations
+  const bulkSelection = useBulkSelection();
 
   const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
 
@@ -354,8 +364,10 @@ export default function Home() {
                 tasks={filteredTasks}
                 lists={lists}
                 labels={labels}
+                focusSessions={focusSessions}
                 onTaskUpdate={handleTaskUpdateDirect}
                 onTaskDelete={requestDelete}
+                onBulkDelete={handleBulkDelete}
                 onTaskClick={handleTaskClick}
                 onAddTask={handleKanbanAddTask}
                 onTaskDuplicate={handleTaskDuplicate}
@@ -365,6 +377,9 @@ export default function Home() {
                 selectedFilter={selectedFilter}
                 onSaveFilter={handleSaveFilter}
                 onFocusTask={openFocusMode}
+                selectedTaskIds={bulkSelection.selectedIds}
+                onToggleSelect={bulkSelection.toggleSelect}
+                onClearSelection={bulkSelection.clearSelection}
               />
               </ErrorBoundary>
             
@@ -440,6 +455,52 @@ export default function Home() {
                 <StatsView tasks={filteredTasks} lists={lists} labels={labels} />
               </ErrorBoundary>
             
+            )}
+
+            {currentView === "dependencies" && (
+              <ErrorBoundary
+                label="Dependency Graph"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <DependencyGraphView
+                tasks={tasks}
+                lists={lists}
+                labels={labels}
+                onTaskClick={handleTaskClick}
+                onTaskUpdate={handleTaskUpdateDirect}
+              />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "gamification" && (
+              <ErrorBoundary
+                label="Gamification"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <GamificationView tasks={tasks} lists={lists} labels={labels} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "timemachine" && (
+              <ErrorBoundary
+                label="Time Machine"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <TimeMachineView tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "habits" && (
+              <ErrorBoundary
+                label="Habits"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <HabitView tasks={tasks} />
+              </ErrorBoundary>
+
             )}
           </>
         )}
@@ -527,6 +588,7 @@ export default function Home() {
         lists={lists}
         labels={labels}
         tasks={tasks}
+        focusSessions={focusSessions}
       />
 
       {/* App Settings Modal */}
