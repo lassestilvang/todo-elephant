@@ -20,7 +20,11 @@ import {
   Flame,
   AlertCircle,
   Sparkles,
-  BookOpenCheck
+  BookOpenCheck,
+  GitBranch,
+  Trophy,
+  Medal,
+  Calendar
 } from "lucide-react";
 import { List, Label, Task, SavedFilter, ActivityLog } from "@/types";
 import { computeTodaySummary } from "@/src/lib/todaySummary";
@@ -29,8 +33,9 @@ import { moodFromStreak } from "@/src/components/ElephantLogo";
 import { isActiveStatus, isArchivedStatus, isCompletedStatus } from "@/src/lib/status";
 
 interface SidebarProps {
-  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats";
-  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats") => void;
+  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits";
+  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits") => void;
+  setThemeModeWith?: (mode: "light" | "dark" | "system" | "adaptive") => void;
   dueDateScope: null | "today" | "week" | "overdue";
   setDueDateScope: (s: null | "today" | "week" | "overdue") => void;
   lists: List[];
@@ -83,6 +88,7 @@ function Sidebar({
   onOpenSettings,
   themeMode,
   updateTheme,
+  setThemeModeWith,
   isZenMode,
   setIsZenMode
 }: SidebarProps) {
@@ -165,6 +171,11 @@ function Sidebar({
             <h1 className="font-bold text-lg leading-tight tracking-tight">Todo Elephant</h1>
             <span className="text-xs text-muted font-medium">Daily Task Planner</span>
           </div>
+        </div>
+        {/* Level badge */}
+        <div className="ml-2 text-[10px] font-bold bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Trophy size={10} />
+          <span>Lv 1</span>
         </div>
       </div>
 
@@ -255,6 +266,62 @@ function Sidebar({
           >
             <BarChart2 size={18} className="shrink-0" />
             <span>Insights &amp; Stats</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("dependencies"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "dependencies" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "dependencies" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <GitBranch size={18} className="shrink-0" />
+            <span>Dependency Graph</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("gamification"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "gamification" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "gamification" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Medal size={18} className="shrink-0" />
+            <span>Gamification</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("timemachine"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "timemachine" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "timemachine" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Calendar size={18} className="shrink-0" />
+            <span>Time Machine</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("habits"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "habits" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "habits" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Flame size={18} className="shrink-0" />
+            <span>Habits</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
         </nav>
@@ -628,10 +695,10 @@ function Sidebar({
         <div className="flex flex-col gap-2">
           {/* Theme Switcher Segment Control */}
           <div className="flex p-1 bg-muted/10 rounded-xl border border-border">
-            {(["light", "system", "dark"] as const).map((mode) => (
+            {(["light", "system", "dark", "adaptive"] as const).map((mode) => (
               <button
                 key={mode}
-                onClick={() => updateTheme(mode)}
+                onClick={() => setThemeModeWith ? setThemeModeWith(mode) : updateTheme(mode as "light" | "dark" | "system")}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
                   themeMode === mode
                     ? "bg-card text-accent shadow-sm"
@@ -641,6 +708,7 @@ function Sidebar({
                 {mode === "light" && <Sun size={12} />}
                 {mode === "system" && <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent rotate-45 shrink-0" />}
                 {mode === "dark" && <Moon size={12} />}
+                {mode === "adaptive" && <span className="text-[10px]">🌙☀️</span>}
                 <span>{mode}</span>
               </button>
             ))}
