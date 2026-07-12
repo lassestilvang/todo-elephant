@@ -155,6 +155,16 @@ describe("templatesApi — createTaskFromTemplate", () => {
     await expect(createTaskFromTemplate(7)).rejects.toThrow("Template not found");
   });
 
+  it("throws fallback message when error field missing on non-2xx", async () => {
+    const res = {
+      ok: false,
+      status: 404,
+      json: async () => ({}), // Empty response, no error field
+    } as Response;
+    fetchMock.mockResolvedValueOnce(res);
+    await expect(createTaskFromTemplate(7)).rejects.toThrow("Failed to create task from template");
+  });
+
   it("throws TemplateApiError on network failure", async () => {
     fetchMock.mockRejectedValueOnce(new Error("network"));
     await expect(createTaskFromTemplate(7)).rejects.toBeInstanceOf(TemplateApiError);
@@ -173,5 +183,19 @@ describe("templatesApi — deleteTemplateById", () => {
   it("throws TemplateApiError on non-2xx", async () => {
     mockJsonResponse({ error: "locked" }, 409);
     await expect(deleteTemplateById(42)).rejects.toBeInstanceOf(TemplateApiError);
+  });
+});
+
+describe("templatesApi — buildTemplatePayload edge cases", () => {
+  it("handles task without labels", () => {
+    const noLabelsTask: Task = { ...fixture, labels: undefined };
+    const body = buildTemplatePayload(noLabelsTask);
+    expect(body.labels).toEqual([]);
+  });
+
+  it("handles task without subtasks", () => {
+    const noSubtasksTask: Task = { ...fixture, subtasks: undefined };
+    const body = buildTemplatePayload(noSubtasksTask);
+    expect(body.subtasks).toEqual([]);
   });
 });
