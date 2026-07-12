@@ -118,22 +118,46 @@ export function useTaskForm() {
     }
 
     const title = taskTitle.toLowerCase();
+    const description = taskDesc.toLowerCase();
     let suggested: string[] = [];
 
-    if (title.includes("groceries") || title.includes("shopping")) {
-      suggested = ["Make a list", "Grab reusable bags", "Go to store", "Unpack groceries"];
-    } else if (title.includes("meeting") || title.includes("call")) {
-      suggested = ["Prepare agenda", "Send invites", "Take notes", "Send follow-up email"];
-    } else if (title.includes("code") || title.includes("dev") || title.includes("build") || title.includes("fix")) {
-      suggested = ["Research solution", "Write initial code", "Run tests", "Submit PR"];
-    } else if (title.includes("clean") || title.includes("house") || title.includes("room")) {
-      suggested = ["Tidy up clutter", "Dust surfaces", "Vacuum floors", "Take out trash"];
-    } else if (title.includes("workout") || title.includes("exercise") || title.includes("gym")) {
-      suggested = ["Pack gym bag", "Warm up", "Main workout", "Cool down & stretch"];
-    } else if (title.includes("trip") || title.includes("travel") || title.includes("vacation")) {
-      suggested = ["Book flights/train", "Arrange accommodation", "Pack bags", "Set out-of-office"];
+    // Enhanced pattern matching with more categories
+    if (title.includes("groceries") || title.includes("shopping") || title.includes("errands")) {
+      suggested = ["Make a list of items needed", "Grab reusable bags", "Go to store", "Unpack groceries", "Store items properly"];
+    } else if (title.includes("meeting") || title.includes("call") || title.includes("sync")) {
+      suggested = ["Prepare agenda", "Review previous notes", "Send calendar invites", "Take meeting notes", "Assign action items", "Send follow-up summary"];
+    } else if (title.includes("code") || title.includes("dev") || title.includes("build") || title.includes("fix") || title.includes("bug")) {
+      suggested = ["Reproduce the issue", "Find root cause", "Implement fix", "Write tests", "Run tests locally", "Submit pull request", "Deploy to staging"];
+    } else if (title.includes("clean") || title.includes("house") || title.includes("room") || title.includes("organize")) {
+      suggested = ["Clear clutter from surfaces", "Dust & wipe down", "Vacuum/sweep floors", "Take out trash", "Final walkthrough"];
+    } else if (title.includes("workout") || title.includes("exercise") || title.includes("gym") || title.includes("run")) {
+      suggested = ["Pack gym bag", "Warm up (5-10 min)", "Main workout set", "Cool down & stretch", "Log workout"];
+    } else if (title.includes("trip") || title.includes("travel") || title.includes("vacation") || title.includes("flight")) {
+      suggested = ["Book flights/train tickets", "Arrange accommodation", "Check passport/visa requirements", "Pack bags", "Set out-of-office", "Download offline maps"];
+    } else if (title.includes("learn") || title.includes("study") || title.includes("read") || title.includes("course")) {
+      suggested = ["Set learning goals", "Gather study materials", "Take notes while learning", "Practice examples", "Review key concepts", "Take practice quiz"];
+    } else if (title.includes("write") || title.includes("blog") || title.includes("article")) {
+      suggested = ["Outline main points", "Write first draft", "Take a break", "Edit and refine", "Add visuals/examples", "Publish and share"];
+    } else if (title.includes("design") || title.includes("ui") || title.includes("ux")) {
+      suggested = ["Research inspiration", "Sketch wireframes", "Get feedback", "Create high-fidelity mockup", "Prepare handoff specs"];
+    } else if (title.includes("plan") || title.includes("strateg")) {
+      suggested = ["Define objectives", "Identify constraints", "List available resources", "Create timeline", "Assign responsibilities", "Set success metrics"];
     } else {
-      suggested = ["Identify first step", "Gather necessary resources", "Execute core task", "Final review"];
+      // Intelligent fallback based on word count - break into smaller chunks
+      const words = taskTitle.trim().split(/\s+/);
+      const actionWord = words.find(w => /^(create|build|make|design|write|implement|prepare|research|analyze|review|update|fix|plan)$/i.test(w));
+
+      if (actionWord) {
+        suggested = [
+          `Plan the ${actionWord} approach`,
+          `Gather necessary resources for ${actionWord}`,
+          `Execute the core ${actionWord} work`,
+          `Review and refine the ${actionWord} output`,
+          `Document or share the ${actionWord} results`
+        ];
+      } else {
+        suggested = ["Identify first step", "Gather necessary resources", "Execute core task", "Review and adjust", "Complete and verify"];
+      }
     }
 
     const newSubtasks = suggested.map((s, index) => ({
@@ -143,8 +167,10 @@ export function useTaskForm() {
     }));
 
     setSubtasksChecklist((prev) => [...prev, ...newSubtasks]);
-    toast.success("Magic! Subtasks generated based on your title.");
-  }, [taskTitle]);
+    toast.success(`AI Breakdown: Generated ${newSubtasks.length} actionable steps`, {
+      description: "Adjust subtasks as needed before saving.",
+    });
+  }, [taskTitle, taskDesc]);
 
   return {
     // Modal
