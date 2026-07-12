@@ -187,4 +187,39 @@ function ListSkeleton() {
   );
 }
 
-export { Skeleton, DashboardSkeleton, KanbanSkeleton, ListSkeleton };
+function StatsSkeleton() {
+  return (
+    <div className="flex-1 flex flex-col h-screen overflow-hidden animate-fade-in">
+      <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-3 w-72" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="p-5 rounded-2xl border border-border/40 bg-card/45 glass-panel space-y-3">
+              <Skeleton className="h-2.5 w-20" />
+              <Skeleton className="h-7 w-24" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-2 p-6 rounded-2xl border border-border/40 bg-card/45 glass-panel">
+            <Skeleton className="h-3 w-36 mb-4" />
+            <Skeleton className="h-44 w-44 mx-auto rounded-full" />
+          </div>
+          <div className="lg:col-span-3 p-6 rounded-2xl border border-border/40 bg-card/45 glass-panel">
+            <Skeleton className="h-3 w-32 mb-4" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Use each export so TS strict mode doesn't drop them; ensures they exist.
+const _exports = [Skeleton, DashboardSkeleton, KanbanSkeleton, ListSkeleton, StatsSkeleton];
+
+export { Skeleton, DashboardSkeleton, KanbanSkeleton, ListSkeleton, StatsSkeleton };
+export default _exports[0];
