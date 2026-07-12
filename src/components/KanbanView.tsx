@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { 
-  Plus, 
-  ArrowRight, 
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import {
+  Plus,
+  ArrowRight,
   ArrowLeft,
-  Calendar, 
-  CheckSquare, 
-  Trash2, 
+  Calendar,
+  CheckSquare,
+  Trash2,
   Inbox,
   Zap,
   CheckCircle2,
@@ -17,18 +17,23 @@ import {
   Tag,
   Copy,
   Link,
-  Target
+  Target,
+  X,
+  Clock
 } from "lucide-react";
-import { Task, List, Label, SavedFilter } from "@/types";
+import { Task, List, Label, SavedFilter, FocusSession } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
 import { getRelativeDateString, getDueDateBadgeClass, highlightText } from "@/src/lib/dateUtils";
+import { calculateTimeEstimate, formatTimeEstimate } from "@/src/lib/timeEstimate";
 
 interface KanbanViewProps {
   tasks: Task[];
   lists: List[];
   labels: Label[];
+  focusSessions?: FocusSession[];
   onTaskUpdate: (id: number, updates: Partial<Task>) => void;
   onTaskDelete: (id: number) => void;
+  onBulkDelete?: (ids: number[]) => void;
   onTaskClick: (task: Task) => void;
   onAddTask: (title: string, status: string) => void;
   onTaskDuplicate?: (task: Task) => void;
@@ -38,14 +43,19 @@ interface KanbanViewProps {
   selectedLabelId?: number | null;
   selectedFilter?: SavedFilter | null;
   onSaveFilter?: (name: string, config: Omit<SavedFilter, "id">) => void;
+  selectedTaskIds?: Set<number>;
+  onToggleSelect?: (id: number) => void;
+  onClearSelection?: () => void;
 }// Local date helpers removed — use src/lib/dateUtils shared implementations.
 
 function KanbanView({
   tasks,
   lists,
   labels,
+  focusSessions,
   onTaskUpdate,
   onTaskDelete,
+  onBulkDelete,
   onTaskClick,
   onAddTask,
   onTaskDuplicate,
@@ -54,7 +64,10 @@ function KanbanView({
   selectedListId = null,
   selectedLabelId = null,
   selectedFilter = null,
-  onSaveFilter
+  onSaveFilter,
+  selectedTaskIds = new Set(),
+  onToggleSelect,
+  onClearSelection
 }: KanbanViewProps) {
   const [addingInColumn, setAddingInColumn] = useState<string | null>(null);
   const [draggedOverCol, setDraggedOverCol] = useState<string | null>(null);
@@ -63,6 +76,10 @@ function KanbanView({
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority" | "order">("newest");
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
+  
+  // Keyboard navigation state
+  const [focusedTaskId, setFocusedTaskId] = useState<number | null>(null);
+  const taskListRef = useRef<HTMLDivElement>(null);
 
   const activeList = useMemo(() => {
     return lists.find(l => l.id === selectedListId);
@@ -476,12 +493,49 @@ function KanbanView({
                           onDragEnd={onDragEnd}
                           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                           onDrop={(e) => onDropOnTask(e, task)}
-                          onClick={() => onTaskClick(task)}
-                          className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1"
+                          onClick={(e) => {
+                            // Ctrl/Cmd+Click for selection
+                            if (e.ctrlKey || e.metaKey) {
+                              e.preventDefault();
+                              onToggleSelect?.(task.id);
+                            } else {
+                              onTaskClick(task);
+                            }
+                            setFocusedTaskId(task.id);
+                          }}
+                          onKeyDown={(e) => {
+                            // Keyboard navigation
+                            if (e.key === " " && (e.ctrlKey || e.metaKey)) {
+                              e.preventDefault();
+                              onToggleSelect?.(task.id);
+                            }
+                          }}
+                          tabIndex={0}
+                          data-task-id={task.id}
+                          className={`p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1 ${
+                            selectedTaskIds?.has(task.id) ? "ring-2 ring-accent border-accent" : ""
+                          } ${focusedTaskId === task.id ? "ring-1 ring-accent/50" : ""}`}
                           style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
                         >
+                          {/* Selection checkbox (visible in bulk mode) */}
+                          {selectedTaskIds && onToggleSelect && (
+                            <div className="absolute top-2 right-2 z-10">
+                              <input
+                                type="checkbox"
+                                checked={selectedTaskIds.has(task.id)}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  onToggleSelect(task.id);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-4 h-4 rounded border border-border accent-accent cursor-pointer"
+                                aria-label={`Select task "${task.title}"`}
+                              />
+                            </div>
+                          )}
+
                           {/* Title & Priority */}
-                          <div className="space-y-2">
+                          <div className="space-y-2 pr-6">
                             <div className="flex items-start justify-between gap-2">
                               <span className={`text-xs font-semibold leading-relaxed truncate group-hover:text-accent transition-colors flex-1 ${isDone ? "line-through text-muted" : "text-foreground"}`}>
                                 {highlightText(task.title, searchQuery)}
@@ -538,11 +592,27 @@ function KanbanView({
                                 <span>{subCompleted}/{subCount}</span>
                               </div>
                               <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
                                   style={{ width: `${subPercent}%` }}
                                 />
                               </div>
+                            </div>
+                          )}
+
+                          {/* Time Estimate */}
+                          {focusSessions && (
+                            <div className="pt-1">
+                              {(() => {
+                                const estimate = calculateTimeEstimate(task, focusSessions, tasks, `kanban-${task.id}`);
+                                return estimate ? (
+                                  <span className="text-[10px] font-bold text-accent flex items-center gap-1">
+                                    <Clock size={10} />
+                                    <span>{formatTimeEstimate(estimate)}</span>
+                                    <span className="text-muted font-medium">({estimate.basedOnCount} sess.)</span>
+                                  </span>
+                                ) : null;
+                              })()}
                             </div>
                           )}
 
@@ -650,6 +720,72 @@ function KanbanView({
           );
         })}
       </div>
+
+      {/* Bulk Action Bar - appears when tasks are selected */}
+      {selectedTaskIds && selectedTaskIds.size > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-xl bg-card/90 backdrop-blur-md border border-border shadow-lg animate-fade-in">
+          <span className="text-xs font-semibold text-foreground">{selectedTaskIds.size} selected</span>
+          {onBulkDelete && (
+            <button
+              onClick={() => {
+                const ids = Array.from(selectedTaskIds);
+                onBulkDelete(ids);
+                onClearSelection?.();
+              }}
+              className="text-xs font-semibold text-red-500 hover:bg-red-500/10 px-2 py-1 rounded"
+            >
+              Delete All
+            </button>
+          )}
+          <button
+            onClick={onClearSelection}
+            className="text-xs font-semibold text-muted hover:text-foreground hover:bg-muted/10 px-2 py-1 rounded"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Keyboard Navigation Handler */}
+      <div
+        ref={taskListRef}
+        tabIndex={-1}
+        onKeyDown={(e) => {
+          // Only handle if not focused on an input
+          const target = e.target as HTMLElement;
+          if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+
+          const allSortedTasks = sortedTasks;
+          const currentIndex = focusedTaskId ? allSortedTasks.findIndex(t => t.id === focusedTaskId) : -1;
+
+          if (e.key === "ArrowDown" && allSortedTasks.length > 0) {
+            e.preventDefault();
+            const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % allSortedTasks.length;
+            setFocusedTaskId(allSortedTasks[nextIndex].id);
+            // Scroll into view
+            document.querySelector(`[data-task-id="${allSortedTasks[nextIndex].id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else if (e.key === "ArrowUp" && allSortedTasks.length > 0) {
+            e.preventDefault();
+            const prevIndex = currentIndex <= 0 ? allSortedTasks.length - 1 : currentIndex - 1;
+            setFocusedTaskId(allSortedTasks[prevIndex].id);
+            document.querySelector(`[data-task-id="${allSortedTasks[prevIndex].id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else if (e.key === "Enter" && focusedTaskId) {
+            e.preventDefault();
+            const task = allSortedTasks.find(t => t.id === focusedTaskId);
+            if (task) onTaskClick(task);
+          } else if (e.key === " " && focusedTaskId) {
+            e.preventDefault();
+            onToggleSelect?.(focusedTaskId);
+          } else if (e.key === "Delete" && selectedTaskIds && selectedTaskIds.size > 0 && onBulkDelete) {
+            const ids = Array.from(selectedTaskIds);
+            onBulkDelete(ids);
+            onClearSelection?.();
+          } else if (e.key === "Escape") {
+            onClearSelection?.();
+            setFocusedTaskId(null);
+          }
+        }}
+      />
 
     </div>
   );
