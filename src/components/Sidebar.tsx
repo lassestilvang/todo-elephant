@@ -1,32 +1,47 @@
-"use client";
-
-import React, { useState } from "react";
+"use client";import React, { useState } from "react";
 import { ElephantLogo } from "./ElephantLogo";
-import { 
-  Tag, 
-  LayoutDashboard, 
-  KanbanSquare, 
-  ListTodo, 
-  Moon, 
-  Sun, 
-  ChevronRight, 
+import {
+  Tag,
+  LayoutDashboard,
+  KanbanSquare,
+  ListTodo,
+  Moon,
+  Sun,
+  ChevronRight,
   Plus,
   TrendingUp,
   Settings,
   Search,
   LayoutGrid,
   Monitor,
-  X
+  X,
+  Calendar as CalIcon,
+  BarChart2,
+  Flame,
+  AlertCircle,
+  Sparkles,
+  BookOpenCheck
 } from "lucide-react";
-import { List, Label, Task, SavedFilter } from "@/types";
+import { List, Label, Task, SavedFilter, ActivityLog } from "@/types";
+import { computeTodaySummary } from "@/src/lib/todaySummary";
+import { computeCurrentStreak } from "@/src/lib/streaks";
+import { moodFromStreak } from "@/src/components/ElephantLogo";
+import { isActiveStatus, isArchivedStatus, isCompletedStatus } from "@/src/lib/status";
 
 interface SidebarProps {
-  currentView: "dashboard" | "kanban" | "list" | "eisenhower";
-  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower") => void;
+  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats";
+  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats") => void;
+  dueDateScope: null | "today" | "week" | "overdue";
+  setDueDateScope: (s: null | "today" | "week" | "overdue") => void;
   lists: List[];
   labels: Label[];
   tasks: Task[];
+  /** Recent activity logs — used to detect a "just completed" celebration mood. */
+  activityLogs?: ActivityLog[];
   savedFilters: SavedFilter[];
+  templates?: Task[];
+  onCreateFromTemplate?: (templateId: number) => void;
+  onDeleteTemplate?: (templateId: number) => void;
   selectedListId: number | null;
   setSelectedListId: (id: number | null) => void;
   selectedLabelId: number | null;
@@ -47,8 +62,14 @@ function Sidebar({
   currentView,
   setView,
   lists,
+  dueDateScope,
+  setDueDateScope,
   labels,
   tasks,
+  activityLogs,
+  templates,
+  onCreateFromTemplate,
+  onDeleteTemplate,
   savedFilters,
   selectedListId,
   setSelectedListId,
@@ -102,9 +123,20 @@ function Sidebar({
   };
 
   // Calculate task counts
-  const activeTasks = tasks.filter(t => t.status !== "completed" && t.status !== "done" && t.status !== "archived");
-  const completedTasksCount = tasks.filter(t => t.status === "completed" || t.status === "done").length;
-  const completionPercentage = tasks.length > 0 ? Math.round((completedTasksCount / tasks.length) * 100) : 0;
+  const activeTasks = tasks.filter((t) => isActiveStatus(t.status) || t.status === "in-progress" || t.status === "in_progress");
+  const completedTasksCount = tasks.filter((t) => isCompletedStatus(t.status)).length;
+  const notArchivedCount = tasks.filter((t) => !isArchivedStatus(t.status)).length;
+  const completionPercentage = notArchivedCount > 0 ? Math.round((completedTasksCount / notArchivedCount) * 100) : 0;
+  const todaySummary = computeTodaySummary(tasks);
+  const streak = computeCurrentStreak(tasks);
+  // Detect celebrating mood: any task.completed log in the last 60s.
+  const justCompleted = React.useMemo(() => {
+    if (!activityLogs || activityLogs.length === 0) return false;
+    const latest = activityLogs[0];
+    const isCompletion = latest?.action?.includes("completed") || latest?.action === "task.completed" || latest?.action === "task.updated" || latest?.action === "status.completed";
+    if (!isCompletion) return false;
+    return Date.now() - new Date(latest.createdAt).getTime() < 60_000;
+  }, [activityLogs]);
 
   const colorPresets = [
     "#3b82f6", // Blue
@@ -127,7 +159,7 @@ function Sidebar({
             }}
             className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center glow-primary overflow-hidden group/logo cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95"
           >
-            <ElephantLogo size={28} className="text-white transition-transform duration-500 ease-out group-hover/logo:scale-115 group-hover/logo:-rotate-12" />
+            <ElephantLogo size={28} className="text-white transition-transform duration-500 ease-out group-hover/logo:scale-115 group-hover/logo:-rotate-12" mood={isZenMode ? "zen" : moodFromStreak(streak, justCompleted)} />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight">Todo Elephant</h1>
@@ -197,7 +229,120 @@ function Sidebar({
             <span>Eisenhower Matrix</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
+
+          <button
+            onClick={() => { setView("calendar"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "calendar" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "calendar" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <CalIcon size={18} className="shrink-0" />
+            <span>Calendar</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("stats"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "stats" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "stats" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <BarChart2 size={18} className="shrink-0" />
+            <span>Insights &amp; Stats</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
         </nav>
+
+        {/* Today Stats — clickable cards dispatch a one-shot filter selection */}
+        <div className="space-y-1">
+          <h3 className="text-xs font-semibold tracking-wider text-muted uppercase px-3 mb-2 flex items-center justify-between">
+            <span>Today</span>
+            {streak > 0 && (
+              <span className="flex items-center gap-1 text-[10px] text-accent font-bold normal-case">
+                <Flame size={10} /> {streak}-day streak
+              </span>
+            )}
+          </h3>
+          <div className="grid grid-cols-3 gap-1.5 px-3">
+            {[
+              { id: "today", label: "Today", count: todaySummary.dueToday, icon: Sun, color: "text-amber-500" },
+              { id: "overdue", label: "Overdue", count: todaySummary.overdue, icon: AlertCircle, color: "text-red-500" },
+              { id: "week", label: "Week", count: todaySummary.thisWeek, icon: Sparkles, color: "text-blue-500" },
+            ].map((chip) => {
+              const Icon = chip.icon;                return (
+                <button
+                  key={chip.id}
+                  disabled={chip.count === 0}
+                  onClick={() => {
+                    const next = chip.id === "today" ? "today" : chip.id === "overdue" ? "overdue" : "week";
+                    setDueDateScope(dueDateScope === next ? null : next);
+                  }}
+                  className={`p-2 rounded-xl border transition-all ${
+                    chip.count === 0
+                      ? "border-border/30 bg-muted/5 opacity-50 cursor-not-allowed"
+                      : dueDateScope === (chip.id === "today" ? "today" : chip.id === "overdue" ? "overdue" : "week")
+                        ? "border-accent bg-accent/15 shadow-glow-primary"
+                        : "border-border/40 bg-muted/5 hover:border-accent/40"
+                  }`}
+                  title={`${chip.label}: ${chip.count} task${chip.count === 1 ? "" : "s"} — click to ${dueDateScope ? "clear" : "filter"}`}
+                >
+                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted">
+                    <Icon size={10} />
+                    <span>{chip.label}</span>
+                  </div>
+                  <div className={`mt-1 text-lg font-black ${chip.color}`}>{chip.count}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Task Templates — clickable templates list */}
+        {templates && templates.length > 0 && onCreateFromTemplate && (
+          <div className="space-y-1">
+            <h3 className="text-xs font-semibold tracking-wider text-muted uppercase px-3 mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <BookOpenCheck size={12} className="text-pink-500" />
+                Templates
+              </span>
+              <span className="text-[10px] text-muted/70 normal-case font-medium">{templates.length} saved</span>
+            </h3>
+            <div className="space-y-0.5">
+              {templates.slice(0, 6).map((tpl) => (
+                <div key={tpl.id} className="group relative">
+                  <button
+                    onClick={() => onCreateFromTemplate(tpl.id)}
+                    title={`Click to spawn a task from "${tpl.title}"`}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-muted hover:bg-pink-500/10 hover:text-pink-500"
+                  >
+                    <BookOpenCheck size={14} className="shrink-0 text-pink-500/70" />
+                    <span className="truncate pr-6">{tpl.title}</span>
+                  </button>
+                  {onDeleteTemplate && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteTemplate(tpl.id); }}
+                      aria-label={`Delete template "${tpl.title}"`}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {templates.length > 6 && (
+                <div className="text-center py-1.5 text-[10px] text-muted/60 italic">
+                  +{templates.length - 6} more — open command palette (⌘K) to see all
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Saved Filters */}
         {savedFilters.length > 0 && (
