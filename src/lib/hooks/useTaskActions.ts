@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Task, ActivityLog } from "@/types";
 import { isCompletedStatus, normalizeStatus } from "@/src/lib/status";
 import { reorderTasksApi, ReorderItem, ReorderApiError } from "../tasksApi";
+import { useUndoStack } from "@/src/lib/hooks/useUndoStack";
 
 /**
  * Holds all task CRUD action callbacks: create, update, delete, duplicate,
@@ -26,6 +27,10 @@ interface UseTaskActionsOpts {
   /** State for the ConfirmDialog that gates destructive deletes. */
   pendingDeleteId: number | null;
   setPendingDeleteId: (id: number | null) => void;
+}
+
+function undoActionId(base: string) {
+  return `${base}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 function playCompletionSound() {
@@ -65,6 +70,7 @@ function playCompletionSound() {
 
 export function useTaskActions(opts: UseTaskActionsOpts) {
   const { setTasks, setActivityLogs: _setActivityLogs, refreshLogs, soundEnabled, onLocalPomodoroBump, pendingDeleteId, setPendingDeleteId } = opts;
+  const undoStack = useUndoStack();
 
   // Ref for tasks lookup to avoid stale closures
   const tasksRef = useRef<Task[]>([]);
@@ -275,7 +281,29 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
       const taskToDelete = tasksRef.current.find((t) => t.id === id);
       if (!taskToDelete) return;
       const previousTasks = tasksRef.current;
+      const actionId = undoActionId(`delete-${id}`);
+
       setTasksAndRef((prev) => prev.filter((t) => t.id !== id));
+
+      // Add to undo stack
+      undoStack.push({
+        id: actionId,
+        timestamp: Date.now(),
+        label: `Deleted task "${taskToDelete.title}"`,
+        undo: async () => {
+          const recoverRes = await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(taskToDelete),
+          });
+          if (recoverRes.ok) {
+            const restoredTask = (await recoverRes.json()) as Task;
+            setTasksAndRef((prev) => [restoredTask, ...prev]);
+          }
+        },
+        type: "delete",
+      });
+
       try {
         const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
         if (res.ok || res.status === 204) {
@@ -283,24 +311,12 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
             action: {
               label: "Undo",
               onClick: async () => {
-                try {
-                  const recoverRes = await fetch("/api/tasks", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(taskToDelete),
-                  });
-                  if (recoverRes.ok) {
-                    const restoredTask = (await recoverRes.json()) as Task;
-                    setTasksAndRef((prev) => [restoredTask, ...prev]);
-                    toast.success("Task restored");
-                    refreshLogs();
-                  }
-                } catch {
-                  toast.error("Failed to restore task");
-                }
+                await undoStack.undo(actionId);
+                refreshLogs();
               },
             },
           });
+          undoStack.remove(actionId);
           refreshLogs();
         } else {
           throw new Error("API error deleting task");
@@ -308,10 +324,11 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
       } catch (err) {
         console.error(err);
         setTasksAndRef(previousTasks);
+        undoStack.remove(actionId);
         toast.error("Failed to delete task. Please try again.");
       }
     },
-    [setTasksAndRef, refreshLogs],
+    [setTasksAndRef, refreshLogs, undoStack],
   );
 
   const clearCompleted = useCallback(async () => {
@@ -319,6 +336,27 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
     if (completedTasks.length === 0) return;
     const previousTasks = tasksRef.current;
     setTasksAndRef((prev) => prev.filter((t) => !isCompletedStatus(t.status)));
+
+    const actionId = undoActionId("bulk-delete");
+    undoStack.push({
+      id: actionId,
+      timestamp: Date.now(),
+      label: `Cleared ${completedTasks.length} completed tasks`,
+      undo: async () => {
+        const recovered = await Promise.all(
+          completedTasks.map(t =>
+            fetch("/api/tasks", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(t),
+            }).then(r => r.ok ? r.json() : null)
+          )
+        );
+        setTasksAndRef(prev => [...prev, ...recovered.filter(Boolean)]);
+      },
+      type: "bulk-delete",
+    });
+
     try {
       const ids = completedTasks.map((t) => t.id);
       const res = await fetch("/api/tasks/batch", {
@@ -327,14 +365,77 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
         body: JSON.stringify({ op: { type: "delete" }, ids }),
       });
       if (!res.ok) throw new Error("Batch delete failed");
-      toast.success(`Cleared ${completedTasks.length} completed tasks!`);
+      toast.success(`Cleared ${completedTasks.length} completed tasks!`, {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            await undoStack.undo(actionId);
+            refreshLogs();
+          },
+        },
+      });
+      undoStack.remove(actionId);
       refreshLogs();
     } catch (err) {
       console.error(err);
       setTasksAndRef(previousTasks);
+      undoStack.remove(actionId);
       toast.error("Failed to clear completed tasks");
     }
-  }, [setTasksAndRef, refreshLogs]);
+  }, [setTasksAndRef, refreshLogs, undoStack]);
+
+  /** Bulk delete multiple tasks at once */
+  const bulkDeleteTasks = useCallback(async (ids: number[]) => {
+    const tasksToDelete = tasksRef.current.filter(t => ids.includes(t.id));
+    if (tasksToDelete.length === 0) return;
+    const previousTasks = tasksRef.current;
+    setTasksAndRef(prev => prev.filter(t => !ids.includes(t.id)));
+
+    const actionId = undoActionId("bulk-delete-multi");
+    undoStack.push({
+      id: actionId,
+      timestamp: Date.now(),
+      label: `Deleted ${tasksToDelete.length} tasks`,
+      undo: async () => {
+        const recovered = await Promise.all(
+          tasksToDelete.map(t =>
+            fetch("/api/tasks", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(t),
+            }).then(r => r.ok ? r.json() : null)
+          )
+        );
+        setTasksAndRef(prev => [...prev, ...recovered.filter(Boolean)]);
+      },
+      type: "bulk-delete",
+    });
+
+    try {
+      const res = await fetch("/api/tasks/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: { type: "delete" }, ids }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      toast.success(`Deleted ${tasksToDelete.length} tasks`, {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            await undoStack.undo(actionId);
+            refreshLogs();
+          },
+        },
+      });
+      undoStack.remove(actionId);
+      refreshLogs();
+    } catch (err) {
+      console.error(err);
+      setTasksAndRef(previousTasks);
+      undoStack.remove(actionId);
+      toast.error("Failed to delete tasks");
+    }
+  }, [setTasksAndRef, refreshLogs, undoStack]);
 
   /** NLP quick-add: parses "tomorrow" / "next monday" / "+3d" / "!p1" / "#work" / "~daily". */
   const quickAdd = useCallback(
@@ -470,6 +571,7 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
     duplicateTask,
     deleteTask,
     clearCompleted,
+    bulkDeleteTasks,
     quickAdd,
     completeFocusSession,
     reorderTasks,
@@ -477,5 +579,6 @@ export function useTaskActions(opts: UseTaskActionsOpts) {
     confirmDelete,
     /** Expose for any consumer that needs to read the latest snapshot without re-render. */
     getTasksSnapshot: () => tasksRef.current,
+    undoStack,
   };
 }
