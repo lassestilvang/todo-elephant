@@ -1,9 +1,11 @@
 "use client";
 
 import React, { memo, useEffect, useRef, useState } from "react";
-import { Tag, X, ListTodo, Sparkles, BookOpenCheck } from "lucide-react";
+import { Tag, X, ListTodo, Sparkles, BookOpenCheck, Timer, Brain, Zap } from "lucide-react";
+import { useAIPrioritization } from "@/src/lib/hooks/useAIPrioritization";
 import { Task, List, Label } from "@/types";
 import { MarkdownEditor } from "@/src/components/MarkdownEditor";
+import { calculateTimeEstimate, formatTimeEstimate } from "@/src/lib/timeEstimate";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ interface TaskModalProps {
   lists: List[];
   labels: Label[];
   tasks?: Task[];
+  focusSessions?: { taskId: number; durationSeconds: number; completedEarly: boolean; startedAt: string }[];
 }
 
 function TaskModal({
@@ -89,8 +92,10 @@ function TaskModal({
   lists,
   labels,
   tasks = [],
+  focusSessions = [],
 }: TaskModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const { analyzeTask } = useAIPrioritization();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -185,6 +190,22 @@ function TaskModal({
             placeholder="What needs to be done?"
             className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent"
           />
+          {/* Time Estimate (read-only, based on similar past tasks) */}
+          {focusSessions && tasks && taskTitle.trim() && (
+            <div className="mt-1.5">
+              {(() => {
+                const tempTask = { id: 0, title: taskTitle, description: taskDesc, dueDate: "", priority: "medium" as const, status: "pending" as const, createdAt: "", updatedAt: "" };
+                const estimate = calculateTimeEstimate(tempTask, focusSessions, tasks);
+                return estimate ? (
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted">
+                    <Timer size={12} className="text-accent" />
+                    <span>{formatTimeEstimate(estimate)}</span>
+                    <span className="text-[9px] opacity-70">({estimate.basedOnCount} sessions)</span>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Description — Markdown editor with formatting toolbar */}
@@ -246,7 +267,24 @@ function TaskModal({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted uppercase tracking-widest">Priority</label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest">Priority</label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!taskTitle.trim()) return;
+                  const analysis = analyzeTask(taskTitle, taskDesc);
+                  setTaskPriority(analysis.priority);
+                  if (setTaskIsUrgent) setTaskIsUrgent(analysis.isUrgent);
+                  if (setTaskIsImportant) setTaskIsImportant(analysis.isImportant);
+                }}
+                className="flex items-center gap-1 text-[10px] font-bold text-accent hover:text-accent/80 transition-colors uppercase"
+                title="AI Suggest Priority & Quadrant"
+              >
+                <Brain size={12} />
+                <span>AI Prioritize</span>
+              </button>
+            </div>
             <div className="flex p-1 bg-muted/10 rounded-xl border border-border/60">
               {(["low", "medium", "high"] as const).map((p) => (
                 <button
