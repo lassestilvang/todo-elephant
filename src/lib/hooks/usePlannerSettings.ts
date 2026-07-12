@@ -28,6 +28,14 @@ export function usePlannerSettings() {
   });
   const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">("system");
 
+  // Adaptive theme based on time of day
+  const getTimeBasedTheme = useCallback(() => {
+    const hour = new Date().getHours();
+    // Morning: light, Evening: dark
+    if (hour >= 6 && hour < 18) return "light";
+    return "dark";
+  }, []);
+
   const updateTheme = useCallback((mode: "light" | "dark" | "system") => {
     setThemeMode(mode);
     if (mode === "system") {
@@ -41,6 +49,29 @@ export function usePlannerSettings() {
       document.documentElement.setAttribute("data-theme", mode);
     }
   }, []);
+
+  // Apply adaptive theme when in "adaptive" mode (stored as "system" with flag)
+  const applyAdaptiveTheme = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const adaptive = localStorage.getItem("adaptive-theme") === "true";
+    if (adaptive) {
+      document.documentElement.setAttribute("data-theme", getTimeBasedTheme());
+    }
+  }, [getTimeBasedTheme]);
+
+  // Set theme mode and optionally enable adaptive
+  const setThemeModeWith = useCallback((mode: "light" | "dark" | "system" | "adaptive") => {
+    if (mode === "adaptive") {
+      localStorage.setItem("adaptive-theme", "true");
+      localStorage.setItem("color-scheme", "adaptive");
+      setThemeMode("system"); // Use system as base
+      applyAdaptiveTheme();
+    } else {
+      localStorage.setItem("adaptive-theme", "false");
+      setThemeMode(mode);
+      updateTheme(mode);
+    }
+  }, [applyAdaptiveTheme, updateTheme, getTimeBasedTheme]);
 
   // Sync state and attribute on mount
   useEffect(() => {
@@ -69,6 +100,19 @@ export function usePlannerSettings() {
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [themeMode]);
+
+  // Adaptive theme: update every hour based on time of day
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const adaptive = localStorage.getItem("adaptive-theme") === "true";
+    if (!adaptive) return;
+
+    const interval = setInterval(() => {
+      applyAdaptiveTheme();
+    }, 3600000); // Check every hour
+
+    return () => clearInterval(interval);
+  }, [applyAdaptiveTheme]);
 
   // Persist soundEnabled
   useEffect(() => {
@@ -110,6 +154,8 @@ export function usePlannerSettings() {
     themeMode,
     setThemeMode,
     updateTheme,
+    setThemeModeWith,
+    getTimeBasedTheme,
     openFocusMode,
     closeFocusMode,
   };
