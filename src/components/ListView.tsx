@@ -20,6 +20,7 @@ import { Task, List, Label, SavedFilter } from "@/types";
 import EmptyState from "./EmptyState";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { getRelativeDateString, getDueDateBadgeClass, highlightText } from "@/src/lib/dateUtils";
 
 interface ListViewProps {
   tasks: Task[];
@@ -35,58 +36,7 @@ interface ListViewProps {
   onFocusTask?: (id: number) => void;
   selectedFilter?: SavedFilter | null;
   onSaveFilter?: (name: string, config: Omit<SavedFilter, "id">) => void;
-}
-
-const highlightText = (text: string, highlight: string) => {
-  if (!highlight.trim()) {
-    return <span>{text}</span>;
-  }
-  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
-  const parts = text.split(regex);
-  return (
-    <span>
-      {parts.map((part, i) => 
-        regex.test(part) 
-          ? <mark key={i} className="bg-accent/25 text-accent rounded px-0.5 font-semibold">{part}</mark>
-          : part
-      )}
-    </span>
-  );
-};
-
-const getRelativeDateString = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffTime = dDate.getTime() - dNow.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Tomorrow";
-  if (diffDays === -1) return "Yesterday";
-  if (diffDays > 1 && diffDays <= 7) return `In ${diffDays} days`;
-  if (diffDays < -1 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
-  
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-};
-
-const getDueDateBadgeClass = (dateStr: string, isDone: boolean) => {
-  if (isDone) return "text-muted bg-muted/10";
-  
-  const date = new Date(dateStr);
-  const now = new Date();
-  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffTime = dDate.getTime() - dNow.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) return "bg-red-500/10 text-red-500 animate-pulse";
-  if (diffDays === 0) return "bg-amber-500/10 text-amber-500 border border-amber-500/20";
-  if (diffDays === 1) return "bg-blue-500/10 text-blue-500 border border-blue-500/20";
-  
-  return "text-muted bg-muted/10";
-};
+}// Local date helpers removed — use src/lib/dateUtils shared implementations.
 
 function ListView({
   tasks,
