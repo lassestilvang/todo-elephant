@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Task, List, Label, ActivityLog, SavedFilter, ShortcutConfig } from "@/types";
+import { Task, List, Label, ActivityLog, SavedFilter, ShortcutConfig, FocusSession } from "@/types";
 
 /**
  * Data-fetching owner: tasks, lists, labels, activity logs, saved filters,
@@ -16,25 +16,28 @@ export function usePlannerData() {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
   const [shortcutConfigs, setShortcutConfigs] = useState<ShortcutConfig[]>([]);
+  const [focusSessions, setFocusSessions] = useState<FocusSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshData = useCallback(async () => {
     try {
-      const [tRes, lRes, tagRes, logRes, filterRes, shortcutRes] = await Promise.all([
+      const [tRes, lRes, tagRes, logRes, filterRes, shortcutRes, fsRes] = await Promise.all([
         fetch("/api/tasks"),
         fetch("/api/lists"),
         fetch("/api/labels"),
         fetch("/api/activity-logs"),
         fetch("/api/filters"),
         fetch("/api/shortcuts"),
+        fetch("/api/focus-sessions"),
       ]);
-      const [tData, lData, tagData, logData, filterData, shortcutData] = await Promise.all([
+      const [tData, lData, tagData, logData, filterData, shortcutData, fsData] = await Promise.all([
         tRes.ok ? (tRes.json() as Promise<Task[]>) : Promise.resolve([]),
         lRes.ok ? (lRes.json() as Promise<List[]>) : Promise.resolve([]),
         tagRes.ok ? (tagRes.json() as Promise<Label[]>) : Promise.resolve([]),
         logRes.ok ? (logRes.json() as Promise<ActivityLog[]>) : Promise.resolve([]),
         filterRes.ok ? (filterRes.json() as Promise<SavedFilter[]>) : Promise.resolve([]),
         shortcutRes.ok ? (shortRes2Json(shortcutRes) as Promise<ShortcutConfig[]>) : Promise.resolve([]),
+        fsRes.ok ? (fsRes.json() as Promise<FocusSession[]>) : Promise.resolve([]),
       ]);
 
       setTasks(tData);
@@ -43,6 +46,7 @@ export function usePlannerData() {
       setActivityLogs(logData);
       setSavedFilters(filterData);
       setShortcutConfigs(shortcutData);
+      setFocusSessions(fsData);
     } catch (err) {
       console.error("Data refresh error:", err);
       toast.error("Failed to refresh planner data");
@@ -185,6 +189,7 @@ export function usePlannerData() {
     setActivityLogs,
     savedFilters,
     shortcutConfigs,
+    focusSessions,
     loading,
     refreshData,
     refreshLogs,
