@@ -97,4 +97,26 @@ describe("statsHelpers", () => {
   it("completionRate returns 0 for empty input", () => {
     expect(completionRate([])).toBe(0);
   });
+
+  it("listDistribution handles tasks without listId", () => {
+    const tasks = [
+      { ...baseTask, id: 1, status: "todo", listId: 1 },
+      { ...baseTask, id: 2, status: "todo", listId: undefined as unknown as number },
+      { ...baseTask, id: 3, status: "todo", listId: null as unknown as number },
+    ];
+    const lists = [{ id: 1, name: "Inbox", color: "#3b82f6" }];
+    expect(listDistribution(tasks, lists)).toEqual([
+      { listId: 1, name: "Inbox", color: "#3b82f6", count: 1 },
+    ]);
+  });
+
+  it("priorityDistribution handles unknown priority values", () => {
+    const tasks = [
+      { ...baseTask, id: 1, status: "todo", priority: "high" as any },
+      { ...baseTask, id: 2, status: "todo", priority: "unknown" as any }, // Unknown priority
+    ];
+    const result = priorityDistribution(tasks);
+    expect(result.high).toBe(1);
+    expect(result.low).toBe(1); // Falls through to low
+  });
 });
