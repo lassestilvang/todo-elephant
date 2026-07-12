@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { 
-  X, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  CheckCircle2, 
+import {
+  X,
+  Play,
+  Pause,
+  RotateCcw,
+  CheckCircle2,
   ChevronLeft,
   Timer,
   Maximize2,
   Minimize2,
-  Bell
+  Bell,
+  Flame
 } from "lucide-react";
 import { Task } from "@/types";
 import { toast } from "sonner";
@@ -29,6 +30,43 @@ export default function FocusView({ task, onClose, onTaskUpdate, onPomodoroCompl
   const [isActive, setIsActive] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const startedAtRef = React.useRef<number | null>(null);
+
+  // Flow state detection
+  const [flowStreak, setFlowStreak] = useState(0);
+  const [showFlowHint, setShowFlowHint] = useState(false);
+
+  // Check for flow state when timer completes
+  useEffect(() => {
+    if (timeLeft === 0 && !isActive) {
+      // Check if this was part of a flow streak
+      const prevSessions = localStorage.getItem(`flow-${task.id}`) || "0";
+      const sessions = parseInt(prevSessions);
+
+      // If user immediately starts another session, increment streak
+      const lastEndTime = localStorage.getItem(`flow-end-${task.id}`);
+      if (lastEndTime) {
+        const timeSince = Date.now() - parseInt(lastEndTime);
+        if (timeSince < 300000) { // Within 5 minutes
+          setFlowStreak(sessions + 1);
+          localStorage.setItem(`flow-${task.id}`, String(sessions + 1));
+          if (sessions + 1 >= 3) {
+            setShowFlowHint(true);
+            toast.success("🔥 Flow State Detected!", {
+              description: "You're in deep work. Consider taking a longer break after 2-3 more sessions.",
+            });
+          }
+        } else {
+          setFlowStreak(1);
+          localStorage.setItem(`flow-${task.id}`, "1");
+        }
+      } else {
+        setFlowStreak(1);
+        localStorage.setItem(`flow-${task.id}`, "1");
+      }
+
+      localStorage.setItem(`flow-end-${task.id}`, Date.now().toString());
+    }
+  }, [timeLeft, isActive, task.id]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -175,6 +213,18 @@ export default function FocusView({ task, onClose, onTaskUpdate, onPomodoroCompl
         <div className="relative group">
           <div className="absolute -inset-8 bg-accent/20 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity" />
           <div className="relative flex flex-col items-center">
+            {/* Flow State Indicator */}
+            {flowStreak > 0 && (
+              <div className="absolute -top-12 flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                <Flame size={14} className="text-amber-500" />
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                  Flow Streak: {flowStreak}
+                </span>
+                {showFlowHint && (
+                  <span className="text-[10px] text-amber-300/70">🔥</span>
+                )}
+              </div>
+            )}
             <div className="text-8xl md:text-9xl font-black tabular-nums tracking-tight mb-8">
               {formatTime(timeLeft)}
             </div>
