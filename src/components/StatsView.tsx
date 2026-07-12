@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { TrendingUp, Award, CheckCircle2, Clock, BarChart2, Tag, ListChecks, Flame } from "lucide-react";
+import { TrendingUp, Award, CheckCircle2, Clock, BarChart2, Tag, ListChecks, Flame, Trophy } from "lucide-react";
 import type { Task, List, Label } from "@/types";
 import { isCompletedStatus, isActiveStatus, isArchivedStatus } from "@/src/lib/status";
 import { computeCurrentStreak, statsForLastNDays } from "@/src/lib/streaks";
@@ -14,6 +14,7 @@ import {
   weekdayName,
 } from "@/src/lib/statsHelpers";
 import EmptyState from "./EmptyState";
+import { useGamification } from "@/src/lib/hooks/useGamification";
 
 interface StatsViewProps {
   tasks: Task[];
@@ -30,6 +31,8 @@ const PRIORITY_COLORS = {
 const PRIORITY_LABELS = { high: "High", medium: "Medium", low: "Low" } as const;
 
 function StatsView({ tasks, lists, labels }: StatsViewProps) {
+  const gamification = useGamification();
+  
   const computed = useMemo(() => {
     const now = new Date();
     // Exclude templates so they don't pollute analytics (they're not real work).
@@ -48,6 +51,10 @@ function StatsView({ tasks, lists, labels }: StatsViewProps) {
     const labelRows = labelDistribution(relevant, labels);
     const listRows = listDistribution(relevant, lists);
     const priorityCounts = priorityDistribution(relevant);
+    
+    // Calculate XP based on tasks
+    const xp = completed.length * 10 + tasks.reduce((sum, t) => sum + (t.completedPomodoros ?? 0) * 5, 0);
+    
     return {
       now,
       relevant,
@@ -63,8 +70,9 @@ function StatsView({ tasks, lists, labels }: StatsViewProps) {
       labelRows,
       listRows,
       priorityCounts,
+      xp,
     };
-  }, [tasks, lists, labels]);
+  }, [tasks, lists, labels, gamification.level]);
 
   const maxBar = Math.max(1, ...computed.last30.map((d) => d.completions));
 
@@ -132,6 +140,11 @@ function StatsView({ tasks, lists, labels }: StatsViewProps) {
                 icon={<Award size={14} className="text-accent" />}
                 label="Most Productive Day"
                 value={weekdayName(computed.weekday)}
+              />
+              <StatCard
+                icon={<Trophy size={14} className="text-amber-500" />}
+                label="Level"
+                value={gamification.level}
               />
             </div>
 
