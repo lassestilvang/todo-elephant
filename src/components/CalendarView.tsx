@@ -16,6 +16,16 @@ interface CalendarViewProps {
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// Heatmap color scales for task density
+const HEATMAP_COLORS = [
+  "bg-slate-50/5", // 0 tasks
+  "bg-emerald-500/[0.03]", // 1 task
+  "bg-emerald-500/[0.08]", // 2 tasks
+  "bg-emerald-500/[0.15]", // 3 tasks
+  "bg-emerald-500/[0.25]", // 4 tasks
+  "bg-emerald-500/[0.40]", // 5+ tasks
+];
+
 function toDayUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
@@ -136,6 +146,8 @@ function CalendarView({ tasks, lists, labels: _labels, onTaskClick, onAddTask }:
               const dayTasks = byDay.get(k) ?? [];
               const isCurrentMonth = cell.inMonth;
               const isTodayCell = isToday(cell.date.toISOString());
+              const heatLevel = Math.min(HEATMAP_COLORS.length - 1, dayTasks.length);
+              
               return (
                 <button
                   key={idx}
@@ -148,7 +160,7 @@ function CalendarView({ tasks, lists, labels: _labels, onTaskClick, onAddTask }:
                     }
                   }}
                   className={`relative border-b border-r border-border/40 p-2 text-left align-top transition-colors hover:bg-muted/15 ${
-                    !isCurrentMonth ? "bg-muted/[0.03] text-muted/50" : ""
+                    !isCurrentMonth ? "bg-muted/[0.03] text-muted/50" : HEATMAP_COLORS[heatLevel]
                   } ${isTodayCell ? "ring-2 ring-inset ring-accent/40 bg-accent/[0.04]" : ""}`}
                 >
                   <span
