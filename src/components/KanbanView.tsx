@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Task, List, Label, SavedFilter } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
+import { getRelativeDateString, getDueDateBadgeClass, highlightText } from "@/src/lib/dateUtils";
 
 interface KanbanViewProps {
   tasks: Task[];
@@ -31,63 +32,13 @@ interface KanbanViewProps {
   onTaskClick: (task: Task) => void;
   onAddTask: (title: string, status: string) => void;
   onTaskDuplicate?: (task: Task) => void;
+  onReorderTasks?: (items: { id: number; order: number }[]) => void;
   onFocusTask?: (id: number) => void;
   selectedListId?: number | null;
   selectedLabelId?: number | null;
   selectedFilter?: SavedFilter | null;
   onSaveFilter?: (name: string, config: Omit<SavedFilter, "id">) => void;
-}
-
-const highlightText = (text: string, highlight: string) => {
-  if (!highlight.trim()) {
-    return <span>{text}</span>;
-  }
-  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
-  const parts = text.split(regex);
-  return (
-    <span>
-      {parts.map((part, i) => 
-        regex.test(part) 
-          ? <mark key={i} className="bg-accent/25 text-accent rounded px-0.5 font-semibold">{part}</mark>
-          : part
-      )}
-    </span>
-  );
-};
-
-const getRelativeDateString = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffTime = dDate.getTime() - dNow.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Tomorrow";
-  if (diffDays === -1) return "Yesterday";
-  if (diffDays > 1 && diffDays <= 7) return `In ${diffDays} days`;
-  if (diffDays < -1 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
-  
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-};
-
-const getDueDateBadgeClass = (dateStr: string, isDone: boolean) => {
-  if (isDone) return "text-muted bg-muted/10";
-  
-  const date = new Date(dateStr);
-  const now = new Date();
-  const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffTime = dDate.getTime() - dNow.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) return "text-red-500 bg-red-500/10 animate-pulse border border-red-500/20";
-  if (diffDays === 0) return "text-amber-500 bg-amber-500/10 border border-amber-500/20";
-  if (diffDays === 1) return "text-blue-500 bg-blue-500/10 border border-blue-500/20";
-  
-  return "text-muted bg-muted/10";
-};
+}// Local date helpers removed — use src/lib/dateUtils shared implementations.
 
 function KanbanView({
   tasks,
@@ -98,6 +49,7 @@ function KanbanView({
   onTaskClick,
   onAddTask,
   onTaskDuplicate,
+  onReorderTasks,
   onFocusTask,
   selectedListId = null,
   selectedLabelId = null,
@@ -109,7 +61,7 @@ function KanbanView({
   const [quickTitle, setQuickTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 200);
-  const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority">("newest");
+  const [sortBy, setSortBy] = useState<"newest" | "dueDate" | "priority" | "order">("newest");
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
 
   const activeList = useMemo(() => {
@@ -162,6 +114,12 @@ function KanbanView({
         const weightA = priorityWeights[a.priority as "high" | "medium" | "low"] || 0;
         const weightB = priorityWeights[b.priority as "high" | "medium" | "low"] || 0;
         return weightB - weightA;
+      }
+      if (sortBy === "order") {
+        // Sort by explicit user-defined order, fall back to id for tasks without an order.
+        const ao = a.order ?? a.id;
+        const bo = b.order ?? b.id;
+        return ao - bo;
       }
       return b.id - a.id;
     });
@@ -225,6 +183,37 @@ function KanbanView({
     if (newStatus === "archived") statusValue = "archived";
 
     onTaskUpdate(taskId, { status: statusValue });
+  };
+
+  /**
+   * Drop on a specific task — used to reorder within a column. The dragged
+   * task's `order` field swaps with the target's so the move persists
+   * regardless of the current sort mode.
+   */
+  const onDropOnTask = (e: React.DragEvent, targetTask: Task) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedOverCol(null);
+    const draggedId = parseInt(e.dataTransfer.getData("taskId"));
+    if (isNaN(draggedId) || draggedId === targetTask.id) return;
+    const draggedTask = tasks.find((t) => t.id === draggedId);
+    if (!draggedTask) return;
+    const draggedOrder = draggedTask.order ?? draggedTask.id;
+    const targetOrder = targetTask.order ?? targetTask.id;
+    if (draggedOrder === targetOrder) return;
+    // Atomic swap via batch endpoint — both writes succeed or both fail.
+    // Falls back to the old per-task PUT path if onReorderTasks isn't wired.
+    if (onReorderTasks) {
+      onReorderTasks([
+        { id: draggedId, order: targetOrder },
+        { id: targetTask.id, order: draggedOrder },
+      ]);
+    } else {
+      onTaskUpdate(draggedId, { order: targetOrder });
+      onTaskUpdate(targetTask.id, { order: draggedOrder });
+    }
+    // Switch sort to "order" so the user actually sees the reorder take effect.
+    setSortBy("order");
   };
 
   const moveStatus = (id: number, currentStatus: string, direction: "next" | "prev") => {
@@ -310,8 +299,8 @@ function KanbanView({
             />
           </div>
 
-          {/* Save Filter action */}
-          {onSaveFilter && (debouncedSearchQuery || priorityFilter !== "all") && !selectedFilter && (
+          {/* Save Filter action — hidden in custom-order mode since saved filters can't persist a per-session drag order */}
+          {onSaveFilter && sortBy !== "order" && (debouncedSearchQuery || priorityFilter !== "all") && !selectedFilter && (
             <button
               onClick={() => {
                 const name = window.prompt("Enter a name for this filter:");
@@ -321,7 +310,9 @@ function KanbanView({
                     query: debouncedSearchQuery,
                     statusFilter: "all",
                     priorityFilter,
-                    sortBy
+                    // SavedFilter's sortBy doesn't include the custom "order"
+                    // variant (which is ephemeral drag-reorder state). Coerce.
+                    sortBy: (sortBy as Exclude<typeof sortBy, "order">) || "newest",
                   });
                 }
               }}
@@ -339,13 +330,14 @@ function KanbanView({
               id="kanban-sort"
               name="kanban-sort"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority")}
+              onChange={(e) => setSortBy(e.target.value as "newest" | "dueDate" | "priority" | "order")}
               aria-label="Sort kanban cards"
               className="bg-transparent border-0 text-[11px] font-bold text-muted focus:ring-0 focus:outline-none cursor-pointer"
             >
               <option value="newest" className="bg-background text-foreground">Sort: Newest</option>
               <option value="dueDate" className="bg-background text-foreground">Sort: Due Date</option>
               <option value="priority" className="bg-background text-foreground">Sort: Priority</option>
+              <option value="order" className="bg-background text-foreground">Sort: Custom</option>
             </select>
           </div>
 
@@ -455,6 +447,7 @@ function KanbanView({
                 ) : (
                   <>
                     {colTasks.map((task, taskIdx) => {
+                      const isDropTarget = draggedOverCol === col.id;
                       const list = lists.find(l => l.id === task.listId);
                       
                       // Checklist calculations
@@ -476,11 +469,13 @@ function KanbanView({
                       const animDelay = Math.min(taskIdx * 40, 300);
 
                       return (
-                        <div 
+                        <div
                           key={task.id}
                           draggable
                           onDragStart={(e) => onDragStart(e, task.id)}
                           onDragEnd={onDragEnd}
+                          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          onDrop={(e) => onDropOnTask(e, task)}
                           onClick={() => onTaskClick(task)}
                           className="p-3.5 rounded-xl border border-border/80 bg-card hover-lift cursor-pointer space-y-3 relative group animate-fade-in shadow-sm hover:shadow-md transition-all active:scale-95 active:rotate-1"
                           style={{ animationDelay: `${animDelay}ms`, animationFillMode: "backwards" }}
