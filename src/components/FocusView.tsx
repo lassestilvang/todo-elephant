@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { 
   X, 
   Play, 
@@ -21,12 +21,14 @@ interface FocusViewProps {
   task: Task;
   onClose: () => void;
   onTaskUpdate: (id: number, updates: Partial<Task>) => void;
+  onPomodoroComplete?: (durationSeconds: number, completedEarly: boolean) => void;
 }
 
-export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProps) {
+export default function FocusView({ task, onClose, onTaskUpdate, onPomodoroComplete }: FocusViewProps) {
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes default
   const [isActive, setIsActive] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const startedAtRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -36,6 +38,9 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
       }, 1000);
     } else if (timeLeft === 0) {
       setIsActive(false);
+      // Persist a 25-minute focus session once the timer completes.
+      if (onPomodoroComplete) onPomodoroComplete(25 * 60, false);
+      startedAtRef.current = null;
       toast.success("Time's up! Take a break or continue focusing.");
       // Play a small notification sound if possible
       if (typeof window !== "undefined") {
@@ -44,10 +49,19 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
       }
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, onPomodoroComplete]);
 
-  const toggleTimer = () => setIsActive(!isActive);
+  const toggleTimer = () => {
+    if (!isActive) startedAtRef.current = Date.now();
+    setIsActive(!isActive);
+  };
   const resetTimer = () => {
+    // If we were mid-session, persist the elapsed seconds as a partial session.
+    if (isActive && startedAtRef.current != null && onPomodoroComplete) {
+      const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+      if (elapsed > 30 && elapsed < 25 * 60) onPomodoroComplete(elapsed, true);
+    }
+    startedAtRef.current = null;
     setIsActive(false);
     setTimeLeft(25 * 60);
   };
@@ -112,8 +126,17 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
           >
             {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
           </button>
-          <button 
-            onClick={onClose}
+          <button
+            onClick={(e) => {
+              // Persist a partial Pomodoro if user exits mid-session.
+              if (isActive && startedAtRef.current != null && onPomodoroComplete) {
+                const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+                if (elapsed > 30 && elapsed < 25 * 60) onPomodoroComplete(elapsed, true);
+              }
+              startedAtRef.current = null;
+              onClose();
+              e.currentTarget.blur();
+            }}
             className="p-3 rounded-full bg-white/5 hover:bg-red-500/20 text-red-400 hover:text-red-500 transition-all"
             title="Close"
           >
@@ -157,15 +180,15 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
             </div>
             
             <div className="flex items-center gap-6">
-              <button 
+              <button
                 onClick={resetTimer}
                 className="p-4 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/10"
                 title="Reset Timer"
               >
                 <RotateCcw size={24} />
               </button>
-              
-              <button 
+
+              <button
                 onClick={toggleTimer}
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 shadow-2xl ${
                   isActive ? "bg-white text-slate-950" : "bg-accent text-white"
@@ -173,14 +196,17 @@ export default function FocusView({ task, onClose, onTaskUpdate }: FocusViewProp
               >
                 {isActive ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => setTimeLeft(prev => prev + 5 * 60)}
                 className="p-4 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/10"
                 title="Add 5 Minutes"
               >
                 <span className="font-bold text-sm">+5</span>
               </button>
+            </div>
+            <div className="mt-3 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+              {task.completedPomodoros ?? 0} pomodoros completed
             </div>
           </div>
         </div>
