@@ -146,6 +146,7 @@ export function useTaskPlanner() {
     requestDelete: actions.requestDelete,
     confirmDelete: actions.confirmDelete,
     handleClearCompleted: actions.clearCompleted,
+    handleBulkDelete: actions.bulkDeleteTasks,
     handleClearLogs: data.clearLogs,
     handleCreateList: data.createList,
     handleCreateLabel: data.createLabel,
@@ -156,6 +157,12 @@ export function useTaskPlanner() {
     handleCreateTaskFromCommand,
     handleQuickAdd,
     handleFocusSessionComplete,
+    // Expose undo stack for consumers
+    undoStack: actions.undoStack,
+    // Time estimates data
+    focusSessions: data.focusSessions,
+    // Settings passthrough
+    setThemeModeWith: settings.setThemeModeWith,
   };
 }
 
