@@ -14,7 +14,8 @@ import {
   Copy,
   X,
   Target,
-  Link
+  Link,
+  Clock
 } from "lucide-react";
 import { Task, List, Label, SavedFilter } from "@/types";
 import EmptyState from "./EmptyState";
@@ -494,11 +495,32 @@ function ListView({
                       </button>
 
                       {task.dueDate && (
-                        <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${getDueDateBadgeClass(task.dueDate, isDone)}`}>
-                          <Calendar size={10} />
-                          <span>{getRelativeDateString(task.dueDate)}</span>
-                          {isOverdue && <span className="text-[9px] uppercase">Overdue</span>}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className={`text-[11px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full ${getDueDateBadgeClass(task.dueDate, isDone)}`}>
+                            <Calendar size={10} />
+                            <span>{getRelativeDateString(task.dueDate)}</span>
+                            {isOverdue && <span className="text-[9px] uppercase">Overdue</span>}
+                          </span>
+                          {/* Quick snooze for overdue tasks */}
+                          {isOverdue && onTaskUpdate && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const days = [1, 3, 7];
+                                const day = window.prompt("Snooze for how many days? (1/3/7)", "1");
+                                if (day && days.includes(Number(day))) {
+                                  const newDate = new Date();
+                                  newDate.setDate(newDate.getDate() + Number(day));
+                                  onTaskUpdate(task.id, { dueDate: newDate.toISOString() });
+                                }
+                              }}
+                              className="p-0.5 rounded text-muted hover:text-accent"
+                              title="Snooze overdue task"
+                            >
+                              <Clock size={10} />
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       {task.dependsOnTaskId && (
