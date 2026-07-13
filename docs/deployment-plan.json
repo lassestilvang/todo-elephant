@@ -1,0 +1,28 @@
+{
+  "title": "Deployment Configuration for Elephant Elephant",
+  "summary": "Complete CI/CD pipeline and deployment settings for production",
+  "source": "/Users/lasse/Sites/todo-elephant",
+  "files": [
+    {
+      "path": "vercel.json",
+      "content": "{\n  \"version\": 2,\n  \"builds\": [\n    {\n      \"src\": \"src/pages/api/**\",\n      \"use”: \"next\" \n    },\n    {\n      \"src\": \"src/pages/**/*.tsx\",\n      \"use\": \"next\" \n    }\n  ],\n  \"routes\": [\n    {\n      \"src\": \"/api/.*\",\n      \"methods\": [\"GET\",\"POST\",\"PUT\",\"DELETE\",\"PATCH\",\"OPTIONS\"],\n      \"destination\": \"/api/$1\"\n    },\n    {\n      \"src\": \"/((?!api).*)\",\n      \"methods\": [\"GET\",\"HEAD\"],\n      \"destination\": \"/$1\"\n    }\n  ],\n  \"env\": {\n    \"NEXT_PUBLIC_APP_NAME\": \"TodoElephant\",\n    \"DISABLE_TELEMETRY\": \"true\"\n  },\n  \"headers\": [\n    {\n      \"source\": \"/(?!/api)\",\n      \"headers\": [\n        {\"key\": \"X-Content-Type-Options\", \"value\": \"nosniff\"},\n        {\"key\": \"X-Frame-Options\", \"value\": \"DENY\"},\n        {\"key\": \"X-XSS-Protection\", \"value\": \"1; mode=block\"},\n        {\"key\": \"Referrer-Policy\", \"value\": \"strict-origin-when-cross-origin\"},\n        {\"key\": \"Content-Security-Policy\", \"value\": \"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; image-src 'self' data:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'\"}\n      ]\n    }\n  ],\n  \"routes\": [\n    {\n      \"src\": \"/(.*)\",\n      \"dest\": \"/index.html\"\n    }\n  ]\n}"
+    },
+    {
+      "path": ".env.production",
+      "content": "NEXT_PUBLIC_APP_NAME=TodoElephant\nNEXT_PUBLIC_API_URL=https://api.todo-elephant.app\nJWT_SECRET=${{ secrets.JWT_SECRET }}\nETSY_API_KEY=${{ secrets.ETSY_API_KEY }}\nETSY_APP_KEY=${{ secrets.ETSY_APP_KEY }}\nAMAZON_API_KEY=${{ secrets.AMAZON_API_KEY }}\nAMAZON_ACCESS_TOKEN=${{ secrets.AMAZON_ACCESS_TOKEN }}\nMONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/todo-elephant?retryWrites=true&w=majority\nNODE_ENV=production"
+    },
+    {
+      "path": "jest.config.js",
+      "content": "// Jest configuration for end‑to‑end and unit testing\nmodule.exports = {\n  preset: 'ts-jest',\n  testEnvironment: 'node',\n  testMatch: ['**/tests/**/*.(ts|tsx)', '**/?(*.)+(spec|test).ts?(x)'], \n  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],\n  globals: {\n    'ts-jest': {\n      tsconfig: 'tsconfig.json',\n    },\n  },\n  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/__tests__/', '!src/**/index.ts'], \n  coverageDirectory: '<rootDir>/coverage',\n  coverageReporters: ['text', 'lcov'], \n  verbose: true,\n  moduleDirectories: ['node_modules', '<rootDir'], \n  transform: {\n    '^.+\\\\.tsx?$': 'ts-jest',\n  },\n};\n"
+    },
+    {
+      "path": "docker-compose.yml",
+      "content": "version: '3.8'\nservices:\n  app:\n    build: .\n    ports:\n      - \"3000:3000\"\n    environment:\n      - NODE_ENV=production\n      - MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/todo-elephant?retryWrites=true&w=majority\n      - JWT_SECRET=${{ secrets.JWT_SECRET }}\n    volumes:\n      - .:/app\n    restart: unless-stopped\n  db:\n    image: mongo:5\n    restart: unless-stopped\n    environment:\n      MONGO_INITDB_ROOT_USERNAME:admin\n      MONGO_INITDB_ROOT_PASSWORD=admin123\n      MONGO_INITDB_DATABASE:todo-elephant\n    volumes:\n      - mongo-data:/data/db\nvolumes:\n  mongo-data:\n"
+    }
+  ],
+  "commands": [
+    "npm run build",
+    "npm start",
+    "npm test -- --ci --verbose"
+  ]
+}
