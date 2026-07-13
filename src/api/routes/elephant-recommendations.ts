@@ -1,64 +1,65 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { fetchEtsyProducts, fetchAmazonProducts } from '@/api/routes/elephant-marketplace-sync';
-import { ElephantPropertyMatcher } from '@/components/RevenueForecast';
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchEtsyProducts, fetchAmazonProducts } from './elephant-marketplace-sync';
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+// Calculate relevance score based on simple matching
+function calculateRelevance(product: any, query: string): number {
+  const titleMatch = product.title?.toLowerCase().includes(query.toLowerCase()) ? 0.5 : 0;
+  const tagMatch = product.styleTags?.some((tag: string) =>
+    tag.toLowerCase().includes(query.toLowerCase())
+  ) ? 0.3 : 0;
+  const descriptionMatch = product.description?.toLowerCase().includes(query.toLowerCase()) ? 0.2 : 0;
+  return titleMatch + tagMatch + descriptionMatch;
+}
+
+// GET endpoint - get recommendations
+export async function GET(request: NextRequest) {
   try {
-    const { query } = req.query;
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('query') || '';
 
     if (!query) {
-      return res.status(400).json({
+      return NextResponse.json({
         success: false,
         error: 'Search query required'
-      });
+      }, { status: 400 });
     }
 
-    // Get matching products from marketplaces
-    const stores = ['etsy', 'amazon'];
-    const allProducts = await Promise.all(stores.map(store => {
-      return fetchEtsyProducts(store) // Unified API call
-            .then(results => ({ store, results }))
-            .catch(error => ({ store, error: error.message }));
-    }));
+    // Get matching products from marketplaces (simulated)
+    const allProducts: any[] = [];
 
-    // Initialize recommender
-    const matcher = new ElephantPropertyMatcher();
-    const recommendations = [];
-
-    // Process each store's results
-    for (const { store, results, error } of allProducts) {
-      if (error) {
-        console.error(`Error from ${store}:`, error);
-        continue;
-      }
-
-      for (const product of results) {
-        const scores = await matcher.generateMatchScores(product, JSON.parse(req.body.preferences || '{}'));
-        if (scores > 0.6) { // 60% threshold for relevance
-          recommendations.push({
-            ...product,
-            store,
-            relevanceScore: scores
-          });
-        }
-      }
+    try {
+      const etsyResults = await fetchEtsyProducts(query);
+      allProducts.push(...etsyResults.map((p: any) => ({ ...p, store: 'etsy' })));
+    } catch (error) {
+      console.error('Etsy fetch error:', error);
     }
 
-    // Sort by relevance score
-    recommendations.sort((a, b) => b.relevanceScore! - a.relevanceScore!);
+    try {
+      const amazonResults = await fetchAmazonProducts(query);
+      allProducts.push(...amazonResults.map((p: any) => ({ ...p, store: 'amazon' })));
+    } catch (error) {
+      console.error('Amazon fetch error:', error);
+    }
 
-    res.status(200).json({
+    // Calculate relevance scores
+    const recommendations = allProducts
+      .map((product) => ({
+        ...product,
+        relevanceScore: calculateRelevance(product, query)
+      }))
+      .filter((p) => p.relevanceScore > 0.3)
+      .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+
+    return NextResponse.json({
       success: true,
       recommendations,
       totalResults: recommendations.length
     });
   } catch (error) {
     console.error('Recommendation API error:', error);
-    res.status(500).json({
+    return NextResponse.json({
       success: false,
       error: 'Recommendation generation failed'
-    });
+    }, { status: 500 });
   }
-};
-
-export default handler;
+}
