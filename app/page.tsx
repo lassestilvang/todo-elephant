@@ -35,6 +35,14 @@ const HabitView = dynamic(() => import("@/src/components/HabitView"));
 const AnalyticsView = dynamic(() => import("@/src/components/AnalyticsView"));
 const PomodoroForest = dynamic(() => import("@/src/components/PomodoroForest"));
 const TaskHistoryView = dynamic(() => import("@/src/components/TaskHistoryView"));
+const AIAssistantView = dynamic(() => import("@/src/components/AIAssistantView"));
+const MemoryPalaceView = dynamic(() => import("@/src/components/MemoryPalaceView"));
+const IvoryTowerView = dynamic(() => import("@/src/components/IvoryTowerView"));
+const ParadeOfProgress = dynamic(() => import("@/src/components/ParadeOfProgress"));
+const HerdTeamsView = dynamic(() => import("@/src/components/HerdTeamsView"));
+const SleepIntegrationView = dynamic(() => import("@/src/components/SleepIntegrationView"));
+const MigrationMapView = dynamic(() => import("@/src/components/MigrationMapView"));
+const StampedeAlertView = dynamic(() => import("@/src/components/StampedeAlertView"));
 
 import { ViewName } from "@/src/lib/hooks/usePlannerView";
 
@@ -539,6 +547,92 @@ export default function Home() {
                 onGoHome={() => transitionView("dashboard")}
               >
                 <TaskHistoryView tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "assistant" && (
+              <ErrorBoundary
+                label="AI Elephant Assistant"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <AIAssistantView
+                  tasks={tasks}
+                  lists={lists}
+                  labels={labels}
+                  focusSessions={focusSessions}
+                />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "palace" && (
+              <ErrorBoundary
+                label="Memory Palace"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <MemoryPalaceView
+                  tasks={tasks}
+                  lists={lists}
+                  labels={labels}
+                  onTaskClick={handleTaskClick}
+                  onTaskUpdate={handleTaskUpdateDirect}
+                />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "ivory" && (
+              <ErrorBoundary
+                label="Ivory Tower"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <IvoryTowerView tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "herd" && (
+              <ErrorBoundary
+                label="Herd Teams"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <HerdTeamsView tasks={tasks} lists={lists} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "sleep" && (
+              <ErrorBoundary
+                label="Sleep Integration"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <SleepIntegrationView tasks={tasks} focusSessions={focusSessions} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "migration" && (
+              <ErrorBoundary
+                label="Migration Map"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <MigrationMapView tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "stampede" && (
+              <ErrorBoundary
+                label="Stampede Alert"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <StampedeAlertView
+                  tasks={tasks}
+                  onTaskUpdate={handleTaskUpdateDirect}
+                  onTaskDelete={requestDelete}
+                  onTaskArchive={confirmDelete}
+                />
               </ErrorBoundary>
 
             )}
