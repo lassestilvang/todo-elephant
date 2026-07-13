@@ -1,0 +1,14 @@
+{
+  "marketplace-monitor": {
+    "type": "agent",
+    "description": "Tracks Amazon/Etsy marketplace trends for Elephant products",
+    "hours": "weekly",
+    "api_keys": [" placeholder for real keys "]
+  },
+  "content-calendar": {
+    "type": "agent",
+    "description": "Plans and schedules content about Elephant merchandise",
+    "interval": "bi-weekly",
+    "social_integrations": ["twitter", "instagram"]
+  }
+}
