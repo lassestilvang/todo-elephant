@@ -56,8 +56,8 @@ export const fetchEtsyProducts = async (query: string) => {
 /**
  * Process and normalize marketplace results
  */
-export const processMarketplaceResults = (results: any) => {
-  return results.map(product => ({
+export const processMarketplaceResults = (results: any[]): any[] => {
+  return results.map((product: any) => ({
     id: product.id || product.asin,
     title: product.title || product.name,
     price: product.price?.amount || product.price,
