@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   // Compression for smaller transfer sizes
   compress: true,
 
-  // Optimize images (even though we don't have many, good practice)
+  // Enable PWA features
+  output: "standalone",
+
+  // Optimize images
   images: {
     formats: ["image/avif", "image/webp"],
   },
@@ -18,20 +21,17 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
-  // Production router middleware for custom logging
-  productionRouterMiddleware: [
-    (req, { fetch }) => {
-      // Custom logging middleware
-      require('@monosnap/cli').middleware({
-        name: "todo-elephant",
-        types: "request_lambda",
-        handler: async (req) => {
-          console.log(`Request: ${req.url}`);
-          return fetch(req);
-        }
-      });
-    },
-  ],
+  // Headers for PWA support
+  async headers() {
+    return [
+      {
+        source: "/manifest.json",
+        headers: [
+          { key: "Content-Type", value: "application/manifest+json" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
