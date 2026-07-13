@@ -4,6 +4,29 @@ import React, { useMemo, useState } from "react";
 import { Task } from "@/types";
 import { Calendar, CheckCircle2, Flame, Target, Plus, BarChart2 } from "lucide-react";
 
+// Footprint icon for visualization
+const Footprint = ({ completed, streak }: { completed: boolean; streak: number }) => {
+  const fillColor = completed
+    ? "#10b981"
+    : streak > 0
+      ? "#f59e0b"
+      : "#64748b";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" className="shrink-0">
+      <path
+        d="M6 12c2-3 4-3 6 0c2-3 4-3 6 0"
+        stroke={fillColor}
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle cx="6" cy="12" r="1.5" fill={fillColor} />
+      <circle cx="12" cy="12" r="1.5" fill={fillColor} />
+      <circle cx="18" cy="12" r="1.5" fill={fillColor} />
+    </svg>
+  );
+};
+
 interface HabitViewProps {
   tasks: Task[];
 }
@@ -150,13 +173,13 @@ export default function HabitView({ tasks }: HabitViewProps) {
         </div>
       </div>
 
-      {/* Habits Grid */}
+      {/* Habits Grid with Footprints */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {allHabits.map(habit => (
-          <button
+          <div
             key={habit.id}
             onClick={() => toggleHabit(habit.id)}
-            className={`p-6 rounded-2xl border transition-all text-left ${
+            className={`p-6 rounded-2xl border transition-all text-left cursor-pointer ${
               habit.completed
                 ? "border-emerald-500 bg-emerald-500/10"
                 : "border-border bg-card/40 hover:border-accent/40"
@@ -166,12 +189,26 @@ export default function HabitView({ tasks }: HabitViewProps) {
               <span className="font-bold text-sm">{habit.name}</span>
               {habit.completed && <CheckCircle2 size={16} className="text-emerald-500" />}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-3">
               <Flame size={16} className="text-amber-500" />
               <span className="text-2xl font-black text-foreground">{habit.streak}</span>
               <span className="text-xs text-muted uppercase">day streak</span>
             </div>
-          </button>
+
+            {/* Footprint trail visualization */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(habit.streak, 7) }).map((_, i) => (
+                <Footprint
+                  key={i}
+                  completed={true}
+                  streak={habit.streak}
+                />
+              ))}
+              {habit.streak > 7 && (
+                <span className="text-[10px] text-muted ml-1">+{habit.streak - 7} more</span>
+              )}
+            </div>
+          </div>
         ))}
       </div>
     </div>
