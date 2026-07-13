@@ -1,25 +1,29 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle, 
-  Layers, 
-  Plus, 
+import {
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Layers,
+  Plus,
   ChevronRight,
   ClipboardList,
   Zap,
   Star,
-  Target
+  Target,
+  Calendar
 } from "lucide-react";
-import { Task, List, ActivityLog } from "@/types";
+import { Task, List, Label, ActivityLog, FocusSession } from "@/types";
 import EmptyState from "./EmptyState";
+import { generateSchedulingSuggestion } from "@/src/lib/scheduling";
 
 interface DashboardViewProps {
   tasks: Task[];
   lists: List[];
+  labels: Label[];
   activityLogs: ActivityLog[];
+  focusSessions?: FocusSession[];
   onAddTaskClick: () => void;
   onTaskClick: (task: Task) => void;
   onQuickAdd?: (title: string) => void;
@@ -31,7 +35,9 @@ interface DashboardViewProps {
 function DashboardView({
   tasks,
   lists,
+  labels: _labels,
   activityLogs,
+  focusSessions = [],
   onAddTaskClick,
   onTaskClick,
   onQuickAdd,
@@ -40,7 +46,19 @@ function DashboardView({
   onFocusTask
 }: DashboardViewProps) {
   const [quickTitle, setQuickTitle] = useState("");
-  
+
+  // Scheduling suggestions
+  const suggestions = useMemo(() => {
+    const incomplete = tasks.filter(t => t.status !== "completed" && t.status !== "done");
+    return incomplete
+      .map(task => ({
+        taskId: task.id,
+        suggestion: generateSchedulingSuggestion(task, tasks, focusSessions),
+      }))
+      .filter(({ suggestion }) => suggestion.suggestedSlots.length > 0)
+      .slice(0, 5);
+  }, [tasks, focusSessions]);
+
   // Calculate analytics (memoized to avoid recalculation on every render)
   const analytics = useMemo(() => {
     const total = tasks.length;
@@ -162,7 +180,37 @@ function DashboardView({
     <div className="flex-1 scroll-container px-8 py-8 h-screen animate-fade-in">
       <div className="scroll-indicator-top" />
       <div className="space-y-8">
-      
+
+      {/* Scheduling Suggestions Banner */}
+      {focusSessions && suggestions.length > 0 && (
+        <div className="p-4 rounded-2xl border border-accent/30 bg-accent/10 backdrop-blur-md animate-fade-in" style={{ animationDelay: "60ms" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Calendar size={16} className="text-accent" />
+            <span className="text-xs font-bold text-accent uppercase">Smart Schedule Suggestions</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {suggestions.slice(0, 3).map(({ taskId, suggestion }) => {
+              const task = tasks.find(t => t.id === taskId);
+              if (!task) return null;
+              return (
+                <div key={taskId} className="p-3 rounded-xl bg-card/40 border border-border text-xs">
+                  <div className="font-semibold truncate mb-1">{task.title}</div>
+                  <div className="text-muted mb-1">{suggestion.reasoning}</div>
+                  {suggestion.suggestedSlots[0] && (
+                    <button
+                      onClick={() => onTaskClick(task)}
+                      className="text-accent font-bold hover:underline"
+                    >
+                      {suggestion.suggestedSlots[0].label}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Page Title & Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
