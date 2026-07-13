@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
     // Optimize package imports to reduce bundle size
     optimizePackageImports: ["lucide-react"],
   },
+
+  // Production router middleware for custom logging
+  productionRouterMiddleware: [
+    (req, { fetch }) => {
+      // Custom logging middleware
+      require('@monosnap/cli').middleware({
+        name: "todo-elephant",
+        types: "request_lambda",
+        handler: async (req) => {
+          console.log(`Request: ${req.url}`);
+          return fetch(req);
+        }
+      });
+    },
+  ],
 };
 
 export default nextConfig;
