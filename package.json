@@ -13,16 +13,21 @@
     "test:mutation": "stryker run"
   },
   "dependencies": {
+    "@react-three/drei": "10.7.7",
+    "@react-three/fiber": "9.6.1",
+    "@react-three/xr": "6.6.30",
     "autoprefixer": "^10.4.27",
     "express-rate-limit": "8.6.0",
     "graphql": "17.0.2",
+    "jsonwebtoken": "9.0.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
     "prom-client": "15.1.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "10.1.0",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "three": "0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -44,5 +49,21 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "main": ".eslintrc.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lassestilvang/todo-elephant.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lassestilvang/todo-elephant/issues"
+  },
+  "homepage": "https://github.com/lassestilvang/todo-elephant#readme"
 }
