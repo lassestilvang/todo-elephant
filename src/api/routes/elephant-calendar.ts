@@ -1,143 +1,146 @@
 // Elephant Content Calendar API
 // Handles content planning and scheduling with persistent storage
 
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
+
+interface CalendarEvent {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  theme?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 // In-memory store for demo (in production: use database)
-let contentCalendar = {
+let contentCalendar: {
+  events: CalendarEvent[];
+  themes: string[];
+  nextId: number;
+} = {
   events: [],
   themes: ['Wildlife Conservation', 'Elephant Care', 'Habitat Preservation', 'Community Outreach', 'Education'],
   nextId: 1
 };
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { method } = req;
+// GET endpoint - list events
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    data: contentCalendar
+  });
+}
 
-  switch (method) {
-    case 'GET':
-      // Get calendar events and themes
-      res.status(200).json({
-        success: true,
-        data: contentCalendar
-      });
-      break;
+// POST endpoint - create event
+export async function POST(request: NextRequest) {
+  try {
+    const { title, description, date, theme } = await request.json();
 
-    case 'POST':
-      // Add new event
-      try {
-        const { title, description, date, theme } = req.body;
+    if (!title || !date) {
+      return NextResponse.json({
+        success: false,
+        error: 'Title and date are required'
+      }, { status: 400 });
+    }
 
-        if (!title || !date) {
-          return res.status(400).json({
-            success: false,
-            error: 'Title and date are required'
-          });
-        }
+    const newEvent: CalendarEvent = {
+      id: contentCalendar.nextId++,
+      title,
+      description: description || '',
+      date,
+      theme: theme || contentCalendar.themes[0],
+      createdAt: new Date().toISOString()
+    };
 
-        const newEvent = {
-          id: contentCalendar.nextId++,
-          title,
-          description: description || '',
-          date,
-          theme: theme || contentCalendar.themes[0],
-          createdAt: new Date().toISOString()
-        };
-
-        contentCalendar.events.push(newEvent);
-        res.status(201).json({
-          success: true,
-          data: newEvent
-        });
-      } catch (error) {
-        console.error('Error adding calendar event:', error);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to add event'
-        });
-      }
-      break;
-
-    case 'PUT':
-      // Update existing event
-      try {
-        const { id, title, description, date, theme } = req.body;
-
-        if (!id) {
-          return res.status(400).json({
-            success: false,
-            error: 'Event ID is required'
-          });
-        }
-
-        const eventIndex = contentCalendar.events.findIndex(e => e.id === id);
-        if (eventIndex === -1) {
-          return res.status(404).json({
-            success: false,
-            error: 'Event not found'
-          });
-        }
-
-        contentCalendar.events[eventIndex] = {
-          ...contentCalendar.events[eventIndex],
-          ...(title !== undefined && { title }),
-          ...(description !== undefined && { description }),
-          ...(date !== undefined && { date }),
-          ...(theme !== undefined && { theme }),
-          updatedAt: new Date().toISOString()
-        };
-
-        res.status(200).json({
-          success: true,
-          data: contentCalendar.events[eventIndex]
-        });
-      } catch (error) {
-        console.error('Error updating calendar event:', error);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to update event'
-        });
-      }
-      break;
-
-    case 'DELETE':
-      // Delete event
-      try {
-        const { id } = req.body;
-
-        if (!id) {
-          return res.status(400).json({
-            success: false,
-            error: 'Event ID is required'
-          });
-        }
-
-        const initialLength = contentCalendar.events.length;
-        contentCalendar.events = contentCalendar.events.filter(e => e.id !== id);
-
-        if (contentCalendar.events.length === initialLength) {
-          return res.status(404).json({
-            success: false,
-            error: 'Event not found'
-          });
-        }
-
-        res.status(200).json({
-          success: true,
-          message: 'Event deleted successfully'
-        });
-      } catch (error) {
-        console.error('Error deleting calendar event:', error);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to delete event'
-        });
-      }
-      break;
-
-    default:
-      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-      res.status(405).end(`Method ${method} Not Allowed`);
+    contentCalendar.events.push(newEvent);
+    return NextResponse.json({
+      success: true,
+      data: newEvent
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error adding calendar event:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to add event'
+    }, { status: 500 });
   }
-};
+}
 
-export default handler;
+// PUT endpoint - update event
+export async function PUT(request: NextRequest) {
+  try {
+    const { id, title, description, date, theme } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'Event ID is required'
+      }, { status: 400 });
+    }
+
+    const eventIndex = contentCalendar.events.findIndex(e => e.id === id);
+    if (eventIndex === -1) {
+      return NextResponse.json({
+        success: false,
+        error: 'Event not found'
+      }, { status: 404 });
+    }
+
+    contentCalendar.events[eventIndex] = {
+      ...contentCalendar.events[eventIndex],
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(date !== undefined && { date }),
+      ...(theme !== undefined && { theme }),
+      updatedAt: new Date().toISOString()
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: contentCalendar.events[eventIndex]
+    });
+  } catch (error) {
+    console.error('Error updating calendar event:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to update event'
+    }, { status: 500 });
+  }
+}
+
+// DELETE endpoint - delete event
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: 'Event ID is required'
+      }, { status: 400 });
+    }
+
+    const initialLength = contentCalendar.events.length;
+    contentCalendar.events = contentCalendar.events.filter(e => e.id !== Number(id));
+
+    if (contentCalendar.events.length === initialLength) {
+      return NextResponse.json({
+        success: false,
+        error: 'Event not found'
+      }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting calendar event:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to delete event'
+    }, { status: 500 });
+  }
+}
