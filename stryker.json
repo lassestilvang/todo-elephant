@@ -1,0 +1,31 @@
+{
+  "files": [
+    "src/lib/**/*.ts",
+    "src/hooks/**/*.ts",
+    "src/security/**/*.ts"
+  ],
+  "mutate/**/*.ts"
+  ],
+  "mutators": ["logic", "equality", "boolean", "regexp", "dateTime", "stringLiteral", "arithmetic", "variableModifier", "console", "unused", "optionalChaining", "nullishCoalescing"],
+  "reporters": ["html", "text", "clear-text", "progress"],
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "breakEven": 70
+  },
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "concurrency": true,
+  "timeoutMS": 5000,
+  "maxConcurrentTestRunners": 4,
+  "logLevel": "info",
+  "cosmicRay": true,
+  "avoidReports": ["clover"],
+  "tmpDir": ".stryker-tmp",
+  "projectVersion": "0.1.0",
+  "tempDir": "./.tmp/stryker",
+  "initialDelay": 0,
+  "incrementDelay": 500,
+  "maxDelay": 5000,
+  "plugins": []
+}
