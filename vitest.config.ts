@@ -1,41 +1,42 @@
-import { defineConfig } from "vitest/config";
-import path from "path";
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: "happy-dom",
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "app/**/*.test.ts"],
-    exclude: ["node_modules/**"],
+    environment: 'happy-dom',
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.spec.ts',
+      'src/components/TaskManager.tsx',
+      'src/lib/recurrence.ts',
+      'src/lib/tasksApi.ts',
+      'src/hooks/useTimeEstimate.ts',
+      'src/security/**/*.ts' // security utilities
+    ],
+    exclude: ['node_modules/**', '**/dist', '**/coverage'],
+    timeout: 5000,
     coverage: {
-      provider: "v8",
-      // Only cover business logic modules (not React hooks which need integration tests)
-      include: [
-        "src/lib/dateUtils.ts",
-        "src/lib/nlp.ts",
-        "src/lib/recurrence.ts",
-        "src/lib/statsHelpers.ts",
-        "src/lib/streaks.ts",
-        "src/lib/tasksApi.ts",
-        "src/lib/templatesApi.ts",
-        "src/lib/timeEstimate.ts",
-        "src/lib/todaySummary.ts",
-      ],
+      provider: 'v8',
       all: true,
       clean: true,
       cleanOnRerun: true,
-      reporter: ["text", "json", "html"],
+      reporter: ['text', 'json', 'lcov', 'html'],
       thresholds: {
-        statements: 85,
-        branches: 75,
-        functions: 85,
-        lines: 85,
+        statements: 95,
+        branches: 95,
+        functions: 95,
+        lines: 95
       },
-    },
+      retries: {
+        maxAttempts: 3,
+        on: ['test']
+      }
+    }
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./"),
-    },
-  },
+      '@': path.resolve(__dirname, './')
+    }
+  }
 });
