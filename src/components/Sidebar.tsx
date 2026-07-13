@@ -1,4 +1,7 @@
-"use client";import React, { useState } from "react";
+"use client";
+
+import React, { useState } from "react";
+import { ViewName } from "@/src/lib/hooks/usePlannerView";
 import { ElephantLogo } from "./ElephantLogo";
 import {
   Tag,
@@ -27,7 +30,13 @@ import {
   Calendar,
   BarChart3,
   TreePine,
-  History
+  History,
+  Brain,
+  Home,
+  Book,
+  Users,
+  Navigation,
+  Siren
 } from "lucide-react";
 import { List, Label, Task, SavedFilter, ActivityLog } from "@/types";
 import { computeTodaySummary } from "@/src/lib/todaySummary";
@@ -36,8 +45,8 @@ import { moodFromStreak } from "@/src/components/ElephantLogo";
 import { isActiveStatus, isArchivedStatus, isCompletedStatus } from "@/src/lib/status";
 
 interface SidebarProps {
-  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history";
-  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history") => void;
+  currentView: ViewName;
+  setView: (view: ViewName) => void;
   setThemeModeWith?: (mode: "light" | "dark" | "system" | "adaptive") => void;
   dueDateScope: null | "today" | "week" | "overdue";
   setDueDateScope: (s: null | "today" | "week" | "overdue") => void;
@@ -367,6 +376,104 @@ function Sidebar({
           >
             <History size={18} className="shrink-0" />
             <span>Task History</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("assistant"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "assistant" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "assistant" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Brain size={18} className="shrink-0" />
+            <span>AI Assistant</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("palace"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "palace" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "palace" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Home size={18} className="shrink-0" />
+            <span>Memory Palace</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("ivory"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "ivory" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "ivory" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Book size={18} className="shrink-0" />
+            <span>Ivory Tower</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("herd"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "herd" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "herd" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Users size={18} className="shrink-0" />
+            <span>Herd Teams</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("sleep"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "sleep" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "sleep" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Moon size={18} className="shrink-0" />
+            <span>Sleep Integration</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("migration"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "migration" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "migration" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Navigation size={18} className="shrink-0" />
+            <span>Migration Map</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("stampede"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "stampede" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "stampede" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <Siren size={18} className="shrink-0" />
+            <span>Stampede Alert</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
         </nav>
