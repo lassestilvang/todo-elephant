@@ -24,7 +24,10 @@ import {
   GitBranch,
   Trophy,
   Medal,
-  Calendar
+  Calendar,
+  BarChart3,
+  TreePine,
+  History
 } from "lucide-react";
 import { List, Label, Task, SavedFilter, ActivityLog } from "@/types";
 import { computeTodaySummary } from "@/src/lib/todaySummary";
@@ -33,8 +36,8 @@ import { moodFromStreak } from "@/src/components/ElephantLogo";
 import { isActiveStatus, isArchivedStatus, isCompletedStatus } from "@/src/lib/status";
 
 interface SidebarProps {
-  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits";
-  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits") => void;
+  currentView: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history";
+  setView: (view: "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history") => void;
   setThemeModeWith?: (mode: "light" | "dark" | "system" | "adaptive") => void;
   dueDateScope: null | "today" | "week" | "overdue";
   setDueDateScope: (s: null | "today" | "week" | "overdue") => void;
@@ -322,6 +325,48 @@ function Sidebar({
           >
             <Flame size={18} className="shrink-0" />
             <span>Habits</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("analytics"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "analytics" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "analytics" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <BarChart3 size={18} className="shrink-0" />
+            <span>Analytics</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("forest"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "forest" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "forest" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <TreePine size={18} className="shrink-0" />
+            <span>Pomodoro Forest</span>
+            <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setView("history"); setSelectedListId(null); setSelectedLabelId(null); }}
+            aria-current={currentView === "history" && !selectedListId && !selectedLabelId ? "page" : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
+              currentView === "history" && !selectedListId && !selectedLabelId
+                ? "bg-accent/10 text-accent font-semibold shadow-inner"
+                : "text-muted hover:bg-muted/10 hover:text-foreground"
+            }`}
+          >
+            <History size={18} className="shrink-0" />
+            <span>Task History</span>
             <ChevronRight size={14} className="ml-auto opacity-40 shrink-0" />
           </button>
         </nav>
