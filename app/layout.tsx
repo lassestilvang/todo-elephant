@@ -56,7 +56,27 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <WeatherBackground />
+        {children}
+      </body>
     </html>
+  );
+}
+
+function WeatherBackground() {
+  // Simple weather that just shows background based on time of day
+  const now = new Date();
+  const hour = now.getHours();
+  const isDaytime = hour >= 6 && hour < 18;
+
+  return (
+    <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+      <div className={`absolute inset-0 bg-gradient-to-b transition-all duration-1000 ${
+        isDaytime
+          ? "from-sky-200 via-blue-100 to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-950"
+          : "from-indigo-900 via-purple-900 to-slate-900"
+      }`} />
+    </div>
   );
 }
