@@ -32,8 +32,11 @@ const DependencyGraphView = dynamic(() => import("@/src/components/DependencyGra
 const GamificationView = dynamic(() => import("@/src/components/GamificationView"));
 const TimeMachineView = dynamic(() => import("@/src/components/TimeMachineView"));
 const HabitView = dynamic(() => import("@/src/components/HabitView"));
+const AnalyticsView = dynamic(() => import("@/src/components/AnalyticsView"));
+const PomodoroForest = dynamic(() => import("@/src/components/PomodoroForest"));
+const TaskHistoryView = dynamic(() => import("@/src/components/TaskHistoryView"));
 
-type ViewName = "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits";
+import { ViewName } from "@/src/lib/hooks/usePlannerView";
 
 export default function Home() {
   const {
@@ -343,7 +346,9 @@ export default function Home() {
                 <DashboardView
                 tasks={filteredTasks}
                 lists={lists}
+                labels={labels}
                 activityLogs={activityLogs}
+                focusSessions={focusSessions}
                 onAddTaskClick={openCreateModal}
                 onTaskClick={handleTaskClick}
                 onQuickAdd={handleQuickAdd}
@@ -352,7 +357,7 @@ export default function Home() {
                 onFocusTask={openFocusMode}
               />
               </ErrorBoundary>
-            
+
             )}
 
             {currentView === "kanban" && (
@@ -499,6 +504,41 @@ export default function Home() {
                 onGoHome={() => transitionView("dashboard")}
               >
                 <HabitView tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "analytics" && (
+              <ErrorBoundary
+                label="Analytics"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <AnalyticsView
+                  tasks={tasks}
+                  lists={lists}
+                  labels={labels}
+                  focusSessions={focusSessions}
+                />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "forest" && (
+              <ErrorBoundary
+                label="Pomodoro Forest"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <PomodoroForest tasks={tasks} />
+              </ErrorBoundary>
+
+            )}
+
+            {currentView === "history" && (
+              <ErrorBoundary
+                label="Task History"
+                onGoHome={() => transitionView("dashboard")}
+              >
+                <TaskHistoryView tasks={tasks} />
               </ErrorBoundary>
 
             )}
