@@ -136,7 +136,7 @@ export function analyzeProductivityDNA(tasks: Task[], focusSessions: FocusSessio
 
   return {
     peakHours,
-    averageTaskTime,
+    averageTaskTime: avgTaskTime,
     preferredWorkPatterns: patterns,
     workStyle,
   };
@@ -182,9 +182,9 @@ export function calculateTimeInvestment(tasks: Task[], focusSessions: FocusSessi
   // By label (requires tasks to have labels)
   const byLabel: Record<string, number> = {};
   tasks.forEach(task => {
-    if (task.labels && task.completedPomodoros) {
+    if (task.labels && task.completedPomodoros !== undefined) {
       task.labels.forEach(labelId => {
-        byLabel[`label-${labelId}`] = (byLabel[`label-${labelId}`] ?? 0) + task.completedPomodoros * 25;
+        byLabel[`label-${labelId}`] = (byLabel[`label-${labelId}`] ?? 0) + (task.completedPomodoros ?? 0) * 25;
       });
     }
   });
