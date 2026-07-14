@@ -1,0 +1,19 @@
+$primary: #1E90FF;
+$secondary: #4A90E2;
+$success: #2ECC71;
+$error: #E53935;
+$warning: #F39C12;
+$info: #6E8EF0;
+$dark: rgba(27, 32, 38, 0.8);
+$light: rgba(255, 255, 255, 0.9);
+
+$font-stack: 'Inter', sans-serif;
+$transition: all 300ms cubic-bezier(.4, 0, .2, 1);
+$border-radius: 0.5rem;
+$spacing: (
+  xs: 0.25rem,
+  sm: 0.5rem,
+  md: 1rem,
+  lg: 1.5rem,
+  xl: 2rem
+);
