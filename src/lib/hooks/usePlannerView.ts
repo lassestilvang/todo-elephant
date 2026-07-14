@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { SavedFilter } from "@/types";
 
-export type ViewName = "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history";
+export type ViewName = "dashboard" | "kanban" | "list" | "eisenhower" | "calendar" | "stats" | "dependencies" | "gamification" | "timemachine" | "habits" | "analytics" | "forest" | "history" | "assistant" | "palace" | "ivory" | "herd" | "sleep" | "migration" | "stampede";
 
 /**
  * View + sidebar-selection state. Includes the transitionView wrapper that
