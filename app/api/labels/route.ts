@@ -1,39 +1,82 @@
-import { NextRequest, NextResponse } from "next/server";
-import { readDB, mutateDB, logActivity, nextLabelId } from "@/app/lib/db";
-import { Label } from "@/types";
+import { NextRequest, NextResponse } from 'next/server';
+import { LabelModel } from '@/models/label.model';
+import { dbConnect } from '@/lib/db';
+import { verifyToken } from '@/lib/auth';
 
-export async function GET() {
+// GET /api/labels - List all labels
+export async function GET(request: NextRequest) {
   try {
-    const db = await readDB();
-    return NextResponse.json(db.labels);
+    await dbConnect();
+
+    // Check authentication
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const labels = await LabelModel.find({ status: 'active' })
+      .sort({ order: 1 })
+      .lean();
+
+    return NextResponse.json(labels);
   } catch (error) {
-    console.error("GET /api/labels error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error('GET /api/labels error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+// POST /api/labels - Create new label
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    if (!body?.name) {
-      return NextResponse.json({ error: "Label name is required" }, { status: 400 });
+    await dbConnect();
+
+    // Check authentication
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const label = await mutateDB<Label>((db) => {
-      const name = String(body.name).trim();
-      const existing = db.labels.find((l) => l.name.toLowerCase() === name.toLowerCase());
-      if (existing) return existing;
-      const newLabel: Label = {
-        id: nextLabelId(db),
-        name,
-        color: body.color || "#64748b",
-      };
-      db.labels.push(newLabel);
-      return newLabel;
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    if (!body?.name) {
+      return NextResponse.json({ error: 'Label name is required' }, { status: 400 });
+    }
+
+    // Check if label with same name exists
+    const existing = await LabelModel.findOne({ name: body.name.trim() });
+    if (existing) {
+      return NextResponse.json(existing);
+    }
+
+    // Get max order for new label
+    const count = await LabelModel.countDocuments();
+
+    const label = new LabelModel({
+      name: body.name.trim(),
+      description: body.description,
+      color: body.color || '#64748b',
+      order: count
     });
-    if (label) await logActivity(`Created tag "${label.name}"`, "label", label.id);
-    return NextResponse.json(label, { status: 201 });
+
+    const savedLabel = await label.save();
+
+    return NextResponse.json(savedLabel, { status: 201 });
   } catch (error) {
-    console.error("POST /api/labels error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error('POST /api/labels error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
