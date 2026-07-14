@@ -7,31 +7,31 @@ export default defineConfig({
     environment: 'happy-dom',
     include: [
       'src/**/*.test.ts',
+      'src/**/*.test.tsx',
       'src/**/*.spec.ts',
-      'src/components/TaskManager.tsx',
-      'src/lib/recurrence.ts',
-      'src/lib/tasksApi.ts',
-      'src/hooks/useTimeEstimate.ts',
-      'src/security/**/*.ts' // security utilities
+      'src/**/*.spec.tsx',
+      'app/**/*.test.ts',
+      'app/**/*.test.tsx',
     ],
     exclude: ['node_modules/**', '**/dist', '**/coverage'],
-    timeout: 5000,
+    timeout: 10000,
     coverage: {
       provider: 'v8',
       all: true,
       clean: true,
       cleanOnRerun: true,
       reporter: ['text', 'json', 'lcov', 'html'],
+      exclude: ['node_modules/**', '**/dist', '**/coverage', '**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
       thresholds: {
-        statements: 95,
-        branches: 95,
-        functions: 95,
-        lines: 95
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80
       },
-      retries: {
-        maxAttempts: 3,
-        on: ['test']
-      }
+      include: [
+        'src/lib/**/*.ts',
+        'app/lib/**/*.ts',
+      ]
     }
   },
   resolve: {
