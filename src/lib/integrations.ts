@@ -101,3 +101,66 @@ Priority: {priority}
 
 ---
 This email will be converted to a task in Todo Elephant.`;
+
+// Webhook security configuration
+export interface WebhookSecurityConfig {
+  secret: string;
+  ipWhitelist: string[];
+  rateLimit: {
+    maxRequests: number;
+    windowMs: number;
+  };
+  allowedEventTypes: string[];
+}
+
+// Webhook verification functions
+const crypto = require('crypto');
+
+function createHash(data: string, key: string): string {
+  return crypto.createHmac('sha256', key).update(data).digest('hex');
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+  const expected = createHash(payload, secret);
+  return timingSafeEqual(signature, expected);
+}
+
+function validateEventType(type: string): boolean {
+  const allowed = ['EVENT', 'UPDATE', 'DELETE', 'TEAM_ACCESS', 'PROJECT_UPDATE'];
+  return allowed.includes(type.toUpperCase());
+}
+
+function rateLimitWebhookRequests(ip: string): boolean {
+  const cache = global.webhookRateCache || (global.webhookRateCache = {});
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes
+  const limit = 100;
+
+  if (!cache[ip]) {
+    cache[ip] = { count: 1, resetTime: now + windowMs };
+  } else {
+    const record = cache[ip];
+    if (now > record.resetTime) {
+      count = 1;
+      resetTime = now + windowMs;
+    } else {
+      count++;
+    }
+    cache[ip] = { count, resetTime };
+  }
+
+  if (cache[ip].count > limit) {
+    return false;
+  }
+
+  return true;
+}
