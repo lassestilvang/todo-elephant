@@ -1,117 +1,68 @@
 // Elephant Security Middleware
 // Implements authentication, rate limiting, and security headers
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { validateToken } from '../api/utils/auth.utils';
-
-// Rate limiting storage (in-memory, for demonstration)
-const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS = 100;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const record = ipRequestCounts.get(ip);
-
-  if (!record) {
-    ipRequestCounts.set(ip, { count: 1, resetTime: now + WINDOW_MS });
-    return false;
-  }
-
-  if (now > record.resetTime) {
-    // Reset window
-    ipRequestCounts.set(ip, { count: 1, resetTime: now + WINDOW_MS });
-    return false;
-  }
-
-  if (record.count >= MAX_REQUESTS) {
-    return true;
-  }
-
-  record.count++;
-  return false;
-}
+import { NextResponse, NextRequest } from 'next/server';
+import { validateToken, rateLimitWebhookRequests, timingSafeEqual } from '@/api/utils/auth.utils';
 
 export async function middleware(req: NextRequest) {
-  // Get path for validation
+  const response = NextResponse.next();
+
+  // ---------- Security Headers ----------
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
+  );
+
+  // ---------- Rate Limiting (global) ----------
+  // Exclude static assets and nextjs internals from rate limiting if desired
   const path = req.nextUrl.pathname;
-
-  // Public paths that don't require auth
-  const publicPaths = [
-    '/api/auth/login',
-    '/api/auth/register',
-    '/api/health',
-    '/_next/static/',
-    '/_next/image/'
-  ];
-
-  // Check if path is public
-  const isPublicPath = publicPaths.some(publicPath => path.startsWith(publicPath));
-
-  // Apply rate limiting
-  if (!isPublicPath) {
-    const forwarded = req.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0].trim() :
-               req.socket.remoteAddress || 'unknown';
-
-    if (isRateLimited(ip)) {
+  if (!path.startsWith('/_next/') && !path.startsWith('/api/')) {
+    // Apply rate limiting to all other routes (including pages)
+    const ip = req.headers.get('x-forwarded-for') ?? req.socket.remoteAddress ?? 'unknown';
+    const rateConfig = { maxRequests: 100, windowMs: 15 * 60 * 1000 }; // 100 requests per 15 minutes
+    if (!rateLimitWebhookRequests(ip, rateConfig)) {
       return new NextResponse(
-        JSON.stringify({ error: 'Too many requests, please try again later' }),
+        JSON.stringify({ error: 'Rate limit exceeded' }),
         {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'X-RateLimit-Limit': String(MAX_REQUESTS),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Math.floor((ipRequestCounts.get(ip)?.resetTime || 0) / 1000))
+            'Retry-After': '60'
           }
         }
       );
     }
   }
 
-  // API routes that require authentication
-  if (path.startsWith('/api/elephant') && !isPublicPath) {
+  // ---------- Authentication for protected API routes ----------
+  if (path.startsWith('/api/elephant/')) {
     const authHeader = req.headers.get('authorization');
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse(
         JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = validateToken(req); // Using our utility
-
+    const decoded = validateToken(req); // returns payload or null
     if (!decoded) {
       return new NextResponse(
         JSON.stringify({ error: 'Invalid or expired token' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Store decoded token payload on request for downstream handlers
+    // Attach user info to request for downstream handlers
     (req as any).userId = decoded.sub;
     (req as any).userEmail = decoded.email;
     (req as any).userRole = decoded.role;
   }
 
-  // Apply security headers
-  const response = NextResponse.next();
-
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';");
-
-  return
+  return response;
+}
