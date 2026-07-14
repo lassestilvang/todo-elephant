@@ -1,0 +1,71 @@
+// Extend existing API routes - node/routes/elephant.js
+app.post('/api/elephant/prioritize', authMiddleware, async (req, res) => {
+  const { tasks } = req.body;
+
+  // Deep copy to avoid mutating original tasks
+  const taskIds = [...tasks].map((t: Task) => t.id);
+
+  try {
+    // Get dependency graph from existing system
+    const dependencies = await fetchDependencyGraph(taskIds);
+
+    // Run temporal analysis (when tasks should be done)
+    const temporalWeights = {};
+    tasks.forEach(task => {
+      if (task.dueDate) {
+        const due = new Date(task.dueDate);
+        const now = new Date();
+        const hoursFromNow = (due.getTime() - now.getTime()) / (1000 * 60 * 64.26); // Approx hours
+        temporalWeights[task.id] = Math.max(0, Math.log(1 + hoursFromNow / 24)); // Higher when closer to due
+      }
+    });
+
+    // Calculate priority scores (combine temporal + dependencies)
+    const scores = {};
+    taskIds.forEach(taskId => {
+      // Temporal weight (urgency)
+      const temporalWeight = temporalWeights[taskId] || 0;
+
+      // Dependency weight (how many tasks depend on it + its own dependencies)
+      const dependencies = getAllDependencies(taskId);
+      const dependencyWeight = dependencies.length + 1;
+
+      // Final score: blend temporal + dependency importance
+      const priorityScore =
+        (temporalWeight * 0.3) +
+        (dependencyWeight * 0.7);
+
+      scores[taskId] = priorityScore;
+    });
+
+    // Sort tasks by priority score (high to low)
+    const prioritized = [...taskIds].sort((a, b) => scores[b] - scores[a]);
+
+    // Generate prioritized tasks with scores
+    const prioritizedTasks = taskIds.map(id => {
+      const task = tasks.find(t => t.id === id);
+      return {
+        ...task,
+        _priorityScore: scores[id],
+        priority: scores[id] > 0.7 ? 'high' : scores[id] > 0.3 ? 'medium' : 'low'
+      };
+    }) || [];
+
+    res.json({ prioritizedTasks: prioritized });
+
+  } catch (err) {
+    console.error('Priority planning failed:', err);
+    res.status(500).json({ prioritizedTasks: tasks });
+  }
+});
+
+// Helper functions (add to same file or separate utils)
+function fetchDependencyGraph(taskIds: string[]) {
+  // In real implementation: query db for dependencies
+  return Promise.resolve({});
+}
+
+function getAllDependencies(taskId: string) {
+  // In real implementation: get transitive dependencies
+  return [];
+}
