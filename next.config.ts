@@ -29,18 +29,45 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "geolocation=(), microphone=(), camera=()" },
+        ],
+      },
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript" },
+          { key: "Cache-Control", value: "no-store" },
         ],
       },
       {
         source: "/manifest.json",
         headers: [
           { key: "Content-Type", value: "application/manifest+json" },
+          { key: "Cache-Control", value: "public, max-age=31536000" },
         ],
+      },
+      {
+        source: "/offline.html",
+        headers: [
+          { key: "Content-Type", value: "text/html" },
+          { key: "Cache-Control", value: "public, max-age=31536000" },
+        ],
+      },
+    ];
+  },
+
+  // PWA Configuration
+  async rewrites() {
+    return [
+      {
+        source: "/sw.js",
+        destination: "/sw.js",
       },
     ];
   },
@@ -59,6 +86,17 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
+  },
+
+  // Bundle analyzer (optional)
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
   },
 };
 
