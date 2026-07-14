@@ -10,15 +10,15 @@ const logger = createLogger({
   ),
   transports: [
     new transports.Console({
-      fmt: format.combine(
+      format: format.combine(
         format.colorize(),
         format.timestamp({
           format: 'HH:mm:ss'
         }),
         format.printf(info => `${info.timestamp} [${info.level}] ${info.message}`)
-      )),
-    ]
-  })
+      )
+    })
+  ]
 });
 
 // Add file logging for production
