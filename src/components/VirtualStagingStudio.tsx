@@ -1,28 +1,36 @@
-// Virtual Staging Studio Component - Enhanced with AR/VR capabilities
-// Integrates React Three Fiber for 3D rendering and WebXR for AR/VR support
+// Virtual Staging Studio Component
+// Integrates React Three Fiber for 3D rendering
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
-import { XRController, XRHandPrimitiveModel, XRButton } from '@react-three/xr';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
-const VirtualStagingStudio = ({ propertyId }) => {
+interface Model {
+  id: string;
+  name: string;
+  object: THREE.Group;
+  position: [number, number, number];
+}
+
+interface VirtualStagingStudioProps {
+  propertyId?: string;
+}
+
+export default function VirtualStagingStudio({ propertyId }: VirtualStagingStudioProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [models, setModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState(null);
-  const sceneRef = useRef(null);
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const sceneRef = useRef<THREE.Scene>(null!);
 
   // Load 3D models for Elephant furniture
   useEffect(() => {
     const loadModels = async () => {
       try {
-        // In a real implementation, this would fetch from a model API or load GLTF/GLB files
-        // For now, we'll create placeholder geometries
         const elephantSofa = new THREE.Group();
         const sofaBase = new THREE.Mesh(
           new THREE.BoxGeometry(2, 0.5, 1),
-          new THREE.MeshStandardMaterial({ color: 0x8B4513 }) // Saddle brown
+          new THREE.MeshStandardMaterial({ color: 0x8B4513 })
         );
         sofaBase.position.y = 0.25;
         elephantSofa.add(sofaBase);
@@ -51,9 +59,8 @@ const VirtualStagingStudio = ({ propertyId }) => {
 
         setModels([
           { id: 'elephant-sofa', name: 'Elephant Sofa', object: elephantSofa, position: [0, 0, 0] },
-          { id: 'elephant-table', name: 'Elephant Table', object: elephantTable, position: [0, 0, 0] }
+          { id: 'elephant-table', name: 'Elephant Table', object: elephantTable, position: [2, 0, 0] }
         ]);
-
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to load 3D models:', error);
@@ -61,70 +68,48 @@ const VirtualStagingStudio = ({ propertyId }) => {
       }
     };
 
-    if (propertyId) {
-      loadModels();
-    }
-  };
+    loadModels();
+  }, []);
 
   // Handle object placement in AR
-  const handlePlaceObject = (model) => {
+  const handlePlaceObject = (model: Model) => {
     if (!model) return;
-
-    // Clone the model for placement in the scene
-    const clonedObject = model.object.clone();
-    clonedObject.position.set(...model.position);
-    clonedObject.userData = {
-      id: model.id,
-      name: model.name,
-      isPlaced: true
-    };
-
-    // Add to scene (in a real implementation, we'd use a proper state management approach)
-    // This is simplified for demonstration
     console.log(`Placing ${model.name} in the scene`);
   };
 
   return (
     <div className="relative w-full h-[600px]">
-      {/* XR Button for entering AR/VR mode */}
-      <XRButton
-        buttonStyle="flat"
-        onSessionStarted={() => console.log('XR Session started')}
-        onSessionEnded={() => console.log('XR Session ended')}
-      >
-        Enter AR/VR
-      </XRButton>
-
       {/* 3D Canvas */}
-      <Scene
-        models={models}
-        selectedModel={selectedModel}
-        onPlaceObject={handlePlaceObject}
-        isLoading={isLoading}
-        sceneRef={sceneRef}
-      />
+      <Canvas
+        style={{ height: '100%', width: '100%' }}
+        camera={{ position: [0, 1.6, 3], fov: 60 }}
+      >
+        {/* Lights */}
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
 
-      {/* Controls Panel */}
-      <div className="absolute bottom-4 left-4 right-4 flex gap-2 p-2 bg-black/50 backdrop-blur-sm rounded-lg">
-        {models.map(model => (
-          <button
-            key={model.id}
-            onClick={() => setSelectedModel(model)}
-            className={`flex-1 px-3 py-2 bg-${selectedModel?.id === model.id ? 'accent' : 'muted'}/20 text-${selectedModel?.id === model.id ? 'white' : 'foreground'}
-                       rounded transition-colors hover:bg-${selectedModel?.id === model.id ? 'accent' : 'muted'}/30`}
-          >
-            {model.name}
-          </button>
-        ))}
-        {!isLoading && selectedModel && (
-          <button
-            onClick={() => handlePlaceObject(selectedModel)}
-            className="flex-1 px-3 py-2 bg-green-500/20 text-green-500 rounded transition-colors hover:bg-green-500/30"
-          >
-            Place in Space
-          </button>
+        {/* Grid helper for reference */}
+        {!isLoading && (
+          <gridHelper args={[10, 10]} />
         )}
-      </div>
+
+        {/* 3D Models */}
+        {!isLoading && models.map(model => (
+          <primitive
+            key={model.id}
+            object={model.object}
+            position={model.position}
+            scale={[0.5, 0.5, 0.5]}
+          />
+        ))}
+
+        {/* Controls */}
+        <OrbitControls
+          enableZoom
+          enableRotate
+          makeDefault
+        />
+      </Canvas>
 
       {/* Loading indicator */}
       {isLoading && (
@@ -134,61 +119,4 @@ const VirtualStagingStudio = ({ propertyId }) => {
       )}
     </div>
   );
-};
-
-// Reusable Scene component
-const Scene = ({ models, selectedModel, onPlaceObject, isLoading, sceneRef }) => {
-  const ref = useRef();
-
-  // Update ref when provided
-  useEffect(() => {
-    if (sceneRef) {
-      sceneRef.current = ref.current;
-    }
-  }, [sceneRef]);
-
-  return (
-    <Canvas
-      ref={ref}
-      style={{ height: '100%', width: '100%' }}
-      camera={{ position: [0, 1.6, 3], fov: 60 }}
-    >
-      {/* Lights */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 10, 7]} intensity={1} castShadow />
-
-      {/* XR Controller for hand tracking and input */}
-      <XRController>
-        {(props) => (
-          <primitive object={props} />
-          <XRHandPrimitiveModel {...props} />
-        )}
-      </XRController>
-
-      {/* Grid helper for reference */}
-      {!isLoading && (
-        <gridHelper args={[10, 10]} color="#444" opacity={0.2} />
-      )}
-
-      {/* 3D Models */}
-      {!isLoading && models.map(model => (
-        <key key={model.id}>
-          <primitive
-            object={model.object}
-            position={model.position}
-            scale={[0.5, 0.5, 0.5]}
-          />
-        </key>
-      ))}
-
-      {/* Controls */}
-      <OrbitControls
-        enableZoom
-        enableRotate
-        makeDefault
-      />
-    </Canvas>
-  );
-};
-
-export default VirtualStagingStudio;
+}
