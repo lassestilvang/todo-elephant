@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Task } from "@/types";
+import { aiAssistant } from "@/lib/ai/assistant";
 
 interface VoiceCommand {
   command: string;
@@ -14,8 +15,12 @@ interface VoiceCommandResult {
   isListening: boolean;
   transcript: string;
   error: string | null;
+  confidence: number;
+  isSupported: boolean;
   startListening: () => void;
   stopListening: () => void;
+  toggleListening: () => void;
+  clearTranscript: () => void;
   commands: VoiceCommand[];
 }
 
@@ -27,30 +32,42 @@ export function useVoiceCommands(
   tasks: Task[],
   onAddTask: (title: string, status: string) => void,
   onCompleteTask: (id: number) => void,
-  onDeleteTask: (id: number) => void
+  onDeleteTask: (id: number) => void,
+  onNavigate?: (view: string) => void
 ): VoiceCommandResult {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [confidence, setConfidence] = useState(0);
+  const [isSupported, setIsSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
+    // Check if supported
+    setIsSupported(isSpeechRecognitionSupported);
+
     if (!isSpeechRecognitionSupported) return;
 
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recog = new SpeechRecognition();
+    if (!SpeechRecognition) return;
 
+    const recog = new SpeechRecognition();
     recog.continuous = true;
     recog.interimResults = true;
     recog.lang = "en-US";
+    recog.maxAlternatives = 5;
 
     recog.onresult = (event: any) => {
       const result = event.results[event.resultIndex];
-      const text = result[0].transcript.toLowerCase();
-      setTranscript(text);
+      const transcript = result[0].transcript;
+      const conf = result[0].confidence;
 
-      // Process commands
-      processCommand(text);
+      setTranscript(transcript.toLowerCase());
+      setConfidence(conf);
+
+      if (result.isFinal) {
+        processCommand(transcript.toLowerCase());
+      }
     };
 
     recog.onerror = (event: any) => {
@@ -58,63 +75,119 @@ export function useVoiceCommands(
       setIsListening(false);
     };
 
-    setRecognition(recog);
+    recog.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recog;
   }, [tasks, onAddTask, onCompleteTask, onDeleteTask]);
 
-  const processCommand = useCallback((text: string) => {
-    // Task creation patterns
-    const createMatch = text.match(/add (task|to do|todo) (?:called? ?)?["']?([^"']+)["']?/i);
-    if (createMatch) {
-      onAddTask(createMatch[2], "pending");
-      setTranscript("");
-      return;
-    }
-
-    // "Remind me tomorrow" pattern
-    const remindMatch = text.match(/remind me (?:tomorrow|next week)/i);
-    if (remindMatch) {
-      const days = remindMatch[0].includes("tomorrow") ? 1 : 7;
-      // This would integrate with task due date setting
-      setTranscript("");
-      return;
-    }
-
-    // "Show me [view]" pattern
-    const viewMatch = text.match(/show (?:me )?(dashboard|kanban|list|calendar)/i);
-    if (viewMatch) {
-      // Would integrate with view navigation
-      setTranscript("");
-      return;
-    }
-
-    // "What's my biggest priority" pattern
-    const priorityMatch = /what's my biggest priority|what is my biggest priority/i.test(text);
-    if (priorityMatch) {
-      const highPriority = tasks.find(t => t.priority === "high");
-      if (highPriority) {
-        setTranscript(`Your biggest priority is: ${highPriority.title}`);
+  // Process voice commands
+  const processCommand = useCallback(async (text: string) => {
+    try {
+      // Task creation patterns
+      const createMatch = text.match(/add (?:task|to do|todo) (?:called? ?)?["']?([^"']+)["']?/i);
+      if (createMatch) {
+        onAddTask(createMatch[1].trim(), "pending");
+        setTranscript("");
+        return;
       }
-      return;
+
+      // Quick add (just a title)
+      if (text.length > 3 && !text.includes('add') && !text.includes('show') && !text.includes('what')) {
+        // Use AI assistant to parse
+        const result = await aiAssistant.processNaturalLanguage(text);
+        onAddTask(result.title, "pending");
+        setTranscript("");
+        return;
+      }
+
+      // "Remind me tomorrow" pattern
+      const remindMatch = text.match(/remind me (?:tomorrow|next week)/i);
+      if (remindMatch) {
+        setTranscript("");
+        return;
+      }
+
+      // "Show me [view]" pattern
+      if (onNavigate) {
+        const viewMatch = text.match(/show (?:me )?(dashboard|kanban|list|calendar|stats|forest|habit|history)/i);
+        if (viewMatch) {
+          onNavigate(viewMatch[1]);
+          setTranscript("");
+          return;
+        }
+      }
+
+      // "What's my biggest priority" pattern
+      const priorityMatch = /what's my biggest priority|what is my biggest priority/i.test(text);
+      if (priorityMatch) {
+        const highPriority = tasks.find(t => t.priority === "high");
+        if (highPriority) {
+          setTranscript(`Your biggest priority is: ${highPriority.title}`);
+        }
+        return;
+      }
+
+      // "What did I complete today" pattern
+      const completedMatch = /what did i (complete|finish|accomplish)/i.test(text);
+      if (completedMatch) {
+        const todayCompleted = tasks.filter(t =>
+          t.status === "completed" || t.status === "done" || t.status === "done"
+        );
+        if (todayCompleted.length > 0) {
+          setTranscript(`You completed ${todayCompleted.length} task${todayCompleted.length > 1 ? 's' : ''} today`);
+        }
+        return;
+      }
+
+      // Help command
+      const helpMatch = /help|what can i (say|do)/i.test(text);
+      if (helpMatch) {
+        setTranscript("Todo Elephant Voice Commands: 'Add task [title]', 'Show dashboard', 'Show kanban', 'Show calendar', 'What's my priority', 'Help'");
+        return;
+      }
+
+    } catch (error) {
+      console.error("Voice command error:", error);
     }
-  }, [tasks, onAddTask]);
+  }, [tasks, onAddTask, onNavigate]);
 
   const startListening = useCallback(() => {
-    if (!recognition) {
+    if (!recognitionRef.current) {
       setError("Voice recognition not supported in this browser");
       return;
     }
     setError(null);
     setTranscript("");
-    recognition.start();
-    setIsListening(true);
-  }, [recognition]);
+    setConfidence(0);
+    try {
+      recognitionRef.current.start();
+      setIsListening(true);
+    } catch (err) {
+      setError("Failed to start voice recognition");
+    }
+  }, []);
 
   const stopListening = useCallback(() => {
-    if (recognition) {
-      recognition.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
     }
     setIsListening(false);
-  }, [recognition]);
+  }, []);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+
+  const clearTranscript = useCallback(() => {
+    setTranscript("");
+    setConfidence(0);
+  }, []);
 
   const commands: VoiceCommand[] = [
     {
@@ -138,7 +211,7 @@ export function useVoiceCommands(
     {
       command: "show me [view]",
       pattern: /show me (dashboard|kanban|list|calendar)/i,
-      action: async () => {},
+      action: async (match) => onNavigate?.(match[1]),
       description: "Navigate to a view",
     },
   ];
@@ -147,8 +220,12 @@ export function useVoiceCommands(
     isListening,
     transcript,
     error,
+    confidence,
+    isSupported,
     startListening,
     stopListening,
+    toggleListening,
+    clearTranscript,
     commands,
   };
 }
