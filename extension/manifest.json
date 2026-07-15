@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Todo Elephant - Capture Tasks",
+  "description": "Capture tasks from any webpage and add them to Todo Elephant",
+  "version": "1.0.0",
+  "icons": {
+    "16": "../public/icon-192.png",
+    "48": "../public/icon-512.png",
+    "128": "../public/icon-512.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "../public/icon-192.png",
+      "48": "../public/icon-512.png",
+      "128": "../public/icon-512.png"
+    },
+    "default_title": "Todo Elephant"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html"
+}
