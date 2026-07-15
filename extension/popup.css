@@ -1,0 +1,156 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  width: 320px;
+}
+
+.container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.input-section textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.input-section textarea::placeholder {
+  color: #64748b;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.primary-btn, .secondary-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.primary-btn {
+  background: #22c55e;
+}
+
+.primary-btn:hover {
+  background: #16a34a;
+}
+
+.secondary-btn {
+  background: #334155;
+  color: #ffffff;
+}
+
+.secondary-btn:hover {
+  background: #475569;
+}
+
+.options-section {
+  margin-top: 12px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: #1e293b;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.checkbox-container input {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-container .checkmark {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #64748b;
+  border-radius: 4px;
+  position: relative;
+  display: inline-block;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.checkbox-container input:checked ~ .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.footer {
+  margin-top: 16px;
+}
+
+#open-app {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+#open-app:hover {
+  background: #2563eb;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+}
