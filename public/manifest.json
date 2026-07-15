@@ -1,13 +1,20 @@
 {
-  "name": "Todo Elephant",
+  "name": "Todo Elephant - Daily Task Planner",
   "short_name": "TodoElephant",
-  "description": "A premium task planner with AI scheduling and analytics",
+  "description": "Your premium task planner with elephant-themed features, AI assistance, and offline support",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
+  "theme_color": "#22c55e",
   "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities"],
+  "lang": "en-US",
   "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
