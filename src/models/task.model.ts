@@ -1,34 +1,49 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'completed';
+export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'completed' | 'archived';
 
-export interface Task {
-  _id?: string;
+export interface ITask extends Document {
   title: string;
   description?: string;
   status: TaskStatus;
-  priority?: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high';
   listId?: string;
-  labelId?: string;
+  labelIds?: string[];
+  dueDate?: Date;
   assignedTo?: string;
-  dueDate?: string | null;
+  dependsOnTaskId?: string;
+  isImportant?: boolean;
+  isUrgent?: boolean;
+  recurrence?: string;
+  completedPomodoros?: number;
+  parentRecurrenceId?: string;
+  order?: number;
+  archivedAt?: Date;
+  isTemplate?: boolean;
+  subtasks?: ISubtask[];
   createdAt: Date;
   updatedAt: Date;
-  comments?: Comment[];
+  completedAt?: Date;
 }
 
-export interface Comment {
-  author: string;
-  content: string;
-  createdAt: Date;
+export interface ISubtask {
+  id: string;
+  title: string;
+  completed: boolean;
 }
 
-export const TaskSchema = new mongoose.Schema({
+const SubtaskSchema = new Schema<ISubtask>({
+  id: { type: String, required: true },
   title: { type: String, required: true },
-  description: { type: String },
+  completed: { type: Boolean, default: false }
+});
+
+const TaskSchema = new Schema<ITask>({
+  title: { type: String, required: true, trim: true },
+  description: { type: String, trim: true },
   status: {
     type: String,
-    enum: ['todo', 'in_progress', 'review', 'completed'],
+    enum: ['todo', 'in_progress', 'review', 'completed', 'archived'],
     default: 'todo'
   },
   priority: {
@@ -37,22 +52,43 @@ export const TaskSchema = new mongoose.Schema({
     default: 'medium'
   },
   listId: { type: String },
-  labelId: { type: String },
+  labelIds: [{ type: String }],
+  dueDate: { type: Date },
   assignedTo: { type: String },
-  dueDate: { type: String },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  comments: [{
-    author: { type: String },
-    content: { type: String },
-    createdAt: { type: Date, default: Date.now }
-  }]
-});
+  dependsOnTaskId: { type: String },
+  isImportant: { type: Boolean, default: false },
+  isUrgent: { type: Boolean, default: false },
+  recurrence: { type: String, default: 'none' },
+  completedPomodoros: { type: Number, default: 0 },
+  parentRecurrenceId: { type: String },
+  order: { type: Number },
+  archivedAt: { type: Date },
+  isTemplate: { type: Boolean, default: false },
+  subtasks: [SubtaskSchema],
+  completedAt: { type: Date }
+}, { timestamps: true });
 
-// Update timestamp on save
+// Indexes for performance
+TaskSchema.index({ status: 1 });
+TaskSchema.index({ priority: 1 });
+TaskSchema.index({ dueDate: 1 });
+TaskSchema.index({ listId: 1 });
+TaskSchema.index({ labelIds: 1 });
+TaskSchema.index({ isTemplate: 1 });
+
+// Update timestamp and completedAt on save
 TaskSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  this.updatedAt = new Date();
+
+  if (this.isModified('status')) {
+    if (this.status === 'completed' || this.status === 'done') {
+      this.completedAt = new Date();
+    } else if (this.status === 'todo') {
+      this.completedAt = undefined;
+    }
+  }
+
   next();
 });
 
-export const TaskModel = mongoose.model('Task', TaskSchema);
+export const TaskModel = mongoose.model<ITask>('Task', TaskSchema);
