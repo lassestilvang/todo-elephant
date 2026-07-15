@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo Elephant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🐘 Todo Elephant</h1>
+      <p class="subtitle">Capture tasks from any page</p>
+    </div>
+
+    <div class="input-section">
+      <textarea id="task-input" placeholder="Enter task description..." rows="3"></textarea>
+      <div class="buttons">
+        <button id="add-task" class="primary-btn">Add Task</button>
+        <button id="quick-add" class="secondary-btn">Quick Add</button>
+      </div>
+    </div>
+
+    <div class="options-section">
+      <label class="checkbox-container">
+        <input type="checkbox" id="auto-detect">
+        <span class="checkmark"></span>
+        Auto-detect text selection
+      </label>
+
+      <label class="checkbox-container">
+        <input type="checkbox" id="sync-default" checked>
+        <span class="checkmark"></span>
+        Sync to Todo Elephant
+      </label>
+    </div>
+
+    <div class="footer">
+      <button id="open-app">Open Todo Elephant</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
