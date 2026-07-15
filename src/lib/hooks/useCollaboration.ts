@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { Task } from "@/types";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Task, List, Label } from "@/types";
 import { toast } from "sonner";
+import { io, Socket } from "socket.io-client";
 
 interface FocusRoom {
   id: string;
@@ -30,16 +31,96 @@ interface SharedTask extends Task {
   lastEditedBy?: { name: string; at: string };
 }
 
+interface CollaborationOptions {
+  workspaceId?: string;
+  onTaskUpdate?: (task: Partial<Task> & { id: number }) => void;
+  onTaskCreate?: (task: Task) => void;
+  onTaskDelete?: (taskId: number) => void;
+}
+
 /**
  * Collaboration features for teams:
+ * - Real-time Socket.IO integration for live updates
  * - Shared focus rooms (real-time focus sessions)
  * - Task handoff between teammates
  * - Review requests
  */
-export function useCollaboration() {
+export function useCollaboration(options?: CollaborationOptions) {
   const [focusRooms, setFocusRooms] = useState<FocusRoom[]>([]);
   const [handoffRequests, setHandoffRequests] = useState<HandoffRequest[]>([]);
   const [isInRoom, setIsInRoom] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) return;
+
+    const socket = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
+      auth: { token: accessToken },
+      query: { workspaceId: options?.workspaceId },
+      transports: ['websocket']
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      setIsConnected(true);
+      console.log('Connected to Socket.IO server');
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+      console.log('Disconnected from Socket.IO server');
+    });
+
+    socket.on('task:updated', (data) => {
+      options?.onTaskUpdate?.(data);
+    });
+
+    socket.on('task:created', (data) => {
+      options?.onTaskCreate?.(data);
+    });
+
+    socket.on('task:deleted', (data) => {
+      options?.onTaskDelete?.(data.taskId);
+    });
+
+    socket.on('user:online', (data) => {
+      setOnlineUsers(prev => [...new Set([...prev, data.userId])]);
+    });
+
+    socket.on('user:offline', (data) => {
+      setOnlineUsers(prev => prev.filter(id => id !== data.userId));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [options?.workspaceId, options?.onTaskUpdate, options?.onTaskCreate, options?.onTaskDelete]);
+
+  // Broadcast task update
+  const broadcastTaskUpdate = useCallback((task: Partial<Task> & { id: number }) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('task:update', task);
+    }
+  }, []);
+
+  // Broadcast task create
+  const broadcastTaskCreate = useCallback((task: Task) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('task:create', task);
+    }
+  }, []);
+
+  // Broadcast task delete
+  const broadcastTaskDelete = useCallback((taskId: number) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('task:delete', { taskId });
+    }
+  }, []);
 
   // Create a shared focus room
   const createFocusRoom = useCallback((taskId: number) => {
@@ -219,6 +300,11 @@ return {
     sharedTasks,
     collaborationStreak,
     isInRoom,
+    isConnected,
+    onlineUsers,
+    broadcastTaskUpdate,
+    broadcastTaskCreate,
+    broadcastTaskDelete,
     createFocusRoom,
     joinFocusRoom,
     leaveFocusRoom,
