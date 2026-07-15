@@ -13,14 +13,15 @@ interface OfflineAction {
 
 interface UseOfflineSyncOptions {
   onSyncComplete?: () => void;
+  autoSync?: boolean; // Auto-sync when coming online
 }
 
 /**
  * Hook for offline support with background sync.
  * Stores actions in localStorage and syncs when online.
  */
-export function useOfflineSync({ onSyncComplete }: UseOfflineSyncOptions = {}) {
-  const [isOnline, setIsOnline] = useState(true);
+export function useOfflineSync({ onSyncComplete, autoSync = true }: UseOfflineSyncOptions = {}) {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [pendingActions, setPendingActions] = useState<OfflineAction[]>([]);
   const [syncInProgress, setSyncInProgress] = useState(false);
 
@@ -40,7 +41,9 @@ export function useOfflineSync({ onSyncComplete }: UseOfflineSyncOptions = {}) {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      syncPendingActions();
+      if (autoSync) {
+        setTimeout(() => syncPendingActions(), 500); // Small delay to ensure connection is ready
+      }
     };
     const handleOffline = () => setIsOnline(false);
 
@@ -51,7 +54,7 @@ export function useOfflineSync({ onSyncComplete }: UseOfflineSyncOptions = {}) {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [autoSync]);
 
   // Save pending actions to localStorage
   const savePendingActions = useCallback((actions: OfflineAction[]) => {
@@ -107,16 +110,41 @@ export function useOfflineSync({ onSyncComplete }: UseOfflineSyncOptions = {}) {
               });
               success = res.ok;
             } else if (action.type === "delete") {
-              const res = await fetch(`/api/tasks?id=${(action.payload as { id: number }).id}`, {
+              const res = await fetch(`/api/tasks/${(action.payload as { id: number }).id}`, {
                 method: "DELETE",
               });
               success = res.ok;
             }
             break;
           case "list":
+            if (action.type === "create" || action.type === "update") {
+              const res = await fetch("/api/lists", {
+                method: action.type === "create" ? "POST" : "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(action.payload),
+              });
+              success = res.ok;
+            } else if (action.type === "delete") {
+              const res = await fetch(`/api/lists/${(action.payload as { id: number }).id}`, {
+                method: "DELETE",
+              });
+              success = res.ok;
+            }
+            break;
           case "label":
-            // Similar pattern for lists/labels
-            success = true;
+            if (action.type === "create" || action.type === "update") {
+              const res = await fetch("/api/labels", {
+                method: action.type === "create" ? "POST" : "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(action.payload),
+              });
+              success = res.ok;
+            } else if (action.type === "delete") {
+              const res = await fetch(`/api/labels/${(action.payload as { id: number }).id}`, {
+                method: "DELETE",
+              });
+              success = res.ok;
+            }
             break;
         }
 
@@ -151,6 +179,7 @@ export function useOfflineSync({ onSyncComplete }: UseOfflineSyncOptions = {}) {
   return {
     isOnline,
     pendingActions,
+    pendingCount: pendingActions.length,
     syncInProgress,
     queueAction,
     syncPendingActions,
