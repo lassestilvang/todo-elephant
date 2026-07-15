@@ -2,6 +2,7 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { spawn } from 'child_process';
+import { Task } from '@/types';
 
 const execFileAsync = promisify(execFile);
 
@@ -12,6 +13,16 @@ export interface NLPResult {
   priority: 'low' | 'medium' | 'high';
   estimatedTime?: number; // in minutes
   tags?: string[];
+}
+
+export interface AISchedulingSuggestion {
+  taskId: number;
+  suggestedSlots: Array<{
+    startTime: string;
+    endTime: string;
+    label: string;
+  }>;
+  reasoning: string;
 }
 
 export class AIAssistant {
@@ -221,6 +232,51 @@ export class AIAssistant {
     } else {
       return "Consider your personal peak productivity times";
     }
+  }
+
+  /**
+   * Generate scheduling suggestions based on task characteristics
+   */
+  async generateSchedulingSuggestions(tasks: Task[], focusSessions: any[] = []): Promise<AISchedulingSuggestion[]> {
+    const suggestions: AISchedulingSuggestion[] = [];
+    const incompleteTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'done');
+
+    // Sort tasks by priority and due date
+    const sortedTasks = [...incompleteTasks].sort((a, b) => {
+      // High priority first
+      if (a.priority === 'high' && b.priority !== 'high') return -1;
+      if (b.priority === 'high' && a.priority !== 'high') return 1;
+
+      // Then by due date
+      if (a.dueDate && b.dueDate) {
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      }
+
+      return 0;
+    });
+
+    // Generate time slots for top 3 tasks
+    const now = new Date();
+    const workHours = [9, 10, 11, 14, 15, 16]; // Typical work hours
+
+    for (let i = 0; i < Math.min(3, sortedTasks.length); i++) {
+      const task = sortedTasks[i];
+      const hour = workHours[i % workHours.length];
+
+      suggestions.push({
+        taskId: task.id,
+        suggestedSlots: [{
+          startTime: `${hour}:00`,
+          endTime: `${hour + 1}:00`,
+          label: `${hour}:00 - ${hour + 1}:00`
+        }],
+        reasoning: task.priority === 'high'
+          ? 'High priority task - best scheduled during peak focus hours'
+          : 'Medium priority task - good fit for afternoon productivity window'
+      });
+    }
+
+    return suggestions;
   }
 }
 
