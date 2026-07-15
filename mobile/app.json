@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Todo Elephant",
+    "slug": "todo-elephant",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "../public/icon-512.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "../public/icon-512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.todoelephant.mobile",
+      "bundleColor": "#22c55e"
+    },
+    "android": {
+      "package": "com.todoelephant.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "../public/icon-512.png",
+        "backgroundColor": "#0f172a"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "../public/favicon.ico"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      },
+      "apiUrl": process.env.API_URL || "http://localhost:3000"
+    }
+  }
+}
