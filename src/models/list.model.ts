@@ -1,25 +1,36 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-export interface List {
-  _id?: string;
+export type ListStatus = 'active' | 'archived';
+
+export interface IList extends Document {
   name: string;
   description?: string;
-  color?: string;
+  color: string;
+  order: number;
+  status: ListStatus;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export const ListSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String },
-  color: { type: String },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+const ListSchema = new Schema<IList>({
+  name: { type: String, required: true, trim: true },
+  description: { type: String, trim: true },
+  color: { type: String, default: '#3b82f6' },
+  order: { type: Number, default: 0 },
+  status: {
+    type: String,
+    enum: ['active', 'archived'],
+    default: 'active'
+  }
+}, { timestamps: true });
 
+// Index for ordering and status
+ListSchema.index({ order: 1, status: 1 });
+
+// Update timestamp on save
 ListSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  this.updatedAt = new Date();
   next();
 });
 
-export const ListModel = mongoose.model('List', ListSchema);
+export const ListModel = mongoose.model<IList>('List', ListSchema);
