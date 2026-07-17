@@ -1,0 +1,49 @@
+# /Users/lasse/Sites/todo-elephant/monitoring/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'api'
+    static_configs:
+      - targets: ['api:3000']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+
+  - job_name: 'database'
+    static_configs:
+      - targets: ['mongo:27017']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+alerts:
+  - alert: 'HighErrorRate'
+    expr: rate(http_requests_total{status="5xx"}[5m]) > 0.05
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: 'High error rate detected'
+      description: 'Error rate exceeded 5% over last 5 minutes'
+
+  - alert: 'HighMemoryUsage'
+    expr: container_memory_usage_bytes{container="api"} / container_memory_limit_bytes{container="api"} > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: 'High memory usage detected'
+      description: 'API container memory usage exceeded 80% of limit'
+
+  - alert: 'TaskQueueBacklog'
+    expr: queue_size{job="task_queue"} > 100
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: 'Task queue backlog growing'
+      description: 'Task queue size exceeded safe threshold'
