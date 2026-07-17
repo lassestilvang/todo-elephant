@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { verifyToken } from './auth';
+import { BoardModel } from '@/models/board.model';
 
 // Singleton pattern for Socket.IO server
 let io: Server | null = null;
@@ -34,44 +35,141 @@ export function initSocket(server: ReturnType<typeof createServer>) {
 
   // Connection handler
   io.on('connection', (socket) => {
-    console.log(`User ${socket.id} connected`);
+    const user = (socket as any).user;
+    console.log(`User ${user.userId} connected`);
 
     // Join user's personal room
-    const user = (socket as any).user;
     socket.join(`user:${user.userId}`);
 
-    // Join workspace room if provided
-    const workspaceId = socket.handshake.query.workspaceId;
-    if (workspaceId) {
-      socket.join(`workspace:${workspaceId}`);
-    }
+    // Handle joining board rooms
+    socket.on('board:join', async (boardId: string) => {
+      try {
+        // Verify user has access to this board
+        const board = await BoardModel.findById(boardId);
+        if (!board) {
+          socket.emit('error', { message: 'Board not found' });
+          return;
+        }
 
-    // Handle task updates
-    socket.on('task:update', async (data) => {
-      // Broadcast to all clients in the workspace/user room
-      socket.to(`user:${user.userId}`).emit('task:updated', data);
+        const member = board.members.find(m => m.userId === user.userId);
+        if (!member) {
+          socket.emit('error', { message: 'Not a board member' });
+          return;
+        }
+
+        socket.join(`board:${boardId}`);
+        socket.data.boardId = boardId;
+
+        // Notify other board members
+        socket.to(`board:${boardId}`).emit('user:joined', {
+          userId: user.userId,
+          email: user.email
+        });
+
+        // Send current board state
+        socket.emit('board:state', {
+          board,
+          members: board.members
+        });
+      } catch (error) {
+        console.error('Board join error:', error);
+        socket.emit('error', { message: 'Failed to join board' });
+      }
     });
 
+    // Handle leaving board rooms
+    socket.on('board:leave', (boardId: string) => {
+      socket.leave(`board:${boardId}`);
+      socket.to(`board:${boardId}`).emit('user:left', {
+        userId: user.userId
+      });
+    });
+
+    // Task events within boards
     socket.on('task:create', async (data) => {
-      socket.to(`user:${user.userId}`).emit('task:created', data);
+      const boardId = data.boardId || socket.data.boardId;
+      if (!boardId) return;
+
+      // Verify permissions
+      const board = await BoardModel.findById(boardId);
+      if (!board) return;
+
+      const member = board.members.find(m => m.userId === user.userId);
+      if (!member || member.permission === 'view') return;
+
+      // Broadcast to all board members
+      io.to(`board:${boardId}`).emit('task:created', {
+        ...data,
+        createdBy: user.userId
+      });
+    });
+
+    socket.on('task:update', async (data) => {
+      const boardId = data.boardId || socket.data.boardId;
+      if (!boardId) return;
+
+      const board = await BoardModel.findById(boardId);
+      if (!board) return;
+
+      const member = board.members.find(m => m.userId === user.userId);
+      if (!member || member.permission === 'view') return;
+
+      io.to(`board:${boardId}`).emit('task:updated', {
+        ...data,
+        updatedBy: user.userId
+      });
     });
 
     socket.on('task:delete', async (data) => {
-      socket.to(`user:${user.userId}`).emit('task:deleted', data);
+      const boardId = data.boardId || socket.data.boardId;
+      if (!boardId) return;
+
+      const board = await BoardModel.findById(boardId);
+      if (!board) return;
+
+      const member = board.members.find(m => m.userId === user.userId);
+      if (!member || member.permission === 'view') return;
+
+      io.to(`board:${boardId}`).emit('task:deleted', {
+        ...data,
+        deletedBy: user.userId
+      });
     });
 
-    // Handle presence
-    socket.on('presence:update', (data) => {
-      socket.to(`workspace:${workspaceId}`).emit('user:online', {
+    // Cursor position for collaborative editing
+    socket.on('cursor:move', (data) => {
+      const boardId = data.boardId || socket.data.boardId;
+      if (!boardId) return;
+
+      socket.to(`board:${boardId}`).emit('cursor:moved', {
         userId: user.userId,
-        ...data
+        email: user.email,
+        position: data.position,
+        taskId: data.taskId
+      });
+    });
+
+    // Presence updates
+    socket.on('presence:update', (data) => {
+      const boardId = data.boardId || socket.data.boardId;
+      if (!boardId) return;
+
+      socket.to(`board:${boardId}`).emit('user:present', {
+        userId: user.userId,
+        email: user.email,
+        status: data.status,
+        lastSeen: new Date()
       });
     });
 
     // Disconnect handler
     socket.on('disconnect', () => {
-      console.log(`User ${socket.id} disconnected`);
-      socket.to(`workspace:${workspaceId}`).emit('user:offline', { userId: user.userId });
+      console.log(`User ${user.userId} disconnected`);
+      if (socket.data.boardId) {
+        socket.to(`board:${socket.data.boardId}`).emit('user:offline', {
+          userId: user.userId
+        });
+      }
     });
   });
 
@@ -83,4 +181,16 @@ export function getSocket() {
     throw new Error('Socket.IO not initialized. Call initSocket first.');
   }
   return io;
+}
+
+// Helper function to emit events to a specific board
+export function emitToBoard(boardId: string, event: string, data: any) {
+  if (!io) return;
+  io.to(`board:${boardId}`).emit(event, data);
+}
+
+// Helper function to emit events to a specific user
+export function emitToUser(userId: string, event: string, data: any) {
+  if (!io) return;
+  io.to(`user:${userId}`).emit(event, data);
 }
