@@ -6,8 +6,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TaskModel, UserModel, BoardModel } from '@/models';
 import { validateRequest, taskSchema, userSchema } from '@/lib/validation';
-import { useAIElephantAssistant } from '@/src/lib/hooks/useAIElephantAssistant';
-import { CollaborationManager } from '@/src/lib/collaboration';
+import { useAIElephantAssistant } from '@/lib/hooks/useAIElephantAssistant';
+import { CollaborationManager } from '@/lib/collaboration';
 import { generateTokens, verifyToken } from '@/lib/auth';
 
 // Test utilities
