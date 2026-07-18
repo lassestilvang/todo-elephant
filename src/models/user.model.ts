@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import speakeasy from 'speakeasy';
 
 export interface IUser extends Document {
+  _id: string;
+  userId: string; // For compatibility with task model
   email: string;
   passwordHash: string;
   name: string;
@@ -30,6 +32,12 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
+  userId: {
+    type: String,
+    unique: true,
+    required: true,
+    default: function() { return new Date().getTime().toString(); }
+  },
   email: {
     type: String,
     required: true,
