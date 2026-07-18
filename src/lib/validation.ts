@@ -1,9 +1,100 @@
 import { z } from 'zod';
 
 /**
- * Comprehensive validation schemas for all API routes
+ * Comprehensive validation schemas and utilities for Todo Elephant
  * All schemas include proper error messages and constraints
  */
+
+// Validation utility functions
+export function validateRequired(value: any, fieldName: string): string | null {
+  if (value === null || value === undefined || value === '') {
+    return `${fieldName} is required`;
+  }
+  return null;
+}
+
+export function validateMinLength(value: string, min: number, fieldName: string): string | null {
+  if (!value || value.length < min) {
+    return `${fieldName} must be at least ${min} characters`;
+  }
+  return null;
+}
+
+export function validateMaxLength(value: string, max: number, fieldName: string): string | null {
+  if (value && value.length > max) {
+    return `${fieldName} must be no more than ${max} characters`;
+  }
+  return null;
+}
+
+export function validatePriority(value: string): string | null {
+  const validPriorities = ['low', 'medium', 'high', 'urgent'];
+  if (!value || !validPriorities.includes(value)) {
+    return 'Priority must be one of: low, medium, high, urgent';
+  }
+  return null;
+}
+
+export function validateStatus(value: string): string | null {
+  const validStatuses = ['todo', 'in_progress', 'review', 'done', 'in-progress', 'completed', 'archived'];
+  if (!value || !validStatuses.includes(value)) {
+    return 'Status must be one of: todo, in-progress, review, done';
+  }
+  return null;
+}
+
+export function validateDate(value: string | null, fieldName: string): string | null {
+  if (!value) return `${fieldName} must be a valid date`;
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return `${fieldName} must be a valid date`;
+  }
+  return null;
+}
+
+export interface TaskFormErrors {
+  title?: string;
+  desc?: string;
+  priority?: string;
+  status?: string;
+  dueDate?: string;
+  [key: string]: string | undefined;
+}
+
+export function validateTaskForm(data: any): TaskFormErrors {
+  const errors: TaskFormErrors = {};
+
+  if (!data.title || data.title.trim().length === 0) {
+    errors.title = 'Title is required';
+  } else if (data.title.trim().length < 3) {
+    errors.title = 'Title must be at least 3 characters';
+  }
+
+  if (data.desc && data.desc.length < 10) {
+    errors.desc = 'Description must be at least 10 characters';
+  }
+
+  if (data.priority && !['low', 'medium', 'high', 'urgent'].includes(data.priority)) {
+    errors.priority = 'Priority must be one of: low, medium, high, urgent';
+  }
+
+  if (data.status && !['todo', 'in_progress', 'review', 'done', 'in-progress'].includes(data.status)) {
+    errors.status = 'Status must be one of: todo, in-progress, review, done';
+  }
+
+  if (data.dueDate) {
+    const date = new Date(data.dueDate);
+    if (isNaN(date.getTime())) {
+      errors.dueDate = 'Due date must be a valid date';
+    }
+  }
+
+  return errors;
+}
+
+export function isValid(errors: TaskFormErrors): boolean {
+  return Object.keys(errors).length === 0;
+}
 
 // Task validation schema
 export const taskSchema = z.object({
