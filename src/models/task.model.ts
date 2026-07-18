@@ -76,6 +76,21 @@ TaskSchema.index({ listId: 1 });
 TaskSchema.index({ labelIds: 1 });
 TaskSchema.index({ isTemplate: 1 });
 
+// Compound indexes for common query patterns
+TaskSchema.index({ userId: 1, status: 1, dueDate: 1 }); // User's tasks by status and due date
+TaskSchema.index({ userId: 1, listId: 1, status: 1 }); // User's tasks by list and status
+TaskSchema.index({ userId: 1, priority: 1, dueDate: 1 }); // Priority-based scheduling
+TaskSchema.index({ userId: 1, isTemplate: 1, createdAt: -1 }); // Template queries
+TaskSchema.index({ completedAt: 1, userId: 1 }); // Completed tasks history
+TaskSchema.index({ dependsOnTaskId: 1 }); // Dependency lookups
+TaskSchema.index({ assignedTo: 1, status: 1 }); // Team assignments
+
+// Text index for search functionality
+TaskSchema.index({ title: 'text', description: 'text' });
+
+// Sparse index for overdue tasks (only when dueDate exists)
+TaskSchema.index({ dueDate: 1, status: 1 }, { sparse: true });
+
 // Update timestamp and completedAt on save
 TaskSchema.pre('save', function(next) {
   this.updatedAt = new Date();
