@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Todo Elephant - Daily Task Planner",
-  description: "A beautiful, glassmorphic daily task planner with dashboard, kanban board, and list views.",
+  description: "A beautiful, glassmorphic daily task planner with dashboard, kanban board, list views, AI assistant, and social features.",
   manifest: "/manifest.json",
   themeColor: "#3b82f6",
   viewport: {
@@ -23,6 +23,18 @@ export const metadata: Metadata = {
     maximumScale: 1,
     userScalable: true,
   },
+  icons: [
+    {
+      rel: "apple-touch-icon",
+      sizes: "192x192",
+      url: "/icon-192.png",
+    },
+    {
+      rel: "icon",
+      sizes: "512x512",
+      url: "/icon-512.png",
+    },
+  ],
 };
 
 const themeScript = `
@@ -54,7 +66,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <WeatherBackground />
