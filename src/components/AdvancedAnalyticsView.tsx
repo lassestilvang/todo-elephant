@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from 'react';
-import { Brain, Clock, TrendingUp, AlertCircle, CheckCircle2, BarChart3, Activity } from 'lucide-react';
+import { Brain, Clock, TrendingUp, AlertCircle, CheckCircle2, BarChart3, Activity, Zap } from 'lucide-react';
 import { Task, FocusSession, Label, List } from '@/types';
 
 interface CognitiveLoadResult {
