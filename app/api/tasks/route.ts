@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TaskModel } from '@/models/task.model';
-import { dbConnect } from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+import { TaskModel } from '@/src/models/task.model';
+import { dbConnect } from '@/src/lib/db';
+import { verifyToken } from '@/src/lib/auth';
+import { getFromCache, setInCache, deleteFromCache, cacheKey, invalidateRelatedCaches } from '@/src/lib/cache';
 
 // GET /api/tasks - List all tasks with optional filters
 export async function GET(request: NextRequest) {
@@ -21,14 +22,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    const userId = payload.userId;
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const listId = searchParams.get('listId');
     const labelId = searchParams.get('labelId');
     const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+
+    // Build cache key
+    const cacheParams: Record<string, any> = { status, listId, labelId, search, page, limit };
+    const cacheKeyString = cacheKey('tasks', userId, cacheParams);
+
+    // Try to get from cache
+    const cachedTasks = await getFromCache(cacheKeyString);
+    if (cachedTasks) {
+      return NextResponse.json(cachedTasks);
+    }
 
     // Build query
-    const query: any = {};
+    const query: any = { userId };
 
     if (status && status !== 'all') {
       query.status = status;
@@ -49,11 +63,32 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Paginated query with lean results for better performance
+    const skip = (page - 1) * limit;
     const tasks = await TaskModel.find(query)
       .sort({ createdAt: -1 })
-      .lean();
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec();
 
-    return NextResponse.json(tasks);
+    // Get total count for pagination
+    const totalTasks = await TaskModel.countDocuments(query);
+
+    const result = {
+      tasks,
+      pagination: {
+        page,
+        limit,
+        total: totalTasks,
+        totalPages: Math.ceil(totalTasks / limit)
+      }
+    };
+
+    // Cache for 5 minutes
+    await setInCache(cacheKeyString, result, 300);
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('GET /api/tasks error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -78,6 +113,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    const userId = payload.userId;
     const body = await request.json();
 
     // Validate required fields
@@ -87,6 +123,7 @@ export async function POST(request: NextRequest) {
 
     // Create task
     const task = new TaskModel({
+      userId,
       title: body.title,
       description: body.description,
       status: body.status || 'todo',
@@ -105,6 +142,9 @@ export async function POST(request: NextRequest) {
     });
 
     const savedTask = await task.save();
+
+    // Invalidate related caches
+    await invalidateRelatedCaches(userId, 'task', [savedTask._id.toString()]);
 
     return NextResponse.json(savedTask, { status: 201 });
   } catch (error) {
