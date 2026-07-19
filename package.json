@@ -73,7 +73,7 @@
     "url": "git+https://github.com/lassestilvang/todo-elephant.git"
   },
   "keywords": [],
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/lassestilvang/todo-elephant/issues"
   },
