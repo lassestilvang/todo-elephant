@@ -1,6 +1,3 @@
-"use client";
-
-import React, { useMemo, useState } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -17,6 +14,7 @@ import {
 import { Task, List, Label, ActivityLog, FocusSession } from "@/types";
 import EmptyState from "./EmptyState";
 import { generateSchedulingSuggestion } from "@/src/lib/scheduling";
+import { PredictiveReminders } from "./PredictiveReminders";
 
 interface DashboardViewProps {
   tasks: Task[];
@@ -30,6 +28,7 @@ interface DashboardViewProps {
   onClearLogs?: () => void;
   onTaskUpdate?: (id: number, updates: Partial<Task>) => void;
   onFocusTask?: (id: number) => void;
+  onSetReminder?: (taskId: string, reminderTime: Date) => void;
 }
 
 function DashboardView({
@@ -208,6 +207,16 @@ function DashboardView({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Predictive Reminders Section */}
+      {onSetReminder && (
+        <div className="w-full">
+          <PredictiveReminders
+            tasks={tasks}
+            onSetReminder={onSetReminder}
+          />
         </div>
       )}
 
