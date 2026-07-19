@@ -129,7 +129,7 @@ export default function KeyboardShortcutCustomizer() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-block mb-4">
-            <Keyboard size={64} mood="happy" className="text-purple-400" />
+            <Keyboard className="h-16 w-16 text-purple-400" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Customize Keyboard Shortcuts</h1>
           <p className="text-gray-400">Tailor your elephant's productivity shortcuts to your herd</p>
