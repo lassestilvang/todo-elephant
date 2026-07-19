@@ -1,33 +1,429 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # for OIDC
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
-
+    outputs:
+      node-version: ${{ steps.setup-node.outputs.node-version }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4/setup-node@v4
         with:
-          node-version: '20'
+          fetch-depth: 0  # for better git diff
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
           cache: 'npm'
+          cache-dependency-path: package-lock.json
 
+  dependencies:
+    name: Install Dependencies
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Save dependencies artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+          retention-days: 1
 
-      - name: Run tests with coverage
-        run: npm test -- --coverage
+  lint:
+    name: Run ESLint & Prettier
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Install ESLint & Prettier
+        run: |
+          npm install --save-dev eslint@^9 prettier@^3 eslint-plugin-react@^7 eslint-plugin-react-hooks@^4
+      - name: Run ESLint
+        run: npx eslint . --ext .ts,.tsx,.js,.jsx --format=pretty
+      - name: Run Prettier Check
+        run: npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,scss,md}"
+      - name: Lint Results
+        if: always()
+        run: echo "Linting completed"
 
-      - name: Upload coverage to Codecov
+  test:
+    name: Run Tests & Coverage
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Run Unit Tests
+        run: npm run test -- --coverage --reporter=verbose
+      - name: Run Mutation Tests (Stryker)
+        if: github.event_name != 'pull_request'
+        run: npm run test:mutation
+      - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           fail_ci_if_error: true
+          flags: unittests
+          name: codecov-umbrella
+      - name: Test Results Summary
+        run: |
+          echo "Test Coverage: $(cat coverage/coverage-summary.json | jq '.total.lines.pct')%"
+
+  build:
+    name: Build Application
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Build Production Bundle
+        run: npm run build
+      - name: Verify Build Output
+        run: |
+          ls -la .next/
+          echo "Build size: $(du -sh .next | cut -f1)"
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-build
+          path: .next
+          retention-days: 7
+
+  security:
+    name: Security Scans
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Install Security Tools
+        run: |
+          npm install --save-dev @trivago/retire-jest snyk
+          npm audit --production
+      - name: Run Dependency Audit
+        id: audit
+        run: |
+          npm audit --json --production > audit-report.json || true
+          echo "vulnerabilities=$(jq '.metadata.vulnerabilities.total' audit-report.json)" >> $GITHUB_OUTPUT
+      - name: Run Retire.js
+        run: npx retire --severity high --outputformat json --outputpath retire-report.json || true
+      - name: Security Results
+        if: always()
+        run: |
+          echo "Dependency vulnerabilities: ${{ steps.audit.outputs.vulnerabilities }}"
+          if [ -f retire-report.json ]; then
+            echo "Retire.js findings: $(jq length retire-report.json)"
+          fi
+      - name: Upload Security Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            audit-report.json
+            retire-report.json
+          retention-days: 30
+
+  scan:
+    name: Secret & Code Scanning
+    needs: [build, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run GitHub Secret Scanning
+        uses: advanced-security/secret-scanning@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript-typescript
+          config-file: ./.github/codeql/codeql-config.yml
+      - uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
+      - name: Upload CodeQL Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: codeql-results.sarif
+
+  test-e2e:
+    name: End-to-End Tests
+    needs: [build, scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - name: Start Development Server
+        run: |
+          npm run dev &
+          SERVER_PID=$!
+          echo "Server started with PID $SERVER_PID"
+          # Wait for server to be ready
+          until curl -s http://localhost:3000 > /dev/null; do
+            echo "Waiting for server..."
+            sleep 2
+          done
+      - name: Run E2E Tests
+        run: npx playwright test --reporter=html
+      - name: Stop Server
+        if: always()
+        run: kill $SERVER_PID || true
+      - name: Upload E2E Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report
+          path: playwright-report/
+          retention-days: 7
+
+  deploy-preview:
+    name: Deploy Preview (PRs)
+    needs: [test-e2e]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Build for Vercel
+        run: npm run build
+      - name: Deploy to Vercel Preview
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--preview --force'
+          working-directory: .
+      - name: Comment Preview URL
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr_number = context.payload.pull_request.number;
+            const preview_url = process.env.VERCEL_URL;
+            github.rest.issues.createComment({
+              issue_number: pr_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ Preview deployment ready: https://${preview_url}`
+            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-staging:
+    name: Deploy Staging
+    needs: [test-e2e]
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Build for Vercel
+        run: npm run build
+      - name: Deploy to Vercel Staging
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--prod'
+          working-directory: .
+
+  deploy-production:
+    name: Deploy Production
+    needs: [test-e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - uses: actions/download-artifact@v3
+        with:
+          name: node_modules
+          path: node_modules
+      - name: Run Final Security Check
+        run: |
+          npm audit --production
+          if [ $? -ne 0 ]; then
+            echo "❌ Production deployment blocked due to security vulnerabilities"
+            exit 1
+          fi
+      - name: Build for Vercel
+        run: npm run build -- --profile
+      - name: Deploy to Vercel Production
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--prod --force'
+          working-directory: .
+      - name: Notify Deployment Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "text": ":rocket: Todo Elephant v${{ github.ref_name }} deployed to production!",
+              "attachments": [
+                {
+                  "color": "good",
+                  "fields": [
+                    {
+                      "title": "Environment",
+                      "value": "Production",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha.substring(0, 7) }}>",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  release:
+    name: Create GitHub Release
+    needs: [deploy-production]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract Version
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup:
+    name: Cleanup Resources
+    needs: [deploy-preview, deploy-staging, deploy-production, release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel In Progress Workflows
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log Completion
+        run: echo "CI/CD pipeline completed at $(date)"
