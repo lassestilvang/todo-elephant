@@ -89,7 +89,9 @@ const nextConfig: NextConfig = {
   },
 
   // Bundle analyzer (optional)
+  // Note: Next.js 16 uses Turbopack by default, webpack config may need migration
   webpack: (config, { isServer }) => {
+    // Simplified for Turbopack compatibility
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -97,6 +99,11 @@ const nextConfig: NextConfig = {
       };
     }
     return config;
+  },
+
+  // Turbopack configuration for compatibility
+  turbopack: {
+    // Enable Turbopack for client-side compilation
   },
 };
 
