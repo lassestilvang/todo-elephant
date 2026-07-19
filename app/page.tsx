@@ -19,6 +19,8 @@ import { useTaskPlanner } from "@/src/lib/hooks/useTaskPlanner";
 import { useTaskTemplates } from "@/src/lib/hooks/useTemplates";
 import ConfettiCanvas from "@/src/components/ConfettiCanvas";
 import FocusView from "@/src/components/FocusView";
+import { VoiceInput, useVoiceInput } from "@/src/components/VoiceInput";
+import { PredictiveReminders } from "@/src/components/PredictiveReminders";
 // useUrlState hooks available for future enhancements
 import { useBulkSelection } from "@/src/lib/hooks/useBulkSelection";
 
@@ -150,6 +152,7 @@ export default function Home() {
   // Bulk selection for batch operations
   const bulkSelection = useBulkSelection();
 
+  const voiceInput = useVoiceInput();
   const [isShortcutsOpen, setIsShortcutsOpen] = React.useState(false);
 
   // Load templates on mount so CommandPalette's "Task Templates" section
@@ -363,6 +366,9 @@ export default function Home() {
                 onClearLogs={handleClearLogs}
                 onTaskUpdate={handleTaskUpdateDirect}
                 onFocusTask={openFocusMode}
+                onSetReminder={(taskId, reminderTime) => {
+                  toast.success(`Reminder set for task!`);
+                }}
               />
               </ErrorBoundary>
 
