@@ -87,7 +87,7 @@ const sampleTemplates: Template[] = [
       {
         id: 'planning-1',
         type: 'list',
-        title: 'Today's herd priorities',
+        title: "Today's herd priorities",
         description: 'Identify 3 most important tasks for the herd today',
         status: 'todo',
         priority: 'high',
