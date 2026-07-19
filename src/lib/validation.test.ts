@@ -8,8 +8,11 @@ import {
   validateStatus,
   validateDate,
   validateTaskForm,
-  isValid
-} from '@/src/lib/validation';
+  isValid,
+  taskSchema,
+  userSchema,
+  validateRequest
+} from '@/lib/validation';
 
 describe('Validation Utilities', () => {
   describe('validateRequired', () => {
