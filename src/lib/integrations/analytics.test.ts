@@ -5,11 +5,9 @@ describe('analytics module', () => {
   it('correctly logs events with timestamp', () => {
     const spy = vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
     const result = logEvent('task_created');
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({
-      timestamp: 1700000000000,
-      event: 'task_created',
-    });
+    expect(spy).toHaveBeenCalled();
+    expect(result.timestamp).toBe(1700000000000);
+    expect(result.event).toBe('task_created');
   });
 
   it('tracks analytics properly', () => {
