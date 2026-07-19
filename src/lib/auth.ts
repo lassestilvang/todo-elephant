@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
-import { UserModel } from '@/models/user.model';
-import type { IUser } from '@/models/user.model';
+import { UserModel } from '@/src/models/user.model';
+import type { IUser } from '@/src/models/user.model';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
