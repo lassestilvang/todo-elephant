@@ -44,7 +44,7 @@ export function validateStatus(value: string): string | null {
 }
 
 export function validateDate(value: string | null, fieldName: string): string | null {
-  if (!value) return `${fieldName} must be a valid date`;
+  if (value === null || value === undefined) return null;
   const date = new Date(value);
   if (isNaN(date.getTime())) {
     return `${fieldName} must be a valid date`;
@@ -78,7 +78,7 @@ export function validateTaskForm(data: any): TaskFormErrors {
     errors.priority = 'Priority must be one of: low, medium, high, urgent';
   }
 
-  if (data.status && !['todo', 'in_progress', 'review', 'done', 'in-progress'].includes(data.status)) {
+  if (data.status && !['todo', 'in_progress', 'review', 'done', 'in-progress', 'pending', 'completed', 'archived'].includes(data.status)) {
     errors.status = 'Status must be one of: todo, in-progress, review, done';
   }
 
@@ -246,7 +246,9 @@ export function rateLimit(config: RateLimitConfig): (identifier: string) => bool
  */
 export function sanitizeInput(input: string): string {
   return input
-    .replace(/[<>]/g, '') // Remove potential XSS characters
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/\bon\w+\s*=/gi, '') // Remove event handlers like onclick, onerror
+    .replace(/\bon\w+\b/gi, '') // Remove remaining event handlers
     .trim()
     .normalize('NFKC');
 }
