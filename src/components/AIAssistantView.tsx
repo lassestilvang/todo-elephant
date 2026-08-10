@@ -1,9 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Brain, Lightbulb, Zap, Sparkles, RefreshCw } from "lucide-react";
 import { Task, List, Label, FocusSession } from "@/types";
 import { useAIElephantAssistant } from "@/src/lib/hooks/useAIElephantAssistant";
+
+// ARIA live region announcer component for screen readers
+const A11yLiveAnnouncer: React.FC<{ message: string; isAssertion?: boolean }> = ({ message, isAssertion = false }) => (
+  <div
+    aria-live={isAssertion ? "assertive" : "polite"}
+    aria-atomic="true"
+    className="sr-only"
+    tabIndex={-1}
+    ref={useRef<HTMLDivElement>(null)}
+  >
+    {message}
+  </div>
+);
 
 interface AIAssistantViewProps {
   tasks: Task[];

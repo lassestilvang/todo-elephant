@@ -1,6 +1,18 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
+
+// ARIA live region announcer component for screen readers
+const A11yLiveAnnouncer: React.FC<{ message: string; isAssertion?: boolean }> = ({ message, isAssertion = false }) => (
+  <div
+    aria-live={isAssertion ? "assertive" : "polite"}
+    aria-atomic="true"
+    className="sr-only"
+    tabIndex={-1}
+  >
+    {message}
+  </div>
+);
 import {
   Plus,
   ArrowRight,
@@ -21,6 +33,9 @@ import {
   X,
   Clock
 } from "lucide-react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { OrbitControls } from "@react-three/drei";
 import { Task, List, Label, SavedFilter, FocusSession } from "@/types";
 import { useDebounce } from "@/src/lib/hooks/useDebounce";
 import { getRelativeDateString, getDueDateBadgeClass, highlightText } from "@/src/lib/dateUtils";
@@ -46,6 +61,210 @@ interface KanbanViewProps {
   selectedTaskIds?: Set<number>;
   onToggleSelect?: (id: number) => void;
   onClearSelection?: () => void;
+}
+
+// 3D Task Component
+interface Task3DProps {
+  task: Task;
+  index: number;
+  columnIndex: number;
+  isDragging: boolean;
+  onClick: (task: Task) => void;
+  onDragStart: (e: React.DragEvent, taskId: number) => void;
+  onDragEnd: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, task: Task) => void;
+  isDropTarget: boolean;
+}
+
+function Task3D({ task, index, columnIndex, isDragging, isDropTarget, onClick, onDragStart, onDragEnd, onDragOver, onDrop }: Task3DProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hover, setHover] = useState(false);
+
+  // Gentle hover lift animation
+  useFrame((state) => {
+    if (meshRef.current) {
+      const hoverOffset = hover ? 0.1 : 0;
+      const dragOffset = isDragging ? 0.2 : 0;
+      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.01;
+      meshRef.current.position.y = hoverOffset + dragOffset + pulse + (index * 0.15);
+      meshRef.current.rotation.x = hover * 0.1;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+    }
+  });
+
+  // Priority color
+  const priorityColors: { [key in Task["priority"]]: number } = {
+    low: 0x4cc9f0,
+    medium: 0xf6e05e,
+    high: 0xf08a5d
+  };
+
+  const statusColors: { [key in Task["status"]]: number } = {
+    todo: 0x8b5cf6,
+    in_progress: 0xf97316,
+    review: 0xec4899,
+    completed: 0x10b981,
+    done: 0x059669,
+    archived: 0x6b7280
+  };
+
+  const color = statusColors[task.status as keyof typeof statusColors] || 0x6b7280;
+
+  return (
+    <group
+      position={[
+        (columnIndex - 1.5) * 3, // X: spread columns apart
+        index * 0.2,             // Y: slight stagger for depth
+        0                        // Z: base depth
+      ]}
+    >
+      {/* Task box */}
+      <mesh
+        ref={meshRef}
+        scale={hover ? [1.05, 1.05, 1.05] : [1, 1, 1]}
+        onPointerEnter={(e) => setHover(true)}
+        onPointerLeave={(e) => setHover(false)}
+        onDragStart={(e) => onDragStart(e, task.id)}
+        onDragEnd={(e) => onDragEnd(e)}
+        onDragOver={(e) => onDragOver(e)}
+        onDrop={(e) => onDrop(e, task)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(task);
+        }}
+      >
+        <boxGeometry args={[1.8, 0.9, 0.4]} />
+        <meshStandardMaterial
+          color={color}
+          metalness={0.2}
+          roughness={0.6}
+        />
+      </mesh>
+
+      {/* Task title */}
+      <sprite
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(task);
+        }}
+      >
+        <spriteMaterial
+          map={createSpriteTexture(task.title)}
+          transparent
+        />
+      </sprite>
+    </group>
+  );
+}
+
+function createSpriteTexture(text: string): THREE.Texture {
+  // Create a simple sprite texture from task title
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 512;
+  canvas.height = 64;
+
+  ctx!.fillStyle = '#ffffff';
+  ctx!.fillRect(0, 0, canvas.width, canvas.height);
+  ctx!.fillStyle = '#000000';
+  ctx!.font = 'bold 24px sans-serif';
+  ctx!.fillText(text, 10, 36);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+// 3D Task Component
+interface Task3DProps {
+  task: Task;
+  index: number;
+  columnIndex: number;
+  isDragging: boolean;
+  onClick: (task: Task) => void;
+  onDragStart: (e: React.DragEvent, taskId: number) => void;
+  onDragEnd: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, task: Task) => void;
+}
+
+function Task3D({ task, index, columnIndex, isDragging, onClick, onDragStart, onDragEnd, onDragOver, onDrop }: Task3DProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hover, setHover] = useState(false);
+
+  // Gentle hover lift animation
+  useFrame((state) => {
+    if (meshRef.current) {
+      const hoverOffset = hover ? 0.1 : 0;
+      const dragOffset = isDragging ? 0.2 : 0;
+      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.01;
+      meshRef.current.position.y = hoverOffset + dragOffset + pulse + (index * 0.15);
+      meshRef.current.rotation.x = hover * 0.1;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+    }
+  });
+
+  // Priority color
+  const priorityColors: { [key in Task["priority"]]: number } = {
+    low: 0x4cc9f0,
+    medium: 0xf6e05e,
+    high: 0xf08a5d
+  };
+
+  const statusColors: { [key in Task["status"]]: number } = {
+    todo: 0x8b5cf6,
+    in_progress: 0xf97316,
+    review: 0xec4899,
+    completed: 0x10b981,
+    done: 0x059669,
+    archived: 0x6b7280
+  };
+
+  const color = statusColors[task.status as keyof typeof statusColors] || 0x6b7280;
+
+  return (
+    <group
+      position={[
+        (columnIndex - 1.5) * 3, // X: spread columns apart
+        index * 0.2,             // Y: slight stagger for depth
+        0                        // Z: base depth
+      ]}
+    >
+      {/* Task box */}
+      <mesh
+        ref={meshRef}
+        scale={hover ? [1.05, 1.05, 1.05] : [1, 1, 1]}
+        onPointerEnter={(e) => setHover(true)}
+        onPointerLeave={(e) => setHover(false)}
+        onDragStart={(e) => onDragStart(e, task.id)}
+        onDragEnd={(e) => onDragEnd(e)}
+        onDragOver={(e) => onDragOver(e)}
+        onDrop={(e) => onDrop(e, task)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(task);
+        }}
+      >
+        <boxGeometry args={[1.8, 0.9, 0.4]} />
+        <meshStandardMaterial
+          color={color}
+          metalness={0.2}
+          roughness={0.6}
+        />
+      </mesh>
+
+      {/* Task title */}
+      <sprite>
+        <spriteMaterial map={new THREE.TextureLoader().load(`/task-title-${task.id}.png`)} transparent />
+      </sprite>
+    </group>
+  )
+}
+
+// Helper component for Sprite (since @react-three/dvier doesn't have Sprite by default)
+function Sprite({ children }: { children: React.ReactNode }) {
+  // This is a simplified sprite implementation
+  return <group>{children}</group>;
 }// Local date helpers removed — use src/lib/dateUtils shared implementations.
 
 function KanbanView({

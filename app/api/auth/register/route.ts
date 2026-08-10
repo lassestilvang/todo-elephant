@@ -3,6 +3,8 @@ import { UserModel } from '@/models/user.model';
 import { generateTokens } from '@/lib/auth';
 import { validatePassword } from '@/lib/auth';
 
+import { verifyRecaptcha } from '@/lib/security'; // Utility to verify reCAPTCHA
+
 // Connect to MongoDB
 async function connectToDB() {
   const mongoose = await import('mongoose');
@@ -16,12 +18,30 @@ export async function POST(request: NextRequest) {
     await connectToDB();
 
     const body = await request.json();
-    const { name, email, password } = body;
+    const { name, email, password, recaptchaToken } = body;
+
+    // Validate required fields
+    if (!name || !email || !password || !recaptchaToken) {
+      return NextResponse.json(
+        { error: 'Name, email, password, and reCAPTCHA token are required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify reCAPTCHA token
+    const verification = await verifyRecaptcha(recaptchaToken);
+    if (!verification.success) {
+      // Optionally check error codes for more granular handling
+      return NextResponse.json(
+        { error: 'reCAPTCHA verification failed', details: verification['error-codes'] },
+        { status: 403 }
+      );
+    }
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!password) {
       return NextResponse.json(
-        { error: 'Name, email, and password are required' },
+        { error: 'Password is required' },
         { status: 400 }
       );
     }

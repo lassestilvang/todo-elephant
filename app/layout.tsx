@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SkipLink, LiveAnnouncer } from "@/src/lib/accessibility";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,6 +72,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <SkipLink />
+        <LiveAnnouncer message="" />
         <WeatherBackground />
         {children}
       </body>
